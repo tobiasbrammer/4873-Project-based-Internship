@@ -19,7 +19,7 @@ mData <- read.csv("igv.csv", sep = ",")
 
 # mData <- na.omit(mData)
 
-mData <- subset(mData, select = -c(Beskrivelse, Leveringsaddresse, Kommentar, Seneste.bogføringgsdato, Ansvarlig, Link.til.NAV))
+mData <- subset(mData, select = -c(Kundenavn, Sagsnr., Beskrivelse, Leveringsaddresse, Kommentar, Seneste.bogføringgsdato, Ansvarlig, Link.til.NAV))
 
 mData <- na.omit(mData)
 
@@ -34,7 +34,4 @@ mData <- na.omit(mData)
 vReg = lm(mData$Beregnet.DB ~ mData$Ressource..omkostning 
           , data=mData)
 summary(vReg)
-
-any(is.na(mData$Beregnet.DB))
-any(is.na(mData$Ressource..omkostning))
 
