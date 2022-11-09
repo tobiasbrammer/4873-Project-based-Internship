@@ -102,13 +102,45 @@
     ,ISNULL(Sagsbudget.[Omkostningsbudget],0) AS 'Slut vurdering omkostning'
     ,ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0) AS 'Slut vurdering DB'
 	,(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) AS 'Slut vurdering DG'
-	,CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL) THEN Sagsbudget.[Indtægtsbudget] 
+	,CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
+			    THEN Sagsbudget.[Indtægtsbudget] 
 		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
 			   THEN Sagsbudget.[Indtægtsbudget]
 		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
 			   THEN Sagsbudget.[Indtægtsbudget]
 		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
 	 END AS 'Beregnet indtægt'
+	 ,(CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
+			    THEN Sagsbudget.[Indtægtsbudget] 
+		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
+	 END - Sagsposter.[Bogført omkostning]) AS 'Beregnet DB'
+	,(CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
+			    THEN Sagsbudget.[Indtægtsbudget] 
+		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
+	 END - Sagsposter.[Bogført omkostning])/NULLIF((CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
+			    THEN Sagsbudget.[Indtægtsbudget] 
+		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
+	 END),0) AS 'Beregnet DG'
+	,((CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
+			    THEN Sagsbudget.[Indtægtsbudget] 
+		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
+			   THEN Sagsbudget.[Indtægtsbudget]
+		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
+	 END) - Sagsposter.[Faktureret indtægt]) AS 'Igangværende arbejder'
     ,ISNULL(Sagsposter.[Faktureret indtægt],0) AS 'Faktureret indtægt'
     ,ISNULL(Sagsposter.[Bogført omkostning],0) 'Bogført omkostning'
     ,ISNULL(Sagsposter.[Ressource omkostning],0) AS 'Ressource omkostning'
@@ -119,6 +151,7 @@
     ,ISNULL(Sagsposter.[Faktureret i måneden],0) AS 'Faktureret i måneden'
     ,ISNULL(Sagsposter.[Forbrug i måneden],0) AS 'Forbrug i måneden'
 	,ISNULL(Sagsposter.[Bogført omkostning],0)/NULLIF(Sagsbudget.[Omkostningsbudget],0) AS 'Færdiggørelsesgrad'
+	,ISNULL(Sagsposter.[Ressource omkostning],0)/NULLIF(Sagsposter.[Bogført omkostning],0) AS 'Ressourcer i %'
     FROM Sagsopgaver
     LEFT JOIN [NRGIDW_Extract].[elcon].[DynamicsNavHyperlink] AS Link
     ON Link.[Sagsnummer]=Sagsopgaver.[Job No_]
