@@ -1,66 +1,39 @@
-    DECLARE @startdate DATETIME 
+    DECLARE @startdate DATETIME
+	DECLARE @enddate DATETIME
     DECLARE @date DATETIME 
     DECLARE @count INT 
-	DECLARE @afd INT
+	DECLARE @jobno CHAR(20)
 
-    SET @startdate='2022-10-31' 
-    SET @date= DATEADD(dd,1,@startdate)
-    SET @count=0 
-	SET @afd =''
+	DECLARE @afd TABLE (Value INT)
+	INSERT INTO @afd VALUES (421)
+	INSERT INTO @afd VALUES (505)
+	INSERT INTO @afd VALUES (515)
 
-    WHILE @count < 2 
-    BEGIN 
-      IF Datename(dw, @date) NOT IN ( 'Saturday', 'Sunday' ) 
-        BEGIN 
-            SET @date=Dateadd(dd, 1, @date) 
-            SET @count=@count + 1 
-        END 
-      ELSE 
-        BEGIN 
-            SET @date=Dateadd(dd, 1, @date) 
-        END 
-    END
 
+    SET @startdate = '2015-01-01' 
+	SET @enddate = '2023-02-28' 
+
+	SET @jobno = ''
 
     ;WITH Sager AS (
     SELECT *
     From [NRGIDW_Extract].[elcon].[Job] AS Sager
     WHERE 1=1
+	AND Sager.No_ = @jobno OR Coalesce(@jobno,'') = ''
 	AND Sager.[Status] = 2
-    AND Sager.[Job Posting Group] IN ('FASTPRIS','PROJEKT','REGNING','TBL')),
-
-	DimDato AS(
-    SELECT
-	   Cal.[CalendarDate]
-      ,Cal.[DayName]
-      ,Cal.[DayNameShort]
-      ,Cal.[YearInt]
-      ,Cal.[MonthEnd]
-      ,Cal.[MonthName]
-      ,Cal.[MonthNameShort]
-      ,Cal.[DayOfYear]
-      ,Cal.[DayOfMonth]
-      ,Cal.[DayOfWeek_EU]
-      ,Cal.[WeekDayNameShort]
-      ,Cal.[WeekOfYear_EU]
-      ,Cal.[MonthOfYear]
-      ,Cal.[HolyDay]
-      ,Cal.[WorkDay]
-      ,Cal.[WorkDayOfMonth]
-    FROM [ElconDW].[dim].[Calendar] AS Cal),
-
+    AND (Sager.[Job Posting Group] = 'FASTPRIS' OR Sager.[Job Posting Group] = 'PROJEKT')),
 
     Sagsopgaver AS(
     SELECT
-    Sagsopgaver.[Job No_]
+	Sagsopgaver.[Global Dimension 1 Code]
+    ,Sagsopgaver.[Job No_]
     ,Sagsopgaver.[Job Task No_]
     ,Sagsopgaver.[Description]
     FROM [NRGIDW_Extract].[elcon].[Job Task] AS Sagsopgaver
     INNER JOIN Sager
     On Sager.[No_] = Sagsopgaver.[Job No_]
     WHERE 1=1
-	--AND Sagsopgaver.[Global Dimension 1 Code] = @afd
-	),
+	AND Sagsopgaver.[Global Dimension 1 Code] IN (SELECT Value FROM @afd)),
 
     Sagsbudget AS(
     SELECT 
@@ -88,8 +61,12 @@
 
     Sagsposter AS(
     SELECT
-	DimDato.MonthName
-	,Sagsposter.[Global Dimension 1 Code] AS Afdeling
+	FORMAT(Sagsposter.[Posting Date],'dd-MM-yyyy') AS 'Dato'
+    ,Datepart(iso_week,Sagsposter.[Posting Date]) AS 'Uge'
+	,CONCAT(Datepart(iso_week,Sagsposter.[Posting Date]),'-',FORMAT(Sagsposter.[Posting Date], 'yyyy')) AS 'Uge-år'
+	,FORMAT(Sagsposter.[Posting Date], 'MM-yyyy') AS 'Måned-år'
+	,FORMAT(Sagsposter.[Posting Date], 'yyyy') AS 'År'
+	,Sagsposter.[Global Dimension 1 Code] AS 'Afd'
     ,Sagsposter.[Job No_]
     ,-SUM(CASE Sagsposter.[Entry Type] WHEN 1 THEN Sagsposter.[Line Amount (LCY)] ELSE 0 END) AS 'Faktureret indtægt'
     ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END) AS 'Bogført omkostning'
@@ -106,78 +83,88 @@
     ON CONCAT(Sagsposter.[Job No_],Sagsposter.[Job Task No_]) = CONCAT(Sagsopgaver.[Job No_],Sagsopgaver.[Job Task No_])
     INNER JOIN Sager
     ON Sager.[No_]=Sagsposter.[Job No_]
-	LEFT JOIN DimDato
-	ON Sagsposter.[Posting Date] = DimDato.CalendarDate
     WHERE 1=1
-	AND Sagsposter.[Posting Date]<= @date
+	AND Sagsposter.[Posting Date] BETWEEN @startdate AND @enddate
     GROUP BY 
-    Sagsposter.[Global Dimension 1 Code], Sagsposter.[Job No_], DimDato.MonthName)
+	Sagsposter.[Global Dimension 1 Code],
+    Sagsposter.[Job No_],
+	Sagsposter.[Posting Date]
+	)
     
     SELECT DISTINCT
-	Sagsposter.MonthName
-	,Sagsposter.Afdeling
+	Sagsposter.[Uge]
+	,Sagsposter.[Uge-år]
+	,Sagsposter.[Måned-år]
+	,Sagsposter.[År]
     ,Sager.[Job Posting Group] AS 'Sagsbogføringsgruppe'
+	,Sagsposter.[Afd]
     ,Sager.[No_] AS 'Sagsnr.'
     ,Sager.[Description] AS 'Beskrivelse'
     ,Kunder.[Name] AS 'Kundenavn'
-    ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City]) AS Leveringsadresse
-    ,Medarbejdere.[Name] AS Ansvarlig
-	,Sager.[Starting Date] AS Startdato
-	,Sager.[Ending Date] AS Slutdato
-    ,ISNULL(Sagsbudget.[Indtægtsbudget],0) AS 'Slut vurdering indtægt'
-    ,ISNULL(Sagsbudget.[Omkostningsbudget],0) AS 'Slut vurdering omkostning'
-    ,ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0) AS 'Slut vurdering DB'
-	,(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) AS 'Slut vurdering DG'
-	,CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
-			    THEN Sagsbudget.[Indtægtsbudget] 
-		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
-	 END AS 'Beregnet indtægt'
-	 ,(CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
-			    THEN Sagsbudget.[Indtægtsbudget] 
-		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
-	 END - Sagsposter.[Bogført omkostning]) AS 'Beregnet DB'
-	,(CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
-			    THEN Sagsbudget.[Indtægtsbudget] 
-		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
-	 END - Sagsposter.[Bogført omkostning])/NULLIF((CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
-			    THEN Sagsbudget.[Indtægtsbudget] 
-		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
-	 END),0) AS 'Beregnet DG'
-	,((CASE WHEN (ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL AND ISNULL(Sagsbudget.[Omkostningsbudget],0) IS NULL)
-			    THEN Sagsbudget.[Indtægtsbudget] 
-		  WHEN (ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0) >= 1
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  WHEN ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0)) > Sagsbudget.[Indtægtsbudget]
-			   THEN Sagsbudget.[Indtægtsbudget]
-		  ELSE ISNULL(Sagsposter.[Bogført omkostning],0)/(1-(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0))
-	 END) - Sagsposter.[Faktureret indtægt]) AS 'Igangværende arbejder'
-    ,ISNULL(Sagsposter.[Faktureret indtægt],0) AS 'Faktureret indtægt'
-    ,ISNULL(Sagsposter.[Bogført omkostning],0) 'Bogført omkostning'
-    ,ISNULL(Sagsposter.[Ressource omkostning],0) AS 'Ressource omkostning'
-    ,ISNULL(Sagsposter.[Vare omkostning],0) AS 'Vare omkostning'
-    ,ISNULL(Sagsposter.[Andre omkostning],0) AS  'Andre omkostning'
-    ,ISNULL(Arbejdssedler.[Antal],0) AS 'Antal ikke lukkede arbejdssedler på sagen'
-	,ISNULL(Sagsposter.[Bogført omkostning],0)/NULLIF(Sagsbudget.[Omkostningsbudget],0) AS 'Færdiggørelsesgrad'
-	,ISNULL(Sagsposter.[Ressource omkostning],0)/NULLIF(Sagsposter.[Bogført omkostning],0) AS 'Ressourcer i %'
-	,ISNULL(Sagsposter.[Vare omkostning],0)/NULLIF(Sagsposter.[Bogført omkostning],0) AS 'Varer i %'
-	,ISNULL(Sagsposter.[Andre omkostning],0)/NULLIF(Sagsposter.[Bogført omkostning],0) AS 'Andet i %'
+    ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City]) AS 'Leveringsadresse'
+	,Sager.[Ship-to Post Code] AS 'Postnummer'
+    ,Medarbejdere.[Name] AS 'Ansvarlig'
+    ,SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) AS 'Slut-vurdering indtægt'
+    ,SUM(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'Slut-vurdering omkostninger'
+    ,SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'Slut-vurdering DB'
+	,ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0) AS 'Slut-vurdering DG'
+    ,SUM(ISNULL(Sagsposter.[Faktureret indtægt],0)) AS 'Faktureret indtægt'
+    ,SUM(ISNULL(Sagsposter.[Bogført omkostning],0)) 'Bogførte omkostninger'
+    ,SUM(ISNULL(Sagsposter.[Ressource omkostning],0)) AS 'Ressourceomkostninger'
+    ,SUM(ISNULL(Sagsposter.[Vare omkostning],0)) AS 'Vareomkostninger'
+    ,SUM(ISNULL(Sagsposter.[Andre omkostning],0)) AS  'Andre omkostninger'
+	,SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsposter.[Faktureret indtægt],0)) AS 'Igangværende arbejder'
+	,(CASE 
+        WHEN 
+            (SUM(ISNULL(Sagsposter.[Bogført omkostning],0)) = 0 AND SUM(ISNULL(Sagsbudget.[Omkostningsbudget],0)) = 0) 
+            OR ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0) >= 1 
+        THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+        ELSE 
+            CASE 
+                WHEN (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0)) > SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                ELSE (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0))
+            END 
+    END) AS 'Beregnet indtægt'
+	,(CASE 
+        WHEN 
+            (SUM(ISNULL(Sagsposter.[Bogført omkostning],0)) = 0 AND SUM(ISNULL(Sagsbudget.[Omkostningsbudget],0)) = 0) 
+            OR ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0) >= 1 
+        THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+        ELSE 
+            CASE 
+                WHEN (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0)) > SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                ELSE (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0))
+            END 
+    END) - SUM(ISNULL(Sagsposter.[Bogført omkostning],0)) AS 'Beregnet DB'
+	,ISNULL(((CASE 
+        WHEN 
+            (SUM(ISNULL(Sagsposter.[Bogført omkostning],0)) = 0 AND SUM(ISNULL(Sagsbudget.[Omkostningsbudget],0)) = 0) 
+            OR ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0) >= 1 
+        THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+        ELSE 
+            CASE 
+                WHEN (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0)) > SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                ELSE (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0))
+            END 
+    END) - SUM(ISNULL(Sagsposter.[Bogført omkostning],0)))/NULLIF((CASE 
+        WHEN 
+            (SUM(ISNULL(Sagsposter.[Bogført omkostning],0)) = 0 AND SUM(ISNULL(Sagsbudget.[Omkostningsbudget],0)) = 0) 
+            OR ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0) >= 1 
+        THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+        ELSE 
+            CASE 
+                WHEN (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0)) > SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                THEN SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                ELSE (SUM(ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(SUM(ISNULL(Sagsbudget.[Indtægtsbudget],0)),0),0)), 0))
+            END 
+    END),0),0) AS 'Beregnet DG'
+    ,ROUND(MAX(ISNULL(Arbejdssedler.[Antal],0)),0) AS 'Antal ikke lukkede arbejdssedler på sagen'
     FROM Sagsopgaver
+    LEFT JOIN [NRGIDW_Extract].[elcon].[DynamicsNavHyperlink] AS Link
+    ON Link.[Sagsnummer]=Sagsopgaver.[Job No_]
     Left JOIN Sagsposter
     ON  Sagsopgaver.[Job No_] = Sagsposter.[Job No_]
     INNER JOIN Sager
@@ -195,3 +182,17 @@
 		 CASE WHEN ISNULL(Sagsbudget.[Omkostningsbudget],0) = 0 THEN 0 ELSE 1 END +
 		 CASE WHEN ISNULL(Sagsposter.[Bogført omkostning],0) = 0 THEN 0 ELSE 1 END +
 		 CASE WHEN ISNULL(Sagsposter.[Faktureret indtægt],0) = 0 THEN 0 ELSE 1 END) <> 0
+	GROUP BY 
+	Sagsposter.[Uge]
+	,Sagsposter.[Uge-år]
+	,Sagsposter.[Måned-år]
+	,Sagsposter.[År]
+    ,Sager.[Job Posting Group]
+	,Sagsposter.[Afd]
+    ,Sager.[No_]
+    ,Sager.[Description]
+    ,Kunder.[Name]
+    ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City])
+	,Sager.[Ship-to Post Code]
+    ,Medarbejdere.[Name]
+	ORDER BY [År],[Uge],[Måned-år],[Afd],[Sagsnr.]
