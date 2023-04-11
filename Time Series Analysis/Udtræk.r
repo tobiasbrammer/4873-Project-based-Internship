@@ -8,7 +8,7 @@ library(ggplot2)
 library(ggthemes)
 library(ggpubr)
 library(feather)
-# install.packages(c("DBI", "RMySQL", "odbc", "dplyr", "tidyr", "lubridate", "ggplot2", "ggthemes", "ggpubr", "feather"))
+#install.packages(c("DBI", "RMySQL", "odbc", "dplyr", "tidyr", "lubridate", "ggplot2", "ggthemes", "ggpubr", "feather"))
 
 # Connect to the MySQL database: con
 
@@ -185,6 +185,7 @@ rm(list = ls())
 # Update R to most recent version
 update.packages(checkBuilt=TRUE, ask=FALSE)
 
+install.packages(c("dplyr", "tidyverse", "tidyr", "lubridate", "ggplot2", "ggthemes", "ggpubr", "feather"))
 
 library(dplyr)
 library(tidyverse)
