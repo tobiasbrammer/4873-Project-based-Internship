@@ -16,7 +16,9 @@ rm(list = ls())
 
 
 # Get directory of file
-dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+
+# Mac
+dir <- "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship /Time Series Analysis"
 
 setwd(dir)
 
@@ -197,7 +199,7 @@ library(ggpubr)
 library(feather)
 
 # Get directory of file
-dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+
 
 setwd(dir)
 
@@ -211,14 +213,20 @@ sJobNo <- sample(dfData$Sagsnr.,1)
 # Filter data with selected job number
 dfSample <- dfData %>% filter(Sagsnr. == sJobNo)
 
-# Create plot
-p <- ggplot(dfSample, aes(x = Dato, y = Beregnet_DB, color = Medarbejder)) +
+dfSample <- dfSample %>% mutate(
+    Dækningsbidrag = cumsum(Dækningsbidrag)
+)
+
+sBeskrivelse <- dfSample$Beskrivelse[1]
+sKunde <- dfSample$Kundenavn[1]
+
+# Plot the dækningsbidrag of the sample job
+ggplot(dfSample, aes(x = Dato, y = `Dækningsbidrag`)) +
   geom_line() +
-  geom_point() +
-  scale_color_manual(values = c("red", "blue", "green", "orange", "purple", "black", "brown", "pink", "grey", "yellow")) +
-  theme_economist() +
-  labs(title = paste0("Sagsnr.: ", sJobNo),
+  scale_fill_gradient(low = "red", high = "green") +
+  labs(title = paste("Dækningsbidrag for", sBeskrivelse, "for", sKunde),
        x = "Dato",
        y = "Dækningsbidrag",
-       color = "Medarbejder") +
-  theme(plot.title = element_text(hjust = 0.5))
+       fill = "Dækningsbidrag") +
+  theme_economist() +
+  theme(legend.position = "none")
