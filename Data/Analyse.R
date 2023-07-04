@@ -108,71 +108,8 @@ dBudgetVare <- tail(dfSample$Slut_vurdering_omkostninger,1) * sum(dfSample$Vareo
 # Calculate the days between start and end of project
 dStart <- as.numeric(head(dfSample$Dato,1))
 dEnd <- as.numeric(tail(dfSample$Dato,1))
-
 # Calculate the number of days between start and end of project
 nDays <- as.numeric(dEnd - dStart)
-
-dSkew <- 1.25
-dPeak <- 0.80
-
-# Calculate the theoretical s-curves according to \frac{1-\cos(\pi t^{s})+pt^{s}}{2+p}
-dfSample <- dfSample %>%
-  mutate(Dato_numeric = as.numeric(Dato), # convert Dato to numeric
-         TheoreticalScurveRes = dBudgetRes * (1-cos(pi*((Dato_numeric-dStart)/nDays)^(dSkew)) + dPeak *((Dato_numeric-dStart)/nDays)^(dSkew))/(2 + dPeak),
-         TheoreticalScurveVare = dBudgetVare * (1-cos(pi*((Dato_numeric-dStart)/nDays)^(dSkew)) + dPeak *((Dato_numeric-dStart)/nDays)^(dSkew))/(2 + dPeak),
-         TheoreticalScurve = dBudget * (1-cos(pi*((Dato_numeric-dStart)/nDays)^(dSkew)) + dPeak *((Dato_numeric-dStart)/nDays)^(dSkew))/(2 + dPeak)) # calculate theoretical s-curve
-
-# Plot theoretical s-curve for vare
-ggplot(dfSample, aes(x = Dato)) +
-  geom_line(aes(y = TheoreticalScurveVare, color = "TheoreticalScurveVare")) +
-  geom_line(aes(y = CumVareomkostninger, color = "CumVareomkostninger")) +
-  geom_ribbon(aes(ymin = CumVareomkostninger, ymax = TheoreticalScurveVare), fill = "grey", alpha = 0.5) +
-  labs(title = paste0("Theoretical s-curve for vareomkostninger"),
-       subtitle = paste0(dfSample$Sagsnr.,' - ',dfSample$Beskrivelse),
-       x = "Dato",
-       y = "Kumulative vareomkostninger") +
-  # Format y-axis with thousands separator and decimal point
-  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
-  theme_economist() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  scale_color_manual(values = col) + 
-  guides(color=guide_legend(title=NULL))
-
-# Ressources 
-ggplot(dfSample, aes(x = Dato)) +
-  geom_line(aes(y = TheoreticalScurveRes, color = "TheoreticalScurveRes")) +
-  geom_line(aes(y = CumRessourceomkostninger, color = "CumRessourceomkostninger")) +
-  geom_ribbon(aes(ymin = CumRessourceomkostninger, ymax = TheoreticalScurveRes), fill = "grey", alpha = 0.5) +
-  labs(title = paste0("Theoretical s-curve for ressourceomkostninger"),
-       subtitle = paste0(dfSample$Sagsnr.,' - ',dfSample$Beskrivelse),
-       x = "Dato",
-       y = "Kumulative ressourceomkostninger") +
-  # Format y-axis with thousands separator and decimal point
-  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
-  theme_economist() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  scale_color_manual(values = col) + 
-  guides(color=guide_legend(title=NULL))
-
-
-# Total costs
-ggplot(dfSample, aes(x = Dato)) +
-  geom_line(aes(y = TheoreticalScurve, color = "TheoreticalScurveRes")) +
-  geom_line(aes(y = CumOmkostninger, color = "CumRessourceomkostninger")) +
-  geom_ribbon(aes(ymin = CumOmkostninger, ymax = TheoreticalScurve), fill = "grey", alpha = 0.5) +
-  labs(title = paste0("Theoretical s-curve for omkostninger"),
-       subtitle = paste0(dfSample$Sagsnr.,' - ',dfSample$Beskrivelse),
-       x = "Dato",
-       y = "Kumulative omkostninger") +
-  # Format y-axis with thousands separator and decimal point
-  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
-  theme_economist() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  scale_color_manual(values = col) + 
-  guides(color=guide_legend(title=NULL))
 
 # Iteratively calculate the theoretical s-curve for different values of dSkew and dPeak until the 
 # theoretical s-curve fits the actual s-curve
@@ -192,8 +129,8 @@ SSE <- function(dSkew, dPeak) {
 }
 
 # For each value of dSkew, calculate the sum of squared errors for different values of dPeak
-dSkew <- seq(-1, 2, 0.001) # define the range of dSkew
-dPeak <- seq(-1, 2, 0.001) # define the range of dPeak
+dSkew <- seq(-1, 2, 0.01) # define the range of dSkew
+dPeak <- seq(-1, 2, 0.01) # define the range of dPeak
 
 # Initialize the matrix to store the sum of squared errors
 SSEMatrix <- matrix(NA, nrow = length(dSkew), ncol = length(dPeak))
@@ -208,7 +145,7 @@ for (i in 1:length(dSkew)) {
 }
 
 # Find the minimum sum of squared errors and the corresponding values of dSkew and dPeak
-minSSE <- min(SSEMatrix)
+minSSE <- min(SSEMatrix, na.rm = TRUE)
 minSSEIndex <- which(SSEMatrix == minSSE, arr.ind = TRUE)
 dSkewMinSSE <- dSkew[minSSEIndex[1]]
 dPeakMinSSE <- dPeak[minSSEIndex[2]]
@@ -221,7 +158,7 @@ dfSample <- dfSample %>%
          TheoreticalScurve = dBudget * (1-cos(pi*((Dato_numeric-dStart)/nDays)^(dSkewMinSSE)) + dPeakMinSSE *((Dato_numeric-dStart)/nDays)^(dSkewMinSSE))/(2 + dPeakMinSSE)) # calculate theoretical s-curve
 
 # Plot the theoretical s-curves
-# Plot theoretical s-curve for vare
+# Varer
 ggplot(dfSample, aes(x = Dato)) +
   geom_line(aes(y = TheoreticalScurveVare, color = "TheoreticalScurveVare")) +
   geom_line(aes(y = CumVareomkostninger, color = "CumVareomkostninger")) +
@@ -230,7 +167,6 @@ ggplot(dfSample, aes(x = Dato)) +
        subtitle = paste0(dfSample$Sagsnr.,' - ',dfSample$Beskrivelse),
        x = "Dato",
        y = "Kumulative vareomkostninger") +
-  # Format y-axis with thousands separator and decimal point
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_economist() +
   theme(plot.title = element_text(hjust = 0.5)) +
@@ -247,14 +183,12 @@ ggplot(dfSample, aes(x = Dato)) +
        subtitle = paste0(dfSample$Sagsnr.,' - ',dfSample$Beskrivelse),
        x = "Dato",
        y = "Kumulative ressourceomkostninger") +
-  # Format y-axis with thousands separator and decimal point
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_economist() +
   theme(plot.title = element_text(hjust = 0.5)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   scale_color_manual(values = col) + 
   guides(color=guide_legend(title=NULL))
-
 
 # Total costs
 ggplot(dfSample, aes(x = Dato)) +
@@ -265,7 +199,6 @@ ggplot(dfSample, aes(x = Dato)) +
        subtitle = paste0(dfSample$Sagsnr.,' - ',dfSample$Beskrivelse),
        x = "Dato",
        y = "Kumulative omkostninger") +
-  # Format y-axis with thousands separator and decimal point
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_economist() +
   theme(plot.title = element_text(hjust = 0.5)) +
