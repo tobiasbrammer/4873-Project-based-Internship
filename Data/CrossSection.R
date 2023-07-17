@@ -163,12 +163,5 @@ query <- dbSendQuery(con,sQuery)
 
 dfData <- dbFetch(query)
 
-#dfData$Dato <- as.Date(dfData$Dato)
-
-# Save dfData to as feather file
-install.packages(c("readxl","writexl")) 
-library(writexl)
-write_xlsx(dfData, "dfData.xlsx")
-
-feather::write_feather(dfData, "dfData.feather")
+feather::write_feather(dfData, "dfDataX.feather")
 dbClearResult(query)

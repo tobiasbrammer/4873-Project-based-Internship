@@ -9,7 +9,6 @@ library(ggthemes)
 library(ggpubr)
 library(feather)
 #install.packages(c("DBI", "RMySQL", "odbc", "dplyr", "tidyr", "lubridate", "ggplot2", "ggthemes", "ggpubr", "feather"))
-
 # Connect to the MySQL database: con
 
 rm(list = ls())
@@ -51,13 +50,14 @@ sQuery <- "
     Sagsopgaver.[Job No_]
     ,SUM(CASE Sagsbudget.[Line Type] WHEN 1 THEN Sagsbudget.[Line Amount (LCY)] WHEN 2 THEN [Line Amount (LCY)] ELSE 0 END) AS 'Indtægtsbudget'
     ,SUM(CASE Sagsbudget.[Line Type] WHEN 0 THEN Sagsbudget.[Total Cost (LCY)] WHEN 2 THEN [Total Cost (LCY)] ELSE 0 END) AS 'Omkostningsbudget'
+	,Sager.[Ending Date] AS 'Slutdato'
     FROM [NRGIDW_Extract].[elcon].[Job Planning Line Entry] AS Sagsbudget
     Inner JOIN Sagsopgaver
     ON CONCAT(Sagsbudget.[Job No_],Sagsbudget.[Job Task No_]) = CONCAT(Sagsopgaver.[Job No_],Sagsopgaver.[Job Task No_])
     INNER JOIN Sager
     ON Sager.[No_]=Sagsbudget.[Job No_]
     GROUP BY 
-    Sagsopgaver.[Job No_]),
+    Sagsopgaver.[Job No_], Sager.[Ending Date]),
 
     Arbejdssedler AS(
     SELECT 
@@ -112,6 +112,7 @@ sQuery <- "
     ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City]) AS 'Leveringsadresse'
 	,Sager.[Ship-to Post Code] AS 'Postnummer'
     ,Medarbejdere.[Name] AS 'Ansvarlig'
+	,Sagsbudget.Slutdato AS 'Slutdato'
     ,(ISNULL(Sagsbudget.[Indtægtsbudget],0)) AS 'Slut_vurdering_indtægt'
     ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'Slut_vurdering_omkostninger'
     ,((ISNULL(Sagsbudget.[Indtægtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'Slut_vurdering_DB'
