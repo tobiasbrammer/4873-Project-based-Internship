@@ -20,6 +20,8 @@ rm(list = ls())
 # Mac
 dir <- "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship /Time Series Analysis"
 
+dir <- "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Time Series Analysis"
+
 setwd(dir)
 
 con <- dbConnect(odbc::odbc(),
@@ -186,8 +188,6 @@ rm(list = ls())
 ### Read feather file ### 
 # Update R to most recent version
 update.packages(checkBuilt=TRUE, ask=FALSE)
-
-install.packages(c("dplyr", "tidyverse", "tidyr", "lubridate", "ggplot2", "ggthemes", "ggpubr", "feather"))
 
 library(dplyr)
 library(tidyverse)
