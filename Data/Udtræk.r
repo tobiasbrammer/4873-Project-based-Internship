@@ -72,18 +72,16 @@ sQuery <- "
 
     Sagsposter AS(
     SELECT
-  	 CAST(Sagsposter.[Posting Date] as date) AS 'Dato'
-  	,FORMAT(Sagsposter.[Posting Date], 'MM') AS 'Måned'
-  	,FORMAT(Sagsposter.[Posting Date], 'MM-yyyy') AS 'Måned-år'
-  	,FORMAT(Sagsposter.[Posting Date], 'yyyy') AS 'År'
-  	,Sagsposter.[Global Dimension 1 Code] AS 'Afd'
+  	FORMAT(Sagsposter.[Posting Date], 'MM') AS 'month'
+  	,FORMAT(Sagsposter.[Posting Date], 'MM-yyyy') AS 'month-year'
+  	,FORMAT(Sagsposter.[Posting Date], 'yyyy') AS 'year'
+  	,Sagsposter.[Global Dimension 1 Code] AS 'department'
     ,Sagsposter.[Job No_]
-    ,-SUM(CASE Sagsposter.[Entry Type] WHEN 1 THEN Sagsposter.[Line Amount (LCY)] ELSE 0 END) AS 'Faktureret indtægt'
-    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END) AS 'Bogført omkostning'
-    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN CASE Sagsposter.[Type] WHEN 0 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END ELSE 0 END) AS 'Ressource omkostning'
-    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN CASE Sagsposter.[Type] WHEN 1 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END ELSE 0 END) AS 'Vare omkostning'
-    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN CASE Sagsposter.[Type] WHEN 2 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END ELSE 0 END) AS  'Andre omkostning'
-    ,MAX(Sagsposter.[Posting Date]) AS 'Seneste bogføringsdato'														
+    ,-SUM(CASE Sagsposter.[Entry Type] WHEN 1 THEN Sagsposter.[Line Amount (LCY)] ELSE 0 END) AS 'revenue'
+    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END) AS 'costs'
+    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN CASE Sagsposter.[Type] WHEN 0 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END ELSE 0 END) AS 'costs_of_labor'
+    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN CASE Sagsposter.[Type] WHEN 1 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END ELSE 0 END) AS 'costs_of_goods'
+    ,SUM(CASE Sagsposter.[Entry Type] WHEN 0 THEN CASE Sagsposter.[Type] WHEN 2 THEN Sagsposter.[Total Cost (LCY)] ELSE 0 END ELSE 0 END) AS  'other_costs'												
     FROM [NRGIDW_Extract].[elcon].[Job Ledger Entry] AS Sagsposter
     INNER JOIN Sagsopgaver
     ON CONCAT(Sagsposter.[Job No_],Sagsposter.[Job Task No_]) = CONCAT(Sagsopgaver.[Job No_],Sagsopgaver.[Job Task No_])
@@ -96,60 +94,79 @@ sQuery <- "
     Sagsposter.[Job No_],
 	Sagsposter.[Posting Date],
 	Sagsposter.[Entry Type]
-	)
+	),
 
-    SELECT DISTINCT
-	 Sagsposter.[Dato]
-	,Sagsposter.[Måned]
-	,Sagsposter.[År]
-    ,Sager.[Job Posting Group] AS 'Sagsbogføringsgruppe'
-	,Sagsposter.[Afd]
-    ,Sager.[No_] AS 'Sagsnr.'
-	,CASE Sager.[Status] WHEN 2 THEN 'Igangværende' ELSE 'Afsluttet' END AS 'Status'
-    ,Sager.[Description] AS 'Beskrivelse'
-	,Kunder.[No_] AS 'Kundenummer'
-    ,Kunder.[Name] AS 'Kundenavn'
-    ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City]) AS 'Leveringsadresse'
-	,Sager.[Ship-to Post Code] AS 'Postnummer'
-    ,Medarbejdere.[Name] AS 'Ansvarlig'
-	,Sagsbudget.Slutdato AS 'Slutdato'
-    ,(ISNULL(Sagsbudget.[Indtægtsbudget],0)) AS 'Slut_vurdering_indtægt'
-    ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'Slut_vurdering_omkostninger'
-    ,((ISNULL(Sagsbudget.[Indtægtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'Slut_vurdering_DB'
-    ,(ISNULL(Sagsposter.[Faktureret indtægt],0)) AS 'Faktureret_indtægt'
-    ,(ISNULL(Sagsposter.[Bogført omkostning],0)) 'Bogførte_omkostninger'
-    ,(ISNULL(Sagsposter.[Ressource omkostning],0)) AS 'Ressourceomkostninger'
-    ,(ISNULL(Sagsposter.[Vare omkostning],0)) AS 'Vareomkostninger'
-    ,(ISNULL(Sagsposter.[Andre omkostning],0)) AS  'Andre_omkostninger'
-	,(ISNULL(Sagsposter.[Faktureret indtægt],0)) - (ISNULL(Sagsposter.[Bogført omkostning],0)) AS 'Dækningsbidrag'
-	,(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsposter.[Faktureret indtægt],0)) AS 'Budget_-_faktureret'
+	Regnskab AS (
+	SELECT 
+	[month],
+	[year],
+	[month-year],
+	[department],
+	[Job No_],
+	SUM(revenue) 'revenue',
+	SUM(costs) 'costs',
+	SUM(costs_of_labor) 'costs_of_labor',
+	SUM(costs_of_goods) 'costs_of_goods',
+	SUM(other_costs) 'other_costs'
+	FROM Sagsposter
+	GROUP BY
+	[month],
+	[year],
+	[month-year],
+	[department],
+	[Job No_])
+
+ SELECT DISTINCT
+	Sagsposter.[month]
+	,Sagsposter.[year]
+    ,Sager.[Job Posting Group] AS 'job_posting_group'
+	,Sagsposter.[department]
+    ,Sager.[No_] AS 'job_no'
+	,CASE Sager.[Status] WHEN 2 THEN 'wip' ELSE 'finished' END AS 'status'
+    ,Sager.[Description] AS 'description'
+	,Kunder.[No_] AS 'customer_no'
+    ,Kunder.[Name] AS 'customer'
+    ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City]) AS 'address'
+	,Sager.[Ship-to Post Code] AS 'zip'
+    ,Medarbejdere.[Name] AS 'responsible'
+	,CAST(Sagsbudget.Slutdato as date) AS 'end_date'
+    ,(ISNULL(Sagsbudget.[Indtægtsbudget],0)) AS 'budget_revenue'
+    ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
+    ,((ISNULL(Sagsbudget.[Indtægtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
+    ,(ISNULL(Sagsposter.[revenue],0)) AS 'revenue'
+    ,(ISNULL(Sagsposter.costs,0)) 'costs'
+    ,(ISNULL(Sagsposter.costs_of_labor,0)) AS 'costs_of_labor'
+    ,(ISNULL(Sagsposter.costs_of_goods,0)) AS 'costs_of_goods'
+    ,(ISNULL(Sagsposter.other_costs,0)) AS  'other_costs'
+	,(ISNULL(Sagsposter.revenue,0)) - (ISNULL(Sagsposter.costs,0)) AS 'contribution'
+	,(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsposter.[revenue],0)) AS 'budget-actual_revenue'
+	,(ISNULL(Sagsbudget.[Omkostningsbudget],0) - ISNULL(Sagsposter.costs,0)) AS 'budget-actual_costs'
 	,(CASE 
         WHEN 
-            ((ISNULL(Sagsposter.[Bogført omkostning],0)) = 0 AND (ISNULL(Sagsbudget.[Omkostningsbudget],0)) = 0) 
+            ((ISNULL(Sagsposter.costs,0)) = 0 AND (ISNULL(Sagsbudget.[Omkostningsbudget],0)) = 0) 
             OR ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0) >= 1 
         THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
         ELSE 
             CASE 
-                WHEN ((ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                WHEN ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
                 THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
-                ELSE ((ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0))
+                ELSE ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0))
             END 
-    END) AS 'Beregnet_indtægt'
+    END) AS 'estimated_revenue'
 	,(CASE 
         WHEN 
-            (Sagsposter.[Bogført omkostning] = 0 AND Sagsbudget.[Omkostningsbudget] = 0) 
+            (Sagsposter.costs = 0 AND Sagsbudget.[Omkostningsbudget] = 0) 
             OR ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0),0) >= 1 
         THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
         ELSE 
             CASE 
-                WHEN ((ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+                WHEN ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
                 THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
-                ELSE ((ISNULL(Sagsposter.[Bogført omkostning],0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0))
+                ELSE ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0))
             END 
-    END) - (ISNULL(Sagsposter.[Bogført omkostning],0)) AS 'Beregnet_DB'
-    ,(ISNULL(Arbejdssedler.[Antal],0)) AS 'Antal_ikke_lukkede_arbejdssedler_på_sagen'
-    FROM Sagsopgaver
-    Left JOIN Sagsposter
+    END) - (ISNULL(Sagsposter.costs,0)) AS 'estimated_contribution'
+    FROM Regnskab as Sagsposter
+    Left JOIN Sagsopgaver
     ON  Sagsopgaver.[Job No_] = Sagsposter.[Job No_]
     INNER JOIN Sager
     ON Sager.[No_]=Sagsopgaver.[Job No_]
@@ -164,9 +181,9 @@ sQuery <- "
     WHERE 1=1
 	AND (CASE WHEN ISNULL(Sagsbudget.[Indtægtsbudget],0) = 0 THEN 0 ELSE 1 END +
 		 CASE WHEN ISNULL(Sagsbudget.[Omkostningsbudget],0) = 0 THEN 0 ELSE 1 END +
-		 CASE WHEN ISNULL(Sagsposter.[Bogført omkostning],0) = 0 THEN 0 ELSE 1 END +
-		 CASE WHEN ISNULL(Sagsposter.[Faktureret indtægt],0) = 0 THEN 0 ELSE 1 END) <> 0
-	AND Sagsposter.[Dato] <> ''
+		 CASE WHEN ISNULL(Sagsposter.costs,0) = 0 THEN 0 ELSE 1 END +
+		 CASE WHEN ISNULL(Sagsposter.revenue,0) = 0 THEN 0 ELSE 1 END) <> 0
+	ORDER BY [year], [month] ASC
 "
 
 query <- dbSendQuery(con,sQuery)
@@ -178,3 +195,4 @@ dfData$Dato <- as.Date(dfData$Dato)
 # Save dfData to as feather file
 feather::write_feather(dfData, "dfData.feather")
 dbClearResult(query)
+
