@@ -117,7 +117,8 @@ sQuery <- "
 	[Job No_])
 
  SELECT DISTINCT
-	Sagsposter.[month]
+ CAST(CONCAT('01-',Sagsposter.[month],'-',Sagsposter.[year]) as date) 'date'
+	,Sagsposter.[month]
 	,Sagsposter.[year]
     ,Sager.[Job Posting Group] AS 'job_posting_group'
 	,Sagsposter.[department]
@@ -190,7 +191,7 @@ query <- dbSendQuery(con,sQuery)
 
 dfData <- dbFetch(query)
 
-dfData$Dato <- as.Date(dfData$Dato)
+dfData$date <- as.Date(dfData$date)
 
 # Save dfData to as feather file
 feather::write_feather(dfData, "dfData.feather")
