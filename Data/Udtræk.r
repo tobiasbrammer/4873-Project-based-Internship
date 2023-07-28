@@ -126,10 +126,10 @@ sQuery <- "
 	,CASE Sager.[Status] WHEN 2 THEN 'wip' ELSE 'finished' END AS 'status'
     ,Sager.[Description] AS 'description'
 	,Kunder.[No_] AS 'customer_no'
-    ,Kunder.[Name] AS 'customer'
+   -- ,Kunder.[Name] AS 'customer'
     ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City]) AS 'address'
 	,Sager.[Ship-to Post Code] AS 'zip'
-    ,Medarbejdere.[Name] AS 'responsible'
+    ,Medarbejdere.[No_] AS 'responsible'
 	,CAST(Sagsbudget.Slutdato as date) AS 'end_date'
     ,(ISNULL(Sagsbudget.[Indtægtsbudget],0)) AS 'budget_revenue'
     ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
@@ -194,6 +194,7 @@ dfData <- dbFetch(query)
 dfData$date <- as.Date(dfData$date)
 
 # Save dfData to as feather file
+write.csv(dfData,"dfData.csv")
 feather::write_feather(dfData, "dfData.feather")
 dbClearResult(query)
 
