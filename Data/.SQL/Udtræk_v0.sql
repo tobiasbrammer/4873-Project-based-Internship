@@ -1,26 +1,22 @@
     ;WITH Sager AS (
-    SELECT *
-    From [NRGIDW_Extract].[elcon].[Job] AS Sager
-    WHERE 1=1
- 	  AND Sager.[Status] IN (2,3)
-	  AND Sager.[Global Dimension 1 Code] IN ('515','505')
-    AND Sager.[Job Posting Group] IN ('FASTPRIS','PROJEKT')),
+        SELECT [No_], [Status], [Global Dimension 1 Code], [Job Posting Group], [Ending Date], [Description], [Bill-to Customer No_], [Person Responsible],
+           [Ship-to Address], [Ship-to Post Code], [Ship-to City]
+        FROM [NRGIDW_Extract].[elcon].[Job]
+        WHERE [Status] IN (2,3)
+        AND [Global Dimension 1 Code] IN ('515','505')
+        AND [Job Posting Group] IN ('FASTPRIS','PROJEKT')
+    ),
 
     Sagsopgaver AS(
-    SELECT
-	  Sagsopgaver.[Global Dimension 1 Code]
-    ,Sagsopgaver.[Job No_]
-    ,Sagsopgaver.[Job Task No_]
-    ,Sagsopgaver.[Description]
-    FROM [NRGIDW_Extract].[elcon].[Job Task] AS Sagsopgaver
-    INNER JOIN Sager
-    On Sager.[No_] = Sagsopgaver.[Job No_]
-    WHERE 1=1),
+        SELECT Sagsopgaver.[Global Dimension 1 Code], Sagsopgaver.[Job No_], Sagsopgaver.[Job Task No_], Sagsopgaver.[Description]
+        FROM [NRGIDW_Extract].[elcon].[Job Task] AS Sagsopgaver
+        INNER JOIN Sager ON Sager.[No_] = Sagsopgaver.[Job No_]
+    ),
 
     Sagsbudget AS(
     SELECT 
     Sagsopgaver.[Job No_]
-    ,SUM(CASE Sagsbudget.[Line Type] WHEN 1 THEN Sagsbudget.[Line Amount (LCY)] WHEN 2 THEN [Line Amount (LCY)] ELSE 0 END) AS 'Indtægtsbudget'
+    ,SUM(CASE Sagsbudget.[Line Type] WHEN 1 THEN Sagsbudget.[Line Amount (LCY)] WHEN 2 THEN [Line Amount (LCY)] ELSE 0 END) AS 'Indtaegtsbudget'
     ,SUM(CASE Sagsbudget.[Line Type] WHEN 0 THEN Sagsbudget.[Total Cost (LCY)] WHEN 2 THEN [Total Cost (LCY)] ELSE 0 END) AS 'Omkostningsbudget'
 	,Sager.[Ending Date] AS 'Slutdato'
     FROM [NRGIDW_Extract].[elcon].[Job Planning Line Entry] AS Sagsbudget
@@ -104,39 +100,37 @@
 	,Sager.[Ship-to Post Code] AS 'zip'
     ,Medarbejdere.[No_] AS 'responsible'
 	,CAST(Sagsbudget.Slutdato as date) AS 'end_date'
-    ,(ISNULL(Sagsbudget.[Indtægtsbudget],0)) AS 'budget_revenue'
+    ,(ISNULL(Sagsbudget.[Indtaegtsbudget],0)) AS 'budget_revenue'
     ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
-    ,((ISNULL(Sagsbudget.[Indtægtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
+    ,((ISNULL(Sagsbudget.[Indtaegtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
     ,(ISNULL(Sagsposter.[revenue],0)) AS 'revenue'
     ,(ISNULL(Sagsposter.costs,0)) 'costs'
     ,(ISNULL(Sagsposter.costs_of_labor,0)) AS 'costs_of_labor'
     ,(ISNULL(Sagsposter.costs_of_goods,0)) AS 'costs_of_goods'
     ,(ISNULL(Sagsposter.other_costs,0)) AS  'other_costs'
 	,(ISNULL(Sagsposter.revenue,0)) - (ISNULL(Sagsposter.costs,0)) AS 'contribution'
-	,(ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsposter.[revenue],0)) AS 'budget-actual_revenue'
-	,(ISNULL(Sagsbudget.[Omkostningsbudget],0) - ISNULL(Sagsposter.costs,0)) AS 'budget-actual_costs'
 	,(CASE 
         WHEN 
             ((ISNULL(Sagsposter.costs,0)) = 0 AND (ISNULL(Sagsbudget.[Omkostningsbudget],0)) = 0) 
-            OR ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0) >= 1 
-        THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+            OR ISNULL((ISNULL(Sagsbudget.[Indtaegtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtaegtsbudget]),0),0) >= 1 
+        THEN (ISNULL(Sagsbudget.[Indtaegtsbudget],0)) 
         ELSE 
             CASE 
-                WHEN ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
-                THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
-                ELSE ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0))
+                WHEN ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtaegtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtaegtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtaegtsbudget],0)) 
+                THEN (ISNULL(Sagsbudget.[Indtaegtsbudget],0)) 
+                ELSE ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtaegtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtaegtsbudget]),0),0)), 0))
             END 
     END) AS 'estimated_revenue'
 	,(CASE 
         WHEN 
             (Sagsposter.costs = 0 AND Sagsbudget.[Omkostningsbudget] = 0) 
-            OR ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtægtsbudget],0),0) >= 1 
-        THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
+            OR ISNULL((ISNULL(Sagsbudget.[Indtaegtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF(Sagsbudget.[Indtaegtsbudget],0),0) >= 1 
+        THEN (ISNULL(Sagsbudget.[Indtaegtsbudget],0)) 
         ELSE 
             CASE 
-                WHEN ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
-                THEN (ISNULL(Sagsbudget.[Indtægtsbudget],0)) 
-                ELSE ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtægtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtægtsbudget]),0),0)), 0))
+                WHEN ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtaegtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtaegtsbudget]),0),0)), 0)) > (ISNULL(Sagsbudget.[Indtaegtsbudget],0)) 
+                THEN (ISNULL(Sagsbudget.[Indtaegtsbudget],0)) 
+                ELSE ((ISNULL(Sagsposter.costs,0))/NULLIF((1-ISNULL((ISNULL(Sagsbudget.[Indtaegtsbudget],0) - ISNULL(Sagsbudget.[Omkostningsbudget],0))/NULLIF((Sagsbudget.[Indtaegtsbudget]),0),0)), 0))
             END 
     END) - (ISNULL(Sagsposter.costs,0)) AS 'estimated_contribution'
     FROM Regnskab as Sagsposter
@@ -153,7 +147,7 @@
     Left JOIN Arbejdssedler
     ON Arbejdssedler.[Source No_] = Sagsopgaver.[Job No_]
     WHERE 1=1
-	AND (CASE WHEN ISNULL(Sagsbudget.[Indtægtsbudget],0) = 0 THEN 0 ELSE 1 END +
+	AND (CASE WHEN ISNULL(Sagsbudget.[Indtaegtsbudget],0) = 0 THEN 0 ELSE 1 END +
 		 CASE WHEN ISNULL(Sagsbudget.[Omkostningsbudget],0) = 0 THEN 0 ELSE 1 END +
 		 CASE WHEN ISNULL(Sagsposter.costs,0) = 0 THEN 0 ELSE 1 END +
 		 CASE WHEN ISNULL(Sagsposter.revenue,0) = 0 THEN 0 ELSE 1 END) <> 0

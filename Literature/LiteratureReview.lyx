@@ -1,0 +1,370 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Literature Review
+\end_layout
+
+\begin_layout Section
+Do right PLS and do PLS right: A critical review of the application of PLS-SEM
+ in construction management research
+\end_layout
+
+\begin_layout Subsection*
+Abstract:
+\end_layout
+
+\begin_layout Standard
+The article discusses the use of Partial Least Squares Structural Equation
+ Modeling (PLS-SEM) in construction management research.
+ The technique has been increasingly adopted in this field over the last
+ two decades.
+ The paper critically reviews 139 articles that applied PLS-SEM from 2002
+ to 2019.
+ It highlights the use and misuse of PLS-SEM in the construction management
+ area and provides recommendations for its future application.
+\end_layout
+
+\begin_layout Subsection*
+Introduction:
+\end_layout
+
+\begin_layout Standard
+The introduction emphasizes the extensive application of Structural Equation
+ Modeling (SEM) across various research disciplines since the early 1980s.
+ PLS-SEM, an alternative to covariance-based SEM, focuses on maximizing
+ the explained variance of dependent latent constructs.
+ The application of PLS-SEM in construction management is relatively new.
+\end_layout
+
+\begin_layout Subsection*
+Methodology: 
+\end_layout
+
+\begin_layout Standard
+The research process was divided into three steps:
+\end_layout
+
+\begin_layout Enumerate
+An exploratory desktop search using the Scopus search engine.
+\end_layout
+
+\begin_layout Enumerate
+A targeted database search for key journals.
+\end_layout
+
+\begin_layout Enumerate
+Checking the contents of the articles to ensure selection quality.
+ 
+\end_layout
+
+\begin_layout Subsection*
+Critical Issues in the Application of PLS-SEM: 
+\end_layout
+
+\begin_layout Subsubsection*
+When to and why use PLS-SEM: 
+\end_layout
+
+\begin_layout Standard
+The reasons for choosing PLS-SEM include small sample size, non-normal data,
+ exploratory research, formative latent variables, addressing predictions,
+ and adopting complex models.
+\end_layout
+
+\begin_layout Standard
+The article critically examines the reasons for choosing Partial Least Squares
+ Structural Equation Modeling (PLS-SEM) in construction management research.
+ The reasons and motivations for adopting PLS-SEM are diverse, and the article
+ provides a comprehensive breakdown:
+\end_layout
+
+\begin_layout Itemize
+Small Sample Size (58.27% of the reviewed articles): PLS-SEM is particularly
+ suitable for datasets with a small sample size.
+ This is one of the most frequently cited reasons for its adoption.
+\end_layout
+
+\begin_layout Itemize
+Non-Normal Data (40.29% of the reviewed articles): PLS-SEM can handle datasets
+ that do not follow a normal distribution, making it a preferred choice
+ in such scenarios.
+\end_layout
+
+\begin_layout Itemize
+Initiation of Exploratory Research (31.65% of the reviewed articles): For
+ research that is exploratory in nature, PLS-SEM is often chosen due to
+ its ability to handle formative measures and its focus on prediction.
+\end_layout
+
+\begin_layout Itemize
+Formative Measures (16.55% of the reviewed articles): PLS-SEM is suitable
+ for datasets with formative measures, which are variables that form or
+ cause the latent variable.
+\end_layout
+
+\begin_layout Itemize
+Focus on Prediction (14.39% of the reviewed articles): PLS-SEM emphasizes
+ maximizing the explained variance of dependent latent constructs, making
+ it ideal for predictive modeling.
+\end_layout
+
+\begin_layout Itemize
+Model Complexity (14.39% of the reviewed articles): PLS-SEM can estimate
+ complex relationships and is often chosen for its ability to handle intricate
+ models.
+\end_layout
+
+\begin_layout Itemize
+Theory Development (7.19% of the reviewed articles): Some researchers adopt
+ PLS-SEM when their primary objective is to develop new theories.
+\end_layout
+
+\begin_layout Itemize
+Theory Validation (6.47% of the reviewed articles): PLS-SEM is also used
+ when the aim is to validate existing theories.
+\end_layout
+
+\begin_layout Itemize
+Use of Categorical Variables (5.04% of the reviewed articles): PLS-SEM can
+ handle categorical variables, making it suitable for datasets with such
+ variables.
+\end_layout
+
+\begin_layout Itemize
+Addressing the Mediation Effect (4.32% of the reviewed articles): PLS-SEM
+ is chosen when researchers aim to address or study the mediation effect
+ in their models.
+\end_layout
+
+\begin_layout Itemize
+Not Specified (7.91% of the reviewed articles): Some articles did not specify
+ any particular reason for using PLS-SEM.
+\end_layout
+
+\begin_layout Standard
+The article also mentions a study by Wen et al.
+ (2017) that compared CB-SEM with PLS-SEM approaches, citing all of the
+ above reasons in their research on construction management consultants.
+ Another study by Nadhim et al.
+ (2018) used PLS-SEM for the categorical variables in their model of safety
+ climate and performance.
+\end_layout
+
+\begin_layout Subsubsection*
+Topic coverage of research using PLS-SEM: 
+\end_layout
+
+\begin_layout Standard
+Topics include project organization, performance measurement, safety, health
+ and environment, procurement, success criteria, teamwork, risk management,
+ and goals, objectives, and strategies.
+ 
+\end_layout
+
+\begin_layout Standard
+The article classifies the selected articles into the most suitable topics
+ based on keywords and topic categories.
+ An article may fall into multiple groups if it covers more than one research
+ interest.
+ Based on the outcome of the keyword grouping and topic categories suggested
+ by Themistocleous and Wearne (2000), the following eight research topics
+ were identified:
+\end_layout
+
+\begin_layout Itemize
+Project Organization (40 articles):
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+This topic ranks first among the eight topics.
+ The majority of these articles used PLS-SEM to identify and evaluate specific
+ inter-organizational relationships.
+ The focus was on the relationships among stakeholders and how they are
+ influenced.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Performance Measurement (35 articles):
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+PLS-SEM was used as an analytical tool for performance measurement.
+ The effects of other topics (e.g., procurement and critical success factors)
+ on project performance were also assessed.
+ Safety, Health, and Environment (21 articles)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Procurement (21 articles)
+\end_layout
+
+\begin_layout Itemize
+Success Criteria (19 articles)
+\end_layout
+
+\begin_layout Itemize
+Teamwork (18 articles)
+\end_layout
+
+\begin_layout Itemize
+Risk Management (16 articles)
+\end_layout
+
+\begin_layout Itemize
+Goals, Objectives, and Strategies (16 articles)
+\end_layout
+
+\begin_layout Standard
+The other six topics (excluding Project Organization and Performance Measurement
+) received roughly the same amount of attention.
+ These eight topics highlight the appeal of applying PLS-SEM in construction
+ management research.
+ The article also notes that other topics in this area have received little
+ or no attention.
+\end_layout
+
+\begin_layout Standard
+This section underscores the diverse applications of PLS-SEM across various
+ topics in construction management research.
+\end_layout
+
+\begin_layout Subsubsection*
+Research design with PLS-SEM: 
+\end_layout
+
+\begin_layout Standard
+This section discusses the importance of selecting a proper sample size
+ and testing the characteristics of the sample data.
+ It also touches on the software applications used for PLS-SEM analysis.
+\end_layout
+
+\begin_layout Paragraph*
+Sampling size and characteristics 
+\end_layout
+
+\begin_layout Itemize
+Importance of Sample Size: Before data collection and analysis, it's crucial
+ to select an appropriate sample size to test the proposed model.
+ The sample size is a significant factor when considering the application
+ of PLS-SEM in construction management research.
+\end_layout
+
+\begin_layout Itemize
+Small Sample Size: One of the primary arguments for using PLS-SEM is its
+ suitability for small sample sizes.
+ When data doesn't meet the distributional assumptions of CB-SEM, researchers
+ might opt for PLS-SEM.
+\end_layout
+
+\begin_layout Itemize
+Sample Size Range: The reviewed articles had sample sizes ranging from 25
+ to 1387.
+ Notably, 29.50% (41 out of 139) of the models were derived from sample sizes
+ of fewer than 100 participants.
+\end_layout
+
+\begin_layout Itemize
+Sample Adequacy: Out of the reviewed articles, 120 (86.33%) addressed non-respons
+e bias, and 74 (53.24%) evaluated the content validity of their data collection
+ instruments.
+\end_layout
+
+\begin_layout Paragraph*
+Software application
+\end_layout
+
+\begin_layout Standard
+The section mentions the use of software applications for PLS-SEM analysis,
+ but the provided excerpts do not detail which specific software packages
+ were commonly used or preferred.
+\end_layout
+
+\begin_layout Standard
+The section emphasizes the importance of careful consideration in sample
+ size selection and the characteristics of the sample data when applying
+ PLS-SEM.
+ It also touches upon the software tools used for PLS-SEM analysis, though
+ specific details on the software are not provided in the excerpts.
+\end_layout
+
+\end_body
+\end_document
