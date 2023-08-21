@@ -8,5 +8,39 @@ At ELCON, the Contracting Division's risk assessments are currently subjective a
 
 ## Data Model
 Includes all relevant internal data.
+
 Includes financial KPI's of the customers such as levels of solvency.
+
 Includes macro economic KPI's such as interest rate and inflation rate.
+
+## Model Selection
+
+### Statistical
+
+- PLS
+
+### Bagging
+
+- Bagging
+- Random Forest
+- Extremely Randomized Trees
+
+### Boosting
+
+- AdaBoost
+
+- Gradient Boost
+
+- XGBoost
+
+### Naive Bayes
+
+- Bernoulli
+
+- Multinomial
+
+- Gaussian
+  
+### Stacking
+
+- Ensemble of Ensembles
