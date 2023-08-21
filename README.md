@@ -23,7 +23,7 @@ Includes macro economic KPI's such as interest rate and inflation rate.
 
 - Bagging
 - Random Forest
-- Extra Trees
+- Extremely Randomized Trees
 
 ### Boosting
 
