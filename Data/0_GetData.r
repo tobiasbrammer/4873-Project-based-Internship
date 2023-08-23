@@ -40,6 +40,13 @@ dfData$end_date[is.na(dfData$end_date)] <- dfData$date[is.na(dfData$end_date)]
 # If end_date is = 1753-01-01, set to date
 dfData$end_date[dfData$end_date == as.Date("1753-01-01")] <- dfData$date[dfData$end_date == as.Date("1753-01-01")]
 
+# Format date to dd-MM-yyyy
+dfData$date <- as.Date(format(dfData$date, "%d-%m-%Y"))
+dfData$end_date <- as.Date(format(dfData$end_date, "%d-%m-%Y"))
+
+colNum <- c('revenue','costs','costs_of_labor','costs_of_materials','other_costs','contribution','estimated_revenue','estimated_contribution')
+colNum <- names(dfData)[sapply(dfData, is.numeric)]
+dfData[,colNum] <- dfData[,colNum]/1000000
 
 # Save dfData to file
 write.csv(dfData,"dfData.csv")
