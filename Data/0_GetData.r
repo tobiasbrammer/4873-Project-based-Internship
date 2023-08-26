@@ -27,8 +27,8 @@ con <- dbConnect(odbc::odbc(),
 
 sQuery <- read_file("C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data/.SQL/Data_v0.sql")
 
-query <- dbSendQuery(con,sQuery)
-dfData <- dbFetch(query)
+
+dfData <- data.frame(dbFetch(dbSendQuery(con,sQuery)))
 
 # Set date as date
 dfData$date <- as.Date(dfData$date)
@@ -40,23 +40,23 @@ dfData$end_date[is.na(dfData$end_date)] <- dfData$date[is.na(dfData$end_date)]
 # If end_date is = 1753-01-01, set to date
 dfData$end_date[dfData$end_date == as.Date("1753-01-01")] <- dfData$date[dfData$end_date == as.Date("1753-01-01")]
 
-# Format date to dd-MM-yyyy
-dfData$date <- as.Date(format(dfData$date, "%d-%m-%Y"))
-dfData$end_date <- as.Date(format(dfData$end_date, "%d-%m-%Y"))
+colMil <- names(dfData)[sapply(dfData, is.numeric)]
+colMil <- colMil[!grepl("_share",colMil)]
 
-colNum <- c('revenue','costs','costs_of_labor','costs_of_materials','other_costs','contribution','estimated_revenue','estimated_contribution')
-colNum <- names(dfData)[sapply(dfData, is.numeric)]
-dfData[,colNum] <- dfData[,colNum]/1000000
+dfData[,colMil] <- dfData[,colMil]/1000000
+
+# Specify
+colFact <- c('month','year','job_posting_group','department','status','responsible')
+
+# Set factor
+dfData[,colFact] <- lapply(dfData[,colFact], factor)
 
 # Save dfData to file
 write.csv(dfData,"dfData.csv")
 write_parquet(dfData, "dfData.parquet")
-
-dbClearResult(query)
 
 # Close connection
 dbDisconnect(con)
 
 # End timer
 Sys.time() - start_time
-

@@ -3,7 +3,7 @@
            [Ship-to Address], [Ship-to Post Code], [Ship-to City]
         FROM [NRGIDW_Extract].[elcon].[Job]
         WHERE [Status] IN (2,3)
-        AND [Global Dimension 1 Code] IN ('515','505')
+        AND [Global Dimension 1 Code] IN ('515','505','421')
         AND [Job Posting Group] IN ('FASTPRIS','PROJEKT')
     ),
 
@@ -65,6 +65,7 @@
 	Sagsposter.[Entry Type]
 	),
 
+
 	Regnskab AS (
 	SELECT 
 	[month],
@@ -76,7 +77,11 @@
 	SUM(costs) 'costs',
 	SUM(costs_of_labor) 'costs_of_labor',
 	SUM(costs_of_materials) 'costs_of_materials',
-	SUM(other_costs) 'other_costs'
+	SUM(other_costs) 'other_costs',
+	SUM(SUM(costs_of_labor)) OVER(PARTITION BY [department] ORDER BY [year], [month]) / 
+        NULLIF(SUM(SUM(costs)) OVER(PARTITION BY [department] ORDER BY [year], [month]), 0) AS 'labor_cost_share',
+	SUM(SUM(costs_of_materials)) OVER(PARTITION BY [department] ORDER BY [year], [month]) / 
+       NULLIF(SUM(SUM(costs)) OVER(PARTITION BY [department] ORDER BY [year], [month]), 0) AS 'material_cost_share'
 	FROM Sagsposter
 	GROUP BY
 	[month],
@@ -90,13 +95,15 @@
 	,Sagsposter.[month]
 	,Sagsposter.[year]
     ,Sager.[Job Posting Group] AS 'job_posting_group'
-	,Sagsposter.[department]
+	,CASE
+		WHEN Sagsposter.[department]  = '421' THEN '505'
+		ELSE Sagsposter.[department]
+	END AS 'department'
     ,Sager.[No_] AS 'job_no'
 	,CASE Sager.[Status] WHEN 2 THEN 'wip' ELSE 'finished' END AS 'status'
     ,Sager.[Description] AS 'description'
 	,Kunder.[No_] AS 'customer'
 	,Kunder.[Post Code] AS 'customer_zip'
-   -- ,Kunder.[Name] AS 'customer'
     ,CONCAT(Sager.[Ship-to Address],' ',Sager.[Ship-to Post Code],' ',Sager.[Ship-to City]) AS 'address'
 	,Sager.[Ship-to Post Code] AS 'zip'
     ,Medarbejdere.[No_] AS 'responsible'
@@ -108,15 +115,22 @@
 			END
 		ELSE CAST(Sagsbudget.Slutdato AS date) 
 	END AS 'end_date'
-	--,CAST(Sagsbudget.Slutdato as date) AS 'end_date'
     ,(ISNULL(Sagsbudget.[Indtaegtsbudget],0)) AS 'budget_revenue'
     ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
     ,((ISNULL(Sagsbudget.[Indtaegtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
     ,(ISNULL(Sagsposter.[revenue],0)) AS 'revenue'
+	,(ISNULL(Sagsposter.[revenue],0))/(NULLIF(Sagsbudget.[Indtaegtsbudget],0)) AS 'revenue_budget_share'
     ,(ISNULL(Sagsposter.costs,0)) 'costs'
+	,(ISNULL(Sagsposter.costs,0))/(NULLIF(Sagsbudget.[Omkostningsbudget],0)) AS 'costs_budget_share'
     ,(ISNULL(Sagsposter.costs_of_labor,0)) AS 'costs_of_labor'
     ,(ISNULL(Sagsposter.costs_of_materials,0)) AS 'costs_of_materials'
     ,(ISNULL(Sagsposter.other_costs,0)) AS  'other_costs'
+	,(ISNULL(Sagsposter.labor_cost_share,0)) AS 'labor_cost_share'
+	,(ISNULL(Sagsposter.material_cost_share,0)) AS 'material_cost_share'
+	,(1-((ISNULL(Sagsposter.labor_cost_share,0))+(ISNULL(Sagsposter.material_cost_share,0)))) AS 'other_cost_share'
+	,(ISNULL(Sagsposter.labor_cost_share,0))*(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_labor_cost'
+	,(ISNULL(Sagsposter.material_cost_share,0))*(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_labor_cost'
+	,(1-((ISNULL(Sagsposter.labor_cost_share,0))+(ISNULL(Sagsposter.material_cost_share,0))))*(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_other_cost'
 	,(ISNULL(Sagsposter.revenue,0)) - (ISNULL(Sagsposter.costs,0)) AS 'contribution'
 	,(CASE 
         WHEN 

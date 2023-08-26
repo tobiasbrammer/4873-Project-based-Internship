@@ -4,10 +4,11 @@ loadfonts(device = "win")
 # Custom Theme #
 theme_elcon <- function(){
 
-    font <- "LM Roman 10"   #assign font family up front
+    font <- "sans"   #assign font family up front
     theme_economist_white() %+replace%    #replace elements we want to change
     theme(
       plot.background = element_blank(),
+      legend.background = element_blank(),
       plot.title = element_text(
                    family = font,
                    size = 20,

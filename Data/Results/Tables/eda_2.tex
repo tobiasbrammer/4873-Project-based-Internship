@@ -1,37 +1,45 @@
-% latex table generated in R 4.2.3 by xtable 1.8-4 package
-% Wed Aug 23 16:08:59 2023
+% latex table generated in R 4.2.2 by xtable 1.8-4 package
+% Fri Aug 25 11:22:54 2023
 \begin{sidewaystable}[ht]
 \centering
 \caption{Summary of Variables} 
-\begin{tabular}{rllrrrr}
+\begin{tabular}{rllrrrrr}
   \hline
- & Variable\_Name & Variable\_Type & Sample\_n & Missing\_Count & Per\_of\_Missing & No\_of\_distinct\_values \\ 
+ & Variable\_Name & Variable\_Type & Sample\_n & Missing\_Count & Per\_of\_Missing & No\_of\_distinct\_values & mean \\ 
   \hline
-1 & date & character & 3232 &   0 & 0.00 &  68 \\ 
-  2 & month & character & 3232 &   0 & 0.00 &  12 \\ 
-  3 & year & character & 3232 &   0 & 0.00 &   6 \\ 
-  4 & job\_posting\_group & character & 3232 &   0 & 0.00 &   2 \\ 
-  5 & department & character & 3232 &   0 & 0.00 &   3 \\ 
-  6 & job\_no & character & 3232 &   0 & 0.00 & 268 \\ 
-  7 & status & character & 3232 &   0 & 0.00 &   2 \\ 
-  8 & description & character & 3232 &   0 & 0.00 & 265 \\ 
-  9 & customer & character & 3232 &   0 & 0.00 & 135 \\ 
-  10 & customer\_zip & character & 3232 &   0 & 0.00 &  76 \\ 
-  11 & address & character & 3232 &   0 & 0.00 & 193 \\ 
-  12 & zip & character & 2851 & 381 & 0.12 &  88 \\ 
-  13 & responsible & character & 3232 &   0 & 0.00 &  44 \\ 
-  14 & end\_date & character & 3232 &   0 & 0.00 & 217 \\ 
-  15 & budget\_revenue & numeric & 3232 &   0 & 0.00 & 240 \\ 
-  16 & budget\_costs & numeric & 3232 &   0 & 0.00 & 230 \\ 
-  17 & budget\_contribution & numeric & 3232 &   0 & 0.00 & 241 \\ 
-  18 & revenue & numeric & 3232 &   0 & 0.00 & 1967 \\ 
-  19 & costs & numeric & 3232 &   0 & 0.00 & 3036 \\ 
-  20 & costs\_of\_labor & numeric & 3232 &   0 & 0.00 & 2361 \\ 
-  21 & costs\_of\_materials & numeric & 3232 &   0 & 0.00 & 2815 \\ 
-  22 & other\_costs & numeric & 3232 &   0 & 0.00 & 1654 \\ 
-  23 & contribution & numeric & 3232 &   0 & 0.00 & 3117 \\ 
-  24 & estimated\_revenue & numeric & 3232 &   0 & 0.00 & 2961 \\ 
-  25 & estimated\_contribution & numeric & 3232 &   0 & 0.00 & 3062 \\ 
+1 & date & Date & 3725 &   0 & 0.00 &  69 &  \\ 
+  2 & month & factor & 3725 &   0 & 0.00 &  12 &  \\ 
+  3 & year & factor & 3725 &   0 & 0.00 &   6 &  \\ 
+  4 & job\_posting\_group & factor & 3725 &   0 & 0.00 &   2 &  \\ 
+  5 & department & factor & 3725 &   0 & 0.00 &   2 &  \\ 
+  6 & job\_no & character & 3725 &   0 & 0.00 & 330 &  \\ 
+  7 & status & factor & 3725 &   0 & 0.00 &   2 &  \\ 
+  8 & description & character & 3725 &   0 & 0.00 & 327 &  \\ 
+  9 & customer & character & 3725 &   0 & 0.00 & 147 &  \\ 
+  10 & customer\_zip & character & 3725 &   0 & 0.00 &  80 &  \\ 
+  11 & address & character & 3725 &   0 & 0.00 & 218 &  \\ 
+  12 & zip & character & 3341 & 384 & 0.10 &  92 &  \\ 
+  13 & responsible & factor & 3725 &   0 & 0.00 &  48 &  \\ 
+  14 & end\_date & Date & 3725 &   0 & 0.00 & 247 &  \\ 
+  15 & budget\_revenue & numeric & 3725 &   0 & 0.00 & 285 & 8.39 \\ 
+  16 & budget\_costs & numeric & 3725 &   0 & 0.00 & 276 & 7.67 \\ 
+  17 & budget\_contribution & numeric & 3725 &   0 & 0.00 & 281 & 0.73 \\ 
+  18 & revenue & numeric & 3725 &   0 & 0.00 & 2215 & 0.29 \\ 
+  19 & revenue\_budget\_share & numeric & 3587 & 138 & 0.04 & 2259 & 0.06 \\ 
+  20 & costs & numeric & 3725 &   0 & 0.00 & 3476 & 0.27 \\ 
+  21 & costs\_budget\_share & numeric & 3566 & 159 & 0.04 & 3288 & 0.06 \\ 
+  22 & costs\_of\_labor & numeric & 3725 &   0 & 0.00 & 2666 & 0.09 \\ 
+  23 & costs\_of\_materials & numeric & 3725 &   0 & 0.00 & 3206 & 0.18 \\ 
+  24 & other\_costs & numeric & 3725 &   0 & 0.00 & 1800 & 0.00 \\ 
+  25 & labor\_cost\_share & numeric & 3725 &   0 & 0.00 & 199 & 0.33 \\ 
+  26 & material\_cost\_share & numeric & 3725 &   0 & 0.00 & 200 & 0.67 \\ 
+  27 & other\_cost\_share & numeric & 3725 &   0 & 0.00 & 200 & 0.01 \\ 
+  28 & budget\_labor\_cost & numeric & 3725 &   0 & 0.00 & 3566 & 2.51 \\ 
+  29 & budget\_labor\_cost.1 & numeric & 3725 &   0 & 0.00 & 3566 & 5.10 \\ 
+  30 & budget\_other\_cost & numeric & 3725 &   0 & 0.00 & 3566 & 0.06 \\ 
+  31 & contribution & numeric & 3725 &   0 & 0.00 & 3577 & 0.02 \\ 
+  32 & estimated\_revenue & numeric & 3725 &   0 & 0.00 & 3401 & 0.37 \\ 
+  33 & estimated\_contribution & numeric & 3725 &   0 & 0.00 & 3524 & 0.10 \\ 
    \hline
 \end{tabular}
 \end{sidewaystable}
