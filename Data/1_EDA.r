@@ -9,11 +9,12 @@ library(dplyr)
 library(tidyr)
 library(texreg)
 library(xtable)
+library(beepr)
 
 rm(list=ls())
 
 # Source GetData
-#source('0_GetData.r')
+source('0_GetData.r')
 # Source theme_elcon
 invisible(source('theme_elcon.R'))
 
@@ -24,6 +25,9 @@ setwd(dir)
 dfData <- data.frame(read_parquet("dfData.parquet"))
 
 names(dfData)
+
+# Unique job numbers
+unique(dfData$job_no)
 
 # Order by date
 dfData <- dfData %>% arrange(date)
@@ -73,6 +77,9 @@ dfDataX <- dfData %>%
   mutate_at(colNum, cumsum) %>%
   filter(date == max(date))
 
+library(writexl)
+write_xlsx(dfDataX,"./dfDataX.xlsx")
+
 # Remove outliers with Mahalanobis distance
 # Multivariate outlier detection ------------------------------------------
 multivariate_outlier <- function(df_id_plus_var,cut_off){
@@ -90,8 +97,10 @@ multivariate_outlier <- function(df_id_plus_var,cut_off){
   return(m_outliers)
 }
 
-mahaVar <- c('revenue','costs_of_labor','costs_of_materials','other_costs','estimated_revenue','labor_cost_share',
-             'budget_labor_cost')
+mahaVar <- c('revenue','costs_of_labor','costs_of_materials','other_costs',
+             'estimated_revenue','sales_estimate_cost','sales_estimate_sales',
+             'estimate_cost','estimate_sales','final_estimate_cost',
+             'final_estimate_sales')
 
 # Row number of dfDataX
 dfDataX$row <- 1:nrow(dfDataX)
@@ -215,6 +224,7 @@ dfSample <- dfData %>% filter(job_no == sJobNo)
 dfSample <- dfSample %>%
                 mutate(contribution_margin = contribution/revenue)
 
+beep()
 
 # Plot cumulative contribution
 ggplot(dfSample, aes(x = date, y = contribution)) +
@@ -228,19 +238,3 @@ ggplot(dfSample, aes(x = date, y = contribution)) +
   theme_elcon() +
   theme(plot.title = element_text(hjust = 0.5)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red")
-
-# Plot cumulative contribution margin
-ggplot(dfSample, aes(x = date, y = contribution_margin)) +
-  geom_line() +
-  labs(title = paste0("Contribution Margin for ", dfSample$job_no,' - ',dfSample$description),
-       subtitle = "Contribution Margin = Contribution/Revenue",
-       x = "Date",
-       y = "Contribution Margin") +
-  # Format y-axis with thousands separator and decimal point
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1
-                                                     ,big.mark = "."
-                                                     ,decimal.mark = ",")) +
-  theme_elcon() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red")
-

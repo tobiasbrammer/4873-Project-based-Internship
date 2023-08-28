@@ -4,6 +4,8 @@ library(odbc)
 library(lubridate)
 library(readr)
 library(arrow)
+library(beepr)
+
 
 rm(list = ls())
 
@@ -24,15 +26,14 @@ con <- dbConnect(odbc::odbc(),
                  user = paste0("NRGI","\"",Sys.getenv("USERNAME")),
                  Trusted_Connection = "True")
 
-
-sQuery <- read_file("C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data/.SQL/Data_v0.sql")
-
+sQuery <- paste(readLines(".SQL/Data_v2.sql"), collapse = "\n")
 
 dfData <- data.frame(dbFetch(dbSendQuery(con,sQuery)))
 
 # Set date as date
-dfData$date <- as.Date(dfData$date)
-dfData$end_date <- as.Date(dfData$end_date)
+dfData$date <- lubridate::dmy(dfData$date)
+dfData$end_date <- lubridate::dmy(dfData$end_date)
+
 
 # If end_date is NA set to date
 dfData$end_date[is.na(dfData$end_date)] <- dfData$date[is.na(dfData$end_date)]
