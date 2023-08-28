@@ -6,11 +6,9 @@ library(readr)
 library(arrow)
 library(beepr)
 
-
 rm(list = ls())
 
 # This script is used to extract data from the NRGIDW_Extract database and save it as a feather file.
-
 # Set start time
 start_time <- Sys.time()
 
@@ -34,7 +32,6 @@ dfData <- data.frame(dbFetch(dbSendQuery(con,sQuery)))
 dfData$date <- lubridate::dmy(dfData$date)
 dfData$end_date <- lubridate::dmy(dfData$end_date)
 
-
 # If end_date is NA set to date
 dfData$end_date[is.na(dfData$end_date)] <- dfData$date[is.na(dfData$end_date)]
 
@@ -43,7 +40,6 @@ dfData$end_date[dfData$end_date == as.Date("1753-01-01")] <- dfData$date[dfData$
 
 colMil <- names(dfData)[sapply(dfData, is.numeric)]
 colMil <- colMil[!grepl("_share",colMil)]
-
 dfData[,colMil] <- dfData[,colMil]/1000000
 
 # Specify

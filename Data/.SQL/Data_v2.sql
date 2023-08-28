@@ -197,12 +197,9 @@ set nocount on
 			END
 		ELSE FORMAT(CAST(Sagsbudget.Slutdato AS date), '01-MM-yyyy')
 	END AS 'end_date'
-	,ISNULL(Budget_final.sales_estimate_cost,0) 'sales_estimate_cost'
-	,ISNULL(Budget_final.sales_estimate_sales,0) 'sales_estimate_sales'
-	,ISNULL(Budget_final.estimate_cost,0) 'estimate_cost'
-	,ISNULL(Budget_final.estimate_sales,0) 'estimate_sales'
-	,ISNULL(Budget_final.final_estimate_cost,0) 'final_estimate_cost'
-	,ISNULL(Budget_final.final_estimate_sales,0) 'final_estimate_sales'
+	,ISNULL(Budget_final.sales_estimate_sales - Budget_final.sales_estimate_cost,0) 'sales_estimate_contribution'
+	,ISNULL(Budget_final.estimate_sales - Budget_final.estimate_cost,0) 'production_estimate_contribution'
+	,ISNULL(Budget_final.final_estimate_sales - Budget_final.final_estimate_cost,0) 'final_estimate_contribution'
     ,(ISNULL(Sagsbudget.[Indtaegtsbudget],0)) AS 'budget_revenue'
     ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
     ,((ISNULL(Sagsbudget.[Indtaegtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
@@ -259,8 +256,7 @@ set nocount on
 		 CASE WHEN ISNULL(Sagsposter.costs,0) = 0 THEN 0 ELSE 1 END +
 		 CASE WHEN ISNULL(Sagsposter.revenue,0) = 0 THEN 0 ELSE 1 END) <> 0
 	AND Sagsposter.[department] IN ('421','515','505')
-	
-	ORDER BY [year], [month] ASC
+	ORDER BY Sager.[No_], [year], [month] ASC
 
 
 	DROP TABLE #Sager, #Sagsbudget, #AllCombinations, #Arbejdssedler, #Budget, #Budget_final, #budget_v2, #Cal, #MaxArchive, #Regnskab, #Sagsopgaver, #Sagsposter

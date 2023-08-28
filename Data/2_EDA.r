@@ -14,26 +14,8 @@ library(beepr)
 rm(list=ls())
 
 # Source GetData
-source('0_GetData.r')
-# Source theme_elcon
-invisible(source('theme_elcon.R'))
+source('1_FeatureEngineering.r')
 
-dir <- "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-setwd(dir)
-
-# Get directory of file
-dfData <- data.frame(read_parquet("dfData.parquet"))
-
-names(dfData)
-
-# Unique job numbers
-unique(dfData$job_no)
-
-# Order by date
-dfData <- dfData %>% arrange(date)
-
-# use ExpReport
-# ExpReport(dfData, op_file = 'ExploratoryDataAnalysis.html')
 
 # Summary of Data
 eda_1 <- xtable(ExpData(data=dfData,type=1),
@@ -61,24 +43,12 @@ eda_3
 # Plot correlation matrix
 # Transform to cross-sectional data using group by job_no, calculate cumulative numbers, and select latest date
 colNum <- names(dfData)[sapply(dfData, is.numeric)]
-colNum <- colNum[!grepl("_share",colNum)]
-
-# Calculate days until end of job
-dfData <- dfData %>%
-  mutate(days_until_end = end_date - date)
-
-dfData$days_until_end[dfData$days_until_end < 0] <- 0
-dfData$days_until_end <- as.numeric(dfData$days_until_end)
-
 
 # Transform to cross-sectional data using group by job_no, calculate cumulative numbers, and select latest date
 dfDataX <- dfData %>%
   group_by(job_no) %>%
   mutate_at(colNum, cumsum) %>%
   filter(date == max(date))
-
-library(writexl)
-write_xlsx(dfDataX,"./dfDataX.xlsx")
 
 # Remove outliers with Mahalanobis distance
 # Multivariate outlier detection ------------------------------------------
@@ -98,9 +68,9 @@ multivariate_outlier <- function(df_id_plus_var,cut_off){
 }
 
 mahaVar <- c('revenue','costs_of_labor','costs_of_materials','other_costs',
-             'estimated_revenue','sales_estimate_cost','sales_estimate_sales',
-             'estimate_cost','estimate_sales','final_estimate_cost',
-             'final_estimate_sales')
+             'estimated_revenue','sales_estimate_contribution',
+             'production_estimate_contribution',
+             'final_estimate_contribution')
 
 # Row number of dfDataX
 dfDataX$row <- 1:nrow(dfDataX)
@@ -109,7 +79,7 @@ lOutlier <- multivariate_outlier(df_id_plus_var = dfDataX[,c('row',mahaVar)], cu
 
 # Get job numbers of outliers
 lOutlier$job_no <- dfDataX[lOutlier$ID,]$job_no
-
+lOutlier
 
 # Dummy in dfData if outlier by job_no
 dfData$outlier <- 0
@@ -129,17 +99,13 @@ tOutlier <- dfDataX %>%
 # Plot outliers by department
 ggplot(tOutlier, aes(x = reorder(department, n), y = n, fill = status)) +
   geom_bar(stat = 'identity') +
-  labs(title = '', x = 'Department', y = 'Count') +
+  labs(title = '', x = 'Department', y = 'Count',caption = "Source: ELCON A/S") +
   theme_elcon() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   scale_fill_manual(values = c(vColor[1], vColor[3])) +
   facet_wrap(~job_posting_group)
 # annotate figure with method
 ggsave('./Results/Figures/outlier.pdf', width = 10, height = 5)
-
-# Calculate contribution margin
-dfDataX$contribution_margin <- dfDataX$contribution / dfDataX$revenue
-dfDataX$budget_contribution_margin <- dfDataX$budget_contribution / dfDataX$budget_revenue
 
 eda_5 <- xtable(ExpData(data=dfDataX,type=1),
                 caption= "Summary of Cross-sectional Dataset", 
@@ -160,29 +126,38 @@ print(eda_7,file="./Results/Tables/eda_7.tex",append=F,
       caption.placement="top",floating = T, floating.environment = "sidewaystable")
 eda_7
 
+dfDataX <- dfDataX %>%
+  mutate(contribution_margin = contribution / revenue,
+         budget_contribution_margin = budget_contribution / budget_revenue)
+
+# If infinite set to 0
+dfDataX$contribution_margin[is.infinite(dfDataX$contribution_margin)] <- NA
+dfDataX$budget_contribution_margin[is.infinite(dfDataX$budget_contribution_margin)] <- NA
+
 # Plot histogram of contribution margin
 ggplot(dfDataX, aes(x = contribution_margin)) +
   geom_histogram(bins = 50, fill = vColor[1]) +
-  labs(title = '', x = 'Contribution Margin', y = 'Count') +
+  labs(title = '', x = 'Contribution Margin', y = 'Count',caption = "Source: ELCON A/S") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
   theme_elcon()
 ggsave('./Results/Figures/margin.pdf', width = 10, height = 5)
 
 ggplot(dfDataX, aes(x = budget_contribution_margin)) +
   geom_histogram(bins = 50, fill = vColor[1]) +
-  labs(title = '', x = 'Budget Contribution Margin', y = 'Count') +
+  labs(title = '', x = 'Budget Contribution Margin', y = 'Count',caption = "Source: ELCON A/S") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
   theme_elcon()
 ggsave('./Results/Figures/budget_margin.pdf', width = 10, height = 5)
 
 dfCorr <- dfDataX %>%
   mutate(across(everything(), ~replace(., is.infinite(.), NA))) %>%
-  na.omit() %>%
   select_if(is.numeric)
 
-# Omit job_no
-dfCorr <- dfCorr[,!names(dfCorr) %in% c('job_no')] %>%
-          cor()
+# Omit job_no from correlation matrix
+dfCorr <- dfCorr[,!grepl('job_no',names(dfCorr))]
+
+# Calculate correlation matrix
+dfCorr <- cor(dfCorr, use = 'pairwise.complete.obs')
 
 # Reframe data
 dfCorr <- dfCorr %>%
@@ -196,10 +171,11 @@ ggplot(dfCorr, aes(x = Var1, y = Var2, fill = value)) +
   scale_fill_gradient2(low = vColor[3], mid = "white", high = vColor[4], midpoint = 0) +
   theme_elcon() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = '', x = '', y = '') +
-  geom_text(aes(label = round(value, 2)), color = 'black', size = 3) +
+  labs(title = '', x = '', y = '',caption = "Source: ELCON A/S") +
+  #geom_text(aes(label = round(value, 2)), color = 'black', size = 3) +
   theme(plot.title = element_text(hjust = 0.5))
-ggsave('./Results/Figures/corr.pdf', width = 10, height = 10)
+ggsave('./Results/Figures/corr.pdf', width = 20, height = 20)
+ggsave('./Results/Presentation/corr.svg', width = 20, height = 20)
 
 # Plot histogram of colCum variables in facet
 dfDataXfacet <- dfDataX %>%
@@ -207,34 +183,60 @@ dfDataXfacet <- dfDataX %>%
 
 ggplot(dfDataXfacet, aes(x = value)) +
     geom_histogram(bins = 50, fill = vColor[1]) +
-    labs(title = '', x = 'Value', y = 'Count') +
+    labs(title = '', x = 'Value', y = 'Count',caption = "Source: ELCON A/S") +
     scale_x_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
     facet_wrap(~variable, scales = 'free') +
     theme_elcon()
-ggsave("./Results/Figures/facet.pdf", width = 10, height = 10)
+ggsave("./Results/Figures/facet.pdf", width = 20, height = 20)
+ggsave("./Results/Presentation/facet.svg", width = 20, height = 20)
 
-# Sample
 # Select random job number
-set.seed(1542)
-
+set.seed(156342)
 sJobNo <- sample(dfData$job_no,1)
 # Filter data with selected job number
 dfSample <- dfData %>% filter(job_no == sJobNo)
 
-dfSample <- dfSample %>%
-                mutate(contribution_margin = contribution/revenue)
-
-beep()
-
-# Plot cumulative contribution
-ggplot(dfSample, aes(x = date, y = contribution)) +
-  geom_line() +
-  labs(title = paste0("Cumulative contribution for ", dfSample$job_no,' - ',dfSample$description),
-       subtitle = "Contribution = Revenue - Costs",
-       x = "Date",
-       y = "Cumulative contribution (MDKK)") +
-  # Format y-axis with thousands separator and decimal point
+# Plot cost_scurve for selected job number
+ggplot(dfSample, aes(x = date)) +
+  geom_line(aes(y = costs_scurve, color = vColor[1])) +
+  geom_line(aes(y = costs_cumsum, color = vColor[3])) +
+  geom_line(aes(y = costs_scurve_diff, color = vColor[2])) +
+    scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
+                         labels = c('S-curve', 'Realized', 'Difference')) +
+  labs(title = paste0('Costs for Job Number: ', sJobNo), x = 'Date', y = 'Costs',caption = "Source: ELCON A/S") +
+  scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
-  theme_elcon() +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red")
+  theme_elcon()
+ggsave("./Results/Figures/costs.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/costs.svg", width = 10, height = 5)
+
+# Plot revenue_scurve for selected job number
+ggplot(dfSample, aes(x = date)) +
+  geom_line(aes(y = revenue_scurve, color = vColor[1])) +
+  geom_line(aes(y = revenue_cumsum, color = vColor[3])) +
+  geom_line(aes(y = revenue_scurve_diff, color = vColor[2])) +
+  scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
+                     labels = c('S-curve', 'Realized', 'Difference')) +
+  labs(title = paste0('Revenue for Job Number: ', sJobNo), x = 'Date', y = 'Revenue',
+       caption = "Source: ELCON A/S") +
+  scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
+ggsave("./Results/Figures/revenue.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/revenue.svg", width = 10, height = 5)
+
+
+# Plot revenue_scurve_diff, costs_scurve_diff, and contribution_scurve_diff for selected job number
+ggplot(dfSample, aes(x = date)) +
+  geom_line(aes(y = revenue_scurve_diff, color = vColor[1])) +
+  geom_line(aes(y = costs_scurve_diff, color = vColor[3])) +
+  geom_line(aes(y = contribution_scurve_diff, color = vColor[2])) +
+  scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
+                     labels = c('Revenue', 'Costs', 'Contribution')) +
+  labs(title = paste0('Difference between S-curve and Realized for Job Number: ', sJobNo), x = 'Date', y = 'Difference',
+       caption = "Source: ELCON A/S") +
+  scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
+ggsave("./Results/Figures/diff.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/diff.svg", width = 10, height = 5)

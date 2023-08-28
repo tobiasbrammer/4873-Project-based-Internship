@@ -36,7 +36,7 @@ dfSample <- dfData_cumsum %>% filter(job_no == sJobNo)
 
 
 # Plot cumulative contribution
-ggplot(dfSample, aes(x = date, y = contribution)) +
+ggplot(dfSample, aes(x = date, y = )) +
   geom_line() +
   labs(title = paste0("Cumulative contribution for ", dfSample$job_no,' - ',dfSample$description),
        subtitle = "Contribution = Revenue - Costs",
@@ -44,7 +44,7 @@ ggplot(dfSample, aes(x = date, y = contribution)) +
        y = "Cumulative contribution") +
   # Format y-axis with thousands separator and decimal point
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
-  theme_economist() +
+  theme_elcon() +
   theme(plot.title = element_text(hjust = 0.5)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red")
 

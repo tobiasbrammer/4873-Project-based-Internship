@@ -9,6 +9,7 @@ theme_elcon <- function(){
     theme(
       plot.background = element_blank(),
       legend.background = element_blank(),
+      legend.box.background = element_blank(),
       plot.title = element_text(
                    family = font,
                    size = 20,
