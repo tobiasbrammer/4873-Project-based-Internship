@@ -192,6 +192,7 @@ ggsave("./Results/Presentation/facet.svg", width = 20, height = 20)
 
 # Select random job number
 set.seed(156342)
+sJobNo <- 'S283202'
 sJobNo <- sample(dfData$job_no,1)
 # Filter data with selected job number
 dfSample <- dfData %>% filter(job_no == sJobNo)
@@ -224,6 +225,21 @@ ggplot(dfSample, aes(x = date)) +
   theme_elcon()
 ggsave("./Results/Figures/revenue.pdf", width = 10, height = 5)
 ggsave("./Results/Presentation/revenue.svg", width = 10, height = 5)
+
+# Plot contribution_scurve for selected job number
+ggplot(dfSample, aes(x = date)) +
+  geom_line(aes(y = contribution_scurve, color = vColor[1])) +
+  geom_line(aes(y = contribution_cumsum, color = vColor[3])) +
+  geom_line(aes(y = contribution_scurve_diff, color = vColor[2])) +
+  scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
+                     labels = c('S-curve', 'Realized', 'Difference')) +
+  labs(title = paste0('Contribution for Job Number: ', sJobNo), x = 'Date', y = 'Contribution',
+       caption = "Source: ELCON A/S") +
+  scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
+ggsave("./Results/Figures/contribution.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/contribution.svg", width = 10, height = 5)
 
 
 # Plot revenue_scurve_diff, costs_scurve_diff, and contribution_scurve_diff for selected job number
