@@ -14,7 +14,7 @@ library(readxl)
 
 rm(list=ls())
 
-# Source GetData
+# Source GetData.
 source('0_GetData.r')
 
 # Source theme_elcon
