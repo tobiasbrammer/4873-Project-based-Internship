@@ -11,6 +11,7 @@ library(texreg)
 library(xtable)
 library(beepr)
 library(readxl)
+library(MASS)
 
 rm(list=ls())
 
@@ -54,6 +55,7 @@ eda_3
 colNum <- names(dfData)[sapply(dfData, is.numeric)]
 colNum <- colNum[!grepl("_share",colNum)]
 colCumSum <- colNum[!grepl("budget_",colNum)]
+
 
 # For each variable in colCumSum create a new variable with cumulative sum by job_no. Name of new variable is the same as the old variable with "_cumsum" added
 dfData <- dfData %>%
@@ -148,4 +150,21 @@ dfData <- left_join(dfData,dfCvr,by="cvr")
 dfData$customer_equity_ratio[is.na(dfData$customer_equity_ratio)] <- mean(dfData$customer_equity_ratio, na.rm = T)
 dfData$customer_quick_ratio[is.na(dfData$customer_quick_ratio)] <- mean(dfData$customer_quick_ratio, na.rm = T)
 
+# Replace NaN & Inf with NA
+dfData <- replace(dfData, is.infinite(as.matrix(dfData)), NA)
+dfData <- replace(dfData, is.nan(as.matrix(dfData)), NA)
+
+dfData[is.na(dfData) | dfData == "Inf"] <- NA
+
+# Define risk as the log of the ratio between the realized and the S-curve. Omit NaN
+dfData <- dfData %>%
+  mutate(contribution_risk = boxcox(lm(contribution_cumsum/contribution_scurve ~ 1, na.action=na.exclude)),
+         revenue_risk = boxcox(lm(revenue_cumsum/revenue_scurve ~ 1, na.action=na.exclude)),
+         material_cost_risk = boxcox(lm(material_cost_cumsum/costs_scurve ~ 1, na.action=na.exclude)),
+         labor_cost_risk = boxcox(lm(labor_cost_cumsum/costs_scurve ~ 1, na.action=na.exclude)),
+         risk = log(contribution_risk + revenue_risk + material_cost_risk + labor_cost_risk + 1, na.action=na.exclude)) %>%
+  filter(!is.nan(risk))
+
 beep()
+
+boxcox(lm(dfData$contribution_cumsum/dfData$contribution_scurve ~ 1, na.action=na.exclude))

@@ -11,11 +11,13 @@ library(texreg)
 library(xtable)
 library(beepr)
 
-rm(list=ls())
-
 # Source GetData
 source('1_FeatureEngineering.r')
 
+rm(list=ls()[!grepl("dfData",ls())])
+
+# Source theme_elcon
+invisible(source('theme_elcon.R'))
 
 # Summary of Data
 eda_1 <- xtable(ExpData(data=dfData,type=1),
@@ -193,7 +195,7 @@ ggsave("./Results/Presentation/facet.svg", width = 20, height = 20)
 # Select random job number
 set.seed(156342)
 sJobNo <- 'S283202'
-sJobNo <- sample(dfData$job_no,1)
+#sJobNo <- sample(dfData$job_no,1)
 # Filter data with selected job number
 dfSample <- dfData %>% filter(job_no == sJobNo)
 
@@ -256,3 +258,30 @@ ggplot(dfSample, aes(x = date)) +
   theme_elcon()
 ggsave("./Results/Figures/diff.pdf", width = 10, height = 5)
 ggsave("./Results/Presentation/diff.svg", width = 10, height = 5)
+
+# Plot revenue_scurve_diff, costs_scurve_diff, and contribution_scurve_diff for selected job number
+ggplot(dfSample, aes(x = date)) +
+  geom_line(aes(y = billable_hours_qty, color = vColor[1])) +
+  geom_line(aes(y = earned_time_off_qty, color = vColor[3])) +
+  geom_line(aes(y = over_time_qty, color = vColor[2])) +
+  geom_line(aes(y = allowance_qty, color = vColor[5])) +
+  scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2],vColor[5]),
+                     labels = c('Billable', 'Earned time off', 'Over-time','Allowance')) +
+  labs(title = paste0('Difference between S-curve and Realized for Job Number: ', sJobNo), x = 'Date', y = 'Hours',
+       caption = "Source: ELCON A/S") +
+  scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
+ggsave("./Results/Figures/hours.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/hours.svg", width = 10, height = 5)
+
+# Plot risk
+ggplot(dfSample, aes(x = date)) +
+  geom_line(aes(y = risk, color = vColor[1])) +
+  scale_color_manual(name = '', values = c(vColor[1]),
+                     labels = c('Risk')) +
+  labs(title = paste0('Risk for Job Number: ', sJobNo), x = 'Date', y = 'Risk',
+       caption = "Source: ELCON A/S") +
+  scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
