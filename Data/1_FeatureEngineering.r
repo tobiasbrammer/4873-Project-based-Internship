@@ -154,7 +154,10 @@ dfData$customer_quick_ratio[is.na(dfData$customer_quick_ratio)] <- mean(dfData$c
 dfData <- replace(dfData, is.infinite(as.matrix(dfData)), NA)
 dfData <- replace(dfData, is.nan(as.matrix(dfData)), NA)
 
-dfData[is.na(dfData) | dfData == "Inf"] <- NA
+# Replace NaN with NA
+dfData <- replace(dfData, is.nan(as.matrix(dfData)), NA)
+# Replace Inf with NA
+dfData <- replace(dfData, is.infinite(as.matrix(dfData)), NA)
 
 # Define risk as the log of the ratio between the realized and the S-curve. Omit NaN
 dfData <- dfData %>%

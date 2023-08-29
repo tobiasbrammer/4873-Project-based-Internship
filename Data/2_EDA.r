@@ -8,8 +8,10 @@ library(svglite)
 library(dplyr)
 library(tidyr)
 library(texreg)
-library(xtable)
+library(knitr)
+library(kableExtra)
 library(beepr)
+
 
 # Source GetData
 source('1_FeatureEngineering.r')
@@ -20,25 +22,36 @@ rm(list=ls()[!grepl("dfData",ls())])
 invisible(source('theme_elcon.R'))
 
 # Summary of Data
-eda_1 <- xtable(ExpData(data=dfData,type=1),
-            caption= "Summary of Dataset", 
-            align=c("l","l","c"), include.rownames=F)
-print(eda_1,file="./Results/Tables/eda_1.tex",append=F,
-      caption.placement="top")
+eda_1 <- kable(ExpData(data=dfData,type=1), format = "latex", booktabs = T, longtable = T, caption = "Summary of Dataset",
+      linesep = "") %>%
+      kable_styling(font_size = 9, latex_options = c("repeat_header"),repeat_header_text = "",
+                    full_width = F)
+writeLines(eda_1, "./Results/Tables/eda_1.tex")
 eda_1
 
+
 # Summary of Variables
-eda_2 <- xtable(ExpData(data=dfData,type=2,fun = c('mean'))[,-1],
-              caption= "Summary of Variables", include.rownames=F)
-print(eda_2,file="./Results/Tables/eda_2.tex",append=F,
-      caption.placement="top",floating = T, floating.environment = "sidewaystable")
+eda_2 <- kable(ExpData(data=dfData,type=2,fun = c('mean'))[,-1],
+               format = "latex", booktabs = T, longtable = T, caption = "Summary of Variables",
+      linesep = "") %>% kableExtra::landscape() %>%
+      kable_styling(font_size = 9, bootstrap_options = c("striped", "hover", "condensed"),
+                    latex_options = c("repeat_header"),repeat_header_text = "",
+                    full_width = F)
+writeLines(eda_2, "./Results/Tables/eda_2.tex")
 eda_2
 
+
+
+# 'Summary of Categorical Variables by Deparment''
+
 # Summary of Categorical Variables
-eda_3 <- xtable(ExpCTable(dfData,Target="department",margin=1,clim=10,nlim=3,round=2,bin=NULL,per=T),
-                caption= "Summary of Categorical Variables by Deparment", include.rownames=F)
-print(eda_3,file="./Results/Tables/eda_3.tex",append=F,
-      caption.placement="top",floating = T, floating.environment = "sidewaystable")
+eda_3 <- kable(ExpCTable(dfData,Target="department",margin=1,clim=10,nlim=3,round=2,bin=NULL,per=T),
+               format = "latex", booktabs = T, longtable = T, caption = "Summary of Categorical Variables by Deparment",
+      linesep = "") %>%
+      kable_styling(font_size = 9, latex_options = c("repeat_header"),repeat_header_text = "",
+                    full_width = F)
+writeLines(eda_3, "./Results/Tables/eda_3.tex")
+
 eda_3
 
 ### Explore numeric variables ###
@@ -109,24 +122,39 @@ ggplot(tOutlier, aes(x = reorder(department, n), y = n, fill = status)) +
 # annotate figure with method
 ggsave('./Results/Figures/outlier.pdf', width = 10, height = 5)
 
-eda_5 <- xtable(ExpData(data=dfDataX,type=1),
-                caption= "Summary of Cross-sectional Dataset", 
-                align=c("l","l","c"), include.rownames=F)
-print(eda_5,file="./Results/Tables/eda_5.tex",append=F,
-      caption.placement="top")
+# Summary of Data
+eda_5 <- kable(ExpData(data=dfDataX,type=1), format = "latex", booktabs = T, longtable = T, caption = "Summary of Dataset",
+      linesep = "") %>%
+      kable_styling(font_size = 9, latex_options = c("repeat_header"),repeat_header_text = "",
+                    full_width = F)
+writeLines(eda_5, "./Results/Tables/eda_5.tex")
 eda_5
 
-eda_6 <- xtable(ExpData(data=dfDataX,type=2,fun = c('mean'))[,-1],
-                caption= "Summary of Cross-sectional Variables", include.rownames=F)
-print(eda_6,file="./Results/Tables/eda_6.tex",append=F,
-      caption.placement="top",floating = T, floating.environment = "sidewaystable")
+
+# Summary of Variables
+eda_6 <- kable(ExpData(data=dfDataX,type=2,fun = c('mean'))[,-1],
+               format = "latex", booktabs = T, longtable = T, caption = "Summary of Variables",
+      linesep = "") %>% kableExtra::landscape() %>%
+      kable_styling(font_size = 9, bootstrap_options = c("striped", "hover", "condensed"),
+                    latex_options = c("repeat_header"),repeat_header_text = "",
+                    full_width = F)
+writeLines(eda_6, "./Results/Tables/eda_6.tex")
 eda_6
 
-eda_7 <- xtable(ExpCTable(dfDataX,Target="department",margin=1,clim=10,nlim=3,round=2,bin=NULL,per=T),
-                caption= "Summary of Cross-sectional Categorical Variables by Deparment", include.rownames=F)
-print(eda_7,file="./Results/Tables/eda_7.tex",append=F,
-      caption.placement="top",floating = T, floating.environment = "sidewaystable")
+
+
+# 'Summary of Categorical Variables by Deparment''
+
+# Summary of Categorical Variables
+eda_7 <- kable(ExpCTable(dfDataX,Target="department",margin=1,clim=10,nlim=3,round=2,bin=NULL,per=T),
+               format = "latex", booktabs = T, longtable = T, caption = "Summary of Categorical Variables by Deparment",
+      linesep = "") %>%
+      kable_styling(font_size = 9, latex_options = c("repeat_header"),repeat_header_text = "",
+                    full_width = F)
+writeLines(eda_7, "./Results/Tables/eda_7.tex")
+
 eda_7
+
 
 dfDataX <- dfDataX %>%
   mutate(contribution_margin = contribution / revenue,
@@ -179,18 +207,6 @@ ggplot(dfCorr, aes(x = Var1, y = Var2, fill = value)) +
 ggsave('./Results/Figures/corr.pdf', width = 20, height = 20)
 ggsave('./Results/Presentation/corr.svg', width = 20, height = 20)
 
-# Plot histogram of colCum variables in facet
-dfDataXfacet <- dfDataX %>%
-  gather(key = 'variable', value = 'value',  c(colNum,'days_until_end'))
-
-ggplot(dfDataXfacet, aes(x = value)) +
-    geom_histogram(bins = 50, fill = vColor[1]) +
-    labs(title = '', x = 'Value', y = 'Count',caption = "Source: ELCON A/S") +
-    scale_x_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
-    facet_wrap(~variable, scales = 'free') +
-    theme_elcon()
-ggsave("./Results/Figures/facet.pdf", width = 20, height = 20)
-ggsave("./Results/Presentation/facet.svg", width = 20, height = 20)
 
 # Select random job number
 set.seed(156342)
