@@ -24,7 +24,7 @@ con <- dbConnect(odbc::odbc(),
                  user = paste0("NRGI","\"",Sys.getenv("USERNAME")),
                  Trusted_Connection = "True")
 
-sQuery <- paste(readLines(".SQL/Data_v2.sql"), collapse = "\n")
+sQuery <- paste(readLines(".SQL/Data_v3.sql"), collapse = "\n")
 
 dfData <- data.frame(dbFetch(dbSendQuery(con,sQuery)))
 
@@ -40,6 +40,7 @@ dfData$end_date[dfData$end_date == as.Date("1753-01-01")] <- dfData$date[dfData$
 
 colMil <- names(dfData)[sapply(dfData, is.numeric)]
 colMil <- colMil[!grepl("_share",colMil)]
+colMil <- colMil[!grepl("_qty",colMil)]
 dfData[,colMil] <- dfData[,colMil]/1000000
 
 # Specify
