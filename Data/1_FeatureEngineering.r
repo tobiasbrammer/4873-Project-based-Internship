@@ -1,4 +1,4 @@
-library(SmartEDA) 
+library(SmartEDA)
 library(arrow)
 library(tibble)
 library(ggplot2)
@@ -12,11 +12,13 @@ library(xtable)
 library(beepr)
 library(readxl)
 library(MASS)
+library(purrr)
+library(arrow)
 
 rm(list=ls())
 
 # Source GetData.
-source('0_GetData.r')
+# source('0_GetData.r')
 
 # Source theme_elcon
 invisible(source('theme_elcon.R'))
@@ -24,12 +26,14 @@ invisible(source('theme_elcon.R'))
 dir <- "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 setwd(dir)
 
+dfData <- arrow::read_parquet("./dfData.parquet")
+
 # Order by date
 dfData <- dfData %>% arrange(date)
 
 # Summary of Data
 eda_1 <- xtable(ExpData(data=dfData,type=1),
-            caption= "Summary of Dataset", 
+            caption= "Summary of Dataset",
             align=c("l","l","c"), include.rownames=F)
 print(eda_1,file="./Results/Tables/eda_1.tex",append=F,
       caption.placement="top")
@@ -109,20 +113,22 @@ dfData <- dfData %>%
   mutate(days_since_start = date - min(date),
          total_days = max(end_date) - min(date), # make total_days a difftime object
          progress = as.numeric(days_since_start) / as.numeric(total_days)) %>%
-  ungroup() %>% # S-curve according to (1/(1+exp(-kx))^a.
-    mutate(scurve = (1/(1+exp(-6*(progress-0.5))))^1,
-           revenue_scurve = scurve * budget_revenue,
-           costs_scurve = scurve * budget_costs,
-           revenue_scurve_diff = revenue_scurve - revenue_cumsum,
-           costs_scurve_diff = costs_scurve - costs_cumsum,
-           contribution_scurve = scurve * contribution,
-           contribution_scurve_diff = contribution_scurve - contribution_cumsum,
-           sales_estimate_contribution_scurve = sales_estimate_contribution * scurve,
-           production_estimate_contribution_scurve = production_estimate_contribution * scurve,
-           final_estimate_contribution_scurve = final_estimate_contribution * scurve,
-           sales_estimate_contribution_scurve_diff = sales_estimate_contribution_scurve - sales_estimate_contribution_cumsum,
-           production_estimate_contribution_scurve_diff = production_estimate_contribution_scurve - production_estimate_contribution_cumsum,
-           final_estimate_contribution_scurve_diff = final_estimate_contribution_scurve - final_estimate_contribution)
+         ungroup() %>% # S-curve according to (1/(1+exp(-kx))^a.
+         mutate(
+         scurve = (1/(1+exp(-6*(progress-0.5))))^2,
+         revenue_scurve = scurve * budget_revenue,
+         costs_scurve = scurve * budget_costs,
+         revenue_scurve_diff = revenue_scurve - revenue_cumsum,
+         costs_scurve_diff = costs_scurve - costs_cumsum,
+         contribution_scurve = scurve * contribution,
+         contribution_scurve_diff = contribution_scurve - contribution_cumsum,
+         sales_estimate_contribution_scurve = sales_estimate_contribution * scurve,
+         production_estimate_contribution_scurve = production_estimate_contribution * scurve,
+         final_estimate_contribution_scurve = final_estimate_contribution * scurve,
+         sales_estimate_contribution_scurve_diff = sales_estimate_contribution_scurve - sales_estimate_contribution_cumsum,
+         production_estimate_contribution_scurve_diff = production_estimate_contribution_scurve - production_estimate_contribution_cumsum,
+         final_estimate_contribution_scurve_diff = final_estimate_contribution_scurve - final_estimate_contribution
+         )
 
 # Read xlxs file with cvr, equity ratio and quick ratio
 dfCvr <- read_excel("./.AUX/Cvr.xlsx")
@@ -161,13 +167,26 @@ dfData <- replace(dfData, is.infinite(as.matrix(dfData)), NA)
 
 # Define risk as the log of the ratio between the realized and the S-curve. Omit NaN
 dfData <- dfData %>%
-  mutate(contribution_risk = boxcox(lm(contribution_cumsum/contribution_scurve ~ 1, na.action=na.exclude)),
-         revenue_risk = boxcox(lm(revenue_cumsum/revenue_scurve ~ 1, na.action=na.exclude)),
-         material_cost_risk = boxcox(lm(material_cost_cumsum/costs_scurve ~ 1, na.action=na.exclude)),
-         labor_cost_risk = boxcox(lm(labor_cost_cumsum/costs_scurve ~ 1, na.action=na.exclude)),
-         risk = log(contribution_risk + revenue_risk + material_cost_risk + labor_cost_risk + 1, na.action=na.exclude)) %>%
-  filter(!is.nan(risk))
+  group_by(job_no) %>%
+  arrange(date) %>%
+  mutate(
+    labor_cost_risk_measure = (costs_scurve_diff * costs_of_labor / costs),
+    material_cost_risk_measure = (costs_scurve_diff * costs_of_materials / costs)
+  ) %>%
+  do({
+    if (any(is.na(.$contribution_scurve_diff)) || any(is.na(.$contribution_cumsum))) {
+      data.frame(., risk = NA_real_)
+    } else {
+      model <- lm(contribution_scurve_diff ~ revenue_scurve_diff + costs_scurve_diff + 1
+      , data = .)
+      data.frame(., risk = -model$residuals)
+    }
+  })
 
-beep()
+dfData$risk <- (dfData$risk)^(1/2)
 
-boxcox(lm(dfData$contribution_cumsum/dfData$contribution_scurve ~ 1, na.action=na.exclude))
+library(ExPanDaR)
+
+prepare_scatter_plot(dfData, x="risk", y="contribution", color="department", loess = 1)
+
+cor(dfData$risk,dfData$contribution,use="complete.obs")

@@ -1,4 +1,5 @@
-library(SmartEDA) 
+library(SmartEDA)
+library(ExPanDaR)
 library(arrow)
 library(tibble)
 library(ggplot2)
@@ -11,7 +12,6 @@ library(texreg)
 library(knitr)
 library(kableExtra)
 library(beepr)
-
 
 # Source GetData
 source('1_FeatureEngineering.r')
@@ -29,9 +29,8 @@ eda_1 <- kable(ExpData(data=dfData,type=1), format = "latex", booktabs = T, long
 writeLines(eda_1, "./Results/Tables/eda_1.tex")
 eda_1
 
-
 # Summary of Variables
-eda_2 <- kable(ExpData(data=dfData,type=2,fun = c('mean'))[,-1],
+eda_2 <- kable(ExpData(data=dfData,type=2,fun = c('mean','sd'))[,-1],
                format = "latex", booktabs = T, longtable = T, caption = "Summary of Variables",
       linesep = "") %>% kableExtra::landscape() %>%
       kable_styling(font_size = 9, bootstrap_options = c("striped", "hover", "condensed"),
@@ -39,19 +38,13 @@ eda_2 <- kable(ExpData(data=dfData,type=2,fun = c('mean'))[,-1],
                     full_width = F)
 writeLines(eda_2, "./Results/Tables/eda_2.tex")
 eda_2
-
-
-
-# 'Summary of Categorical Variables by Deparment''
-
-# Summary of Categorical Variables
+# Summary of Categorical Variables by Deparment
 eda_3 <- kable(ExpCTable(dfData,Target="department",margin=1,clim=10,nlim=3,round=2,bin=NULL,per=T),
                format = "latex", booktabs = T, longtable = T, caption = "Summary of Categorical Variables by Deparment",
       linesep = "") %>%
       kable_styling(font_size = 9, latex_options = c("repeat_header"),repeat_header_text = "",
                     full_width = F)
 writeLines(eda_3, "./Results/Tables/eda_3.tex")
-
 eda_3
 
 ### Explore numeric variables ###
@@ -88,7 +81,7 @@ mahaVar <- c('revenue','costs_of_labor','costs_of_materials','other_costs',
              'final_estimate_contribution')
 
 # Row number of dfDataX
-dfDataX$row <- 1:nrow(dfDataX)
+dfDataX$row <- seq_len(nrow(dfDataX))
 
 lOutlier <- multivariate_outlier(df_id_plus_var = dfDataX[,c('row',mahaVar)], cut_off = 6)
 
@@ -114,17 +107,18 @@ tOutlier <- dfDataX %>%
 # Plot outliers by department
 ggplot(tOutlier, aes(x = reorder(department, n), y = n, fill = status)) +
   geom_bar(stat = 'identity') +
-  labs(title = '', x = 'Department', y = 'Count',caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Department', y = 'Count',caption = paste0("Source: ELCON A/S")) +
   theme_elcon() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   scale_fill_manual(values = c(vColor[1], vColor[3])) +
   facet_wrap(~job_posting_group)
 # annotate figure with method
-ggsave('./Results/Figures/outlier.pdf', width = 10, height = 5)
+ggsave('./Results/Figures/1_outlier.pdf', width = 10, height = 5)
+ggsave('./Results/Presentation/1_outlier.svg', width = 10, height = 5)
 
 # Summary of Data
-eda_5 <- kable(ExpData(data=dfDataX,type=1), format = "latex", booktabs = T, longtable = T, caption = "Summary of Dataset",
-      linesep = "") %>%
+eda_5 <- kable(ExpData(data=dfDataX,type=1), format = "latex", booktabs = T, longtable = T,
+               caption = "Summary of Cross-sectional Dataset", linesep = "") %>%
       kable_styling(font_size = 9, latex_options = c("repeat_header"),repeat_header_text = "",
                     full_width = F)
 writeLines(eda_5, "./Results/Tables/eda_5.tex")
@@ -132,8 +126,8 @@ eda_5
 
 
 # Summary of Variables
-eda_6 <- kable(ExpData(data=dfDataX,type=2,fun = c('mean'))[,-1],
-               format = "latex", booktabs = T, longtable = T, caption = "Summary of Variables",
+eda_6 <- kable(ExpData(data=dfDataX,type=2,fun = c('mean','sd'))[,-1],
+               format = "latex", booktabs = T, longtable = T, caption = "Summary of Cross-sectional Variables",
       linesep = "") %>% kableExtra::landscape() %>%
       kable_styling(font_size = 9, bootstrap_options = c("striped", "hover", "condensed"),
                     latex_options = c("repeat_header"),repeat_header_text = "",
@@ -141,20 +135,14 @@ eda_6 <- kable(ExpData(data=dfDataX,type=2,fun = c('mean'))[,-1],
 writeLines(eda_6, "./Results/Tables/eda_6.tex")
 eda_6
 
-
-
-# 'Summary of Categorical Variables by Deparment''
-
-# Summary of Categorical Variables
+# Summary of Categorical Variables by Deparment
 eda_7 <- kable(ExpCTable(dfDataX,Target="department",margin=1,clim=10,nlim=3,round=2,bin=NULL,per=T),
-               format = "latex", booktabs = T, longtable = T, caption = "Summary of Categorical Variables by Deparment",
-      linesep = "") %>%
+               format = "latex", booktabs = T, longtable = T,
+               caption = "Summary of Cross-sectional Categorical Variables by Deparment", linesep = "") %>%
       kable_styling(font_size = 9, latex_options = c("repeat_header"),repeat_header_text = "",
                     full_width = F)
 writeLines(eda_7, "./Results/Tables/eda_7.tex")
-
 eda_7
-
 
 dfDataX <- dfDataX %>%
   mutate(contribution_margin = contribution / revenue,
@@ -167,17 +155,19 @@ dfDataX$budget_contribution_margin[is.infinite(dfDataX$budget_contribution_margi
 # Plot histogram of contribution margin
 ggplot(dfDataX, aes(x = contribution_margin)) +
   geom_histogram(bins = 50, fill = vColor[1]) +
-  labs(title = '', x = 'Contribution Margin', y = 'Count',caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Contribution Margin', y = 'Count',caption = paste0('Source: ELCON A/S')) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
   theme_elcon()
-ggsave('./Results/Figures/margin.pdf', width = 10, height = 5)
+ggsave('./Results/Figures/2_margin.pdf', width = 10, height = 5)
+ggsave('./Results/Presentation/2_margin.svg', width = 10, height = 5)
 
 ggplot(dfDataX, aes(x = budget_contribution_margin)) +
   geom_histogram(bins = 50, fill = vColor[1]) +
-  labs(title = '', x = 'Budget Contribution Margin', y = 'Count',caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Budget Contribution Margin', y = 'Count',caption = paste0('Source: ELCON A/S')) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
   theme_elcon()
-ggsave('./Results/Figures/budget_margin.pdf', width = 10, height = 5)
+ggsave('./Results/Figures/3_budget_margin.pdf', width = 10, height = 5)
+ggsave('./Results/Presentation/3_budget_margin.svg', width = 10, height = 5)
 
 dfCorr <- dfDataX %>%
   mutate(across(everything(), ~replace(., is.infinite(.), NA))) %>%
@@ -201,17 +191,17 @@ ggplot(dfCorr, aes(x = Var1, y = Var2, fill = value)) +
   scale_fill_gradient2(low = vColor[3], mid = "white", high = vColor[4], midpoint = 0) +
   theme_elcon() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = '', x = '', y = '',caption = "Source: ELCON A/S") +
+  labs(title = '', x = '', y = '',caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   #geom_text(aes(label = round(value, 2)), color = 'black', size = 3) +
   theme(plot.title = element_text(hjust = 0.5))
-ggsave('./Results/Figures/corr.pdf', width = 20, height = 20)
-ggsave('./Results/Presentation/corr.svg', width = 20, height = 20)
+ggsave('./Results/Figures/4_corr.pdf', width = 20, height = 20)
+ggsave('./Results/Presentation/4_corr.svg', width = 20, height = 20)
 
 
 # Select random job number
 set.seed(156342)
-sJobNo <- 'S283202'
-#sJobNo <- sample(dfData$job_no,1)
+sJobNo <- 'S283201'
+
 # Filter data with selected job number
 dfSample <- dfData %>% filter(job_no == sJobNo)
 
@@ -222,12 +212,12 @@ ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = costs_scurve_diff, color = vColor[2])) +
     scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
                          labels = c('S-curve', 'Realized', 'Difference')) +
-  labs(title = paste0('Costs for Job Number: ', sJobNo), x = 'Date', y = 'Costs',caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Date', y = 'Costs',caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/costs.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/costs.svg", width = 10, height = 5)
+ggsave("./Results/Figures/5_costs.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/5_costs.svg", width = 10, height = 5)
 
 # Plot revenue_scurve for selected job number
 ggplot(dfSample, aes(x = date)) +
@@ -236,13 +226,13 @@ ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = revenue_scurve_diff, color = vColor[2])) +
   scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
                      labels = c('S-curve', 'Realized', 'Difference')) +
-  labs(title = paste0('Revenue for Job Number: ', sJobNo), x = 'Date', y = 'Revenue',
-       caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Date', y = 'Revenue',
+       caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/revenue.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/revenue.svg", width = 10, height = 5)
+ggsave("./Results/Figures/6_revenue.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/6_revenue.svg", width = 10, height = 5)
 
 # Plot contribution_scurve for selected job number
 ggplot(dfSample, aes(x = date)) +
@@ -251,13 +241,13 @@ ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = contribution_scurve_diff, color = vColor[2])) +
   scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
                      labels = c('S-curve', 'Realized', 'Difference')) +
-  labs(title = paste0('Contribution for Job Number: ', sJobNo), x = 'Date', y = 'Contribution',
-       caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Date', y = 'Contribution',
+       caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/contribution.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/contribution.svg", width = 10, height = 5)
+ggsave("./Results/Figures/7_contribution.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/7_contribution.svg", width = 10, height = 5)
 
 
 # Plot revenue_scurve_diff, costs_scurve_diff, and contribution_scurve_diff for selected job number
@@ -267,15 +257,15 @@ ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = contribution_scurve_diff, color = vColor[2])) +
   scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2]),
                      labels = c('Revenue', 'Costs', 'Contribution')) +
-  labs(title = paste0('Difference between S-curve and Realized for Job Number: ', sJobNo), x = 'Date', y = 'Difference',
-       caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Date', y = 'Difference',
+       caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/diff.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/diff.svg", width = 10, height = 5)
+ggsave("./Results/Figures/8_diff.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/8_diff.svg", width = 10, height = 5)
 
-# Plot revenue_scurve_diff, costs_scurve_diff, and contribution_scurve_diff for selected job number
+# Plot hours
 ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = billable_hours_qty, color = vColor[1])) +
   geom_line(aes(y = earned_time_off_qty, color = vColor[3])) +
@@ -283,21 +273,25 @@ ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = allowance_qty, color = vColor[5])) +
   scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2],vColor[5]),
                      labels = c('Billable', 'Earned time off', 'Over-time','Allowance')) +
-  labs(title = paste0('Difference between S-curve and Realized for Job Number: ', sJobNo), x = 'Date', y = 'Hours',
-       caption = "Source: ELCON A/S") +
+  labs(title = '', x = 'Date', y = 'Hours',
+       caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/hours.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/hours.svg", width = 10, height = 5)
+ggsave("./Results/Figures/9_hours.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/9_hours.svg", width = 10, height = 5)
 
 # Plot risk
 ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = risk, color = vColor[1])) +
-  scale_color_manual(name = '', values = c(vColor[1]),
-                     labels = c('Risk')) +
-  labs(title = paste0('Risk for Job Number: ', sJobNo), x = 'Date', y = 'Risk',
-       caption = "Source: ELCON A/S") +
+  scale_color_manual(name = '', values = vColor[1],
+                     labels = 'Risk') +
+  labs(title = '', x = 'Date', y = 'Risk',
+       caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
+ggsave("./Results/Figures/10_risk.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/10_risk.svg", width = 10, height = 5)
+
+beep()

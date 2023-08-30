@@ -35,15 +35,15 @@ dfScurve <- dfScurve %>%
 # Calculate s-curves
 dfScurve <- dfScurve %>%
   mutate(scurve_1 = (1/(1+exp(-k*(progress-0.5))))^1,
-         scurve_2 = (1/(1+exp(-k*(progress-0.5))))^2,
-         scurve_3 = (1/(1+exp(-k*(progress-0.5))))^3,
-         scurve_4 = (1/(1+exp(-k*(progress-0.5))))^4,
-         scurve_5 = (1/(1+exp(-k*(progress-0.5))))^5,
-         scurve_6 = (1/(1+exp(-k*(progress-0.5))))^6,
-         scurve_7 = (1/(1+exp(-k*(progress-0.5))))^7,
-         scurve_8 = (1/(1+exp(-k*(progress-0.5))))^8,
-         scurve_9 = (1/(1+exp(-k*(progress-0.5))))^9,
-         scurve_10 = (1/(1+exp(-k*(progress-0.5))))^10)
+         scurve_2 = (1/(1+exp(-k*(progress-0.5))))^1.1,
+         scurve_3 = (1/(1+exp(-k*(progress-0.5))))^1.2,
+         scurve_4 = (1/(1+exp(-k*(progress-0.5))))^1.3,
+         scurve_5 = (1/(1+exp(-k*(progress-0.5))))^1.4,
+         scurve_6 = (1/(1+exp(-k*(progress-0.5))))^1.5,
+         scurve_7 = (1/(1+exp(-k*(progress-0.5))))^1.6,
+         scurve_8 = (1/(1+exp(-k*(progress-0.5))))^1.7,
+         scurve_9 = (1/(1+exp(-k*(progress-0.5))))^1.8,
+         scurve_10 = (1/(1+exp(-k*(progress-0.5))))^1.9)
 
 # Plot s-curves
 ggplot(dfScurve, aes(x = date)) +
