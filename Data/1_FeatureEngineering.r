@@ -18,7 +18,7 @@ library(arrow)
 rm(list=ls())
 
 # Source GetData.
-# source('0_GetData.r')
+source('0_GetData.r')
 
 # Source theme_elcon
 invisible(source('theme_elcon.R'))
@@ -58,6 +58,7 @@ eda_3
 # Transform to cross-sectional data using group by job_no, calculate cumulative numbers, and select latest date
 colNum <- names(dfData)[sapply(dfData, is.numeric)]
 colNum <- colNum[!grepl("_share",colNum)]
+colNum <- colNum[!grepl("_rate",colNum)]
 colCumSum <- colNum[!grepl("budget_",colNum)]
 
 
