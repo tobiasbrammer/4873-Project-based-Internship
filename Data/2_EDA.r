@@ -21,6 +21,9 @@ rm(list=ls()[!grepl("dfData",ls())])
 # Source theme_elcon
 invisible(source('theme_elcon.R'))
 
+# Date as date format ymd
+dfData$date <- lubridate::ymd(dfData$date)
+
 # Summary of Data
 eda_1 <- kable(ExpData(data=dfData,type=1), format = "latex", booktabs = T, longtable = T, caption = "Summary of Dataset",
       linesep = "") %>%
@@ -75,7 +78,7 @@ multivariate_outlier <- function(df_id_plus_var,cut_off){
   return(m_outliers)
 }
 
-mahaVar <- c('revenue','costs_of_labor','costs_of_materials','other_costs',
+mahaVar <- c('revenue','costs_of_labor_share','costs_of_materials_share',
              'estimated_revenue','sales_estimate_contribution',
              'production_estimate_contribution',
              'final_estimate_contribution')
@@ -191,7 +194,7 @@ ggplot(dfCorr, aes(x = Var1, y = Var2, fill = value)) +
   scale_fill_gradient2(low = vColor[3], mid = "white", high = vColor[4], midpoint = 0) +
   theme_elcon() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = '', x = '', y = '',caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
+  labs(title = '', x = '', y = '',caption = paste0("Source: ELCON A/S")) +
   #geom_text(aes(label = round(value, 2)), color = 'black', size = 3) +
   theme(plot.title = element_text(hjust = 0.5))
 ggsave('./Results/Figures/4_corr.pdf', width = 20, height = 20)
@@ -200,13 +203,13 @@ ggsave('./Results/Presentation/4_corr.svg', width = 20, height = 20)
 
 # Select random job number
 set.seed(156342)
-sJobNo <- 'S283201'
+sJobNo <- 'S333720'
 
 # Filter data with selected job number
 dfSample <- dfData %>% filter(job_no == sJobNo)
 
 # Plot cost_scurve for selected job number
-ggplot(dfSample, aes(x = date)) +
+plotCost <- ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = costs_scurve, color = vColor[1])) +
   geom_line(aes(y = costs_cumsum, color = vColor[3])) +
   geom_line(aes(y = costs_scurve_diff, color = vColor[2])) +
@@ -216,11 +219,12 @@ ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/5_costs.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/5_costs.svg", width = 10, height = 5)
+ggsave("./Results/Figures/5_costs.pdf", plotCost, width = 10, height = 5)
+ggsave("./Results/Presentation/5_costs.svg", plotCost, width = 10, height = 5)
+plotCost
 
 # Plot revenue_scurve for selected job number
-ggplot(dfSample, aes(x = date)) +
+plotRevenue <- ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = revenue_scurve, color = vColor[1])) +
   geom_line(aes(y = revenue_cumsum, color = vColor[3])) +
   geom_line(aes(y = revenue_scurve_diff, color = vColor[2])) +
@@ -231,11 +235,12 @@ ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/6_revenue.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/6_revenue.svg", width = 10, height = 5)
+ggsave("./Results/Figures/6_revenue.pdf", plotRevenue, width = 10, height = 5)
+ggsave("./Results/Presentation/6_revenue.svg", plotRevenue, width = 10, height = 5)
+plotRevenue
 
 # Plot contribution_scurve for selected job number
-ggplot(dfSample, aes(x = date)) +
+plotContrib <- ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = contribution_scurve, color = vColor[1])) +
   geom_line(aes(y = contribution_cumsum, color = vColor[3])) +
   geom_line(aes(y = contribution_scurve_diff, color = vColor[2])) +
@@ -246,12 +251,12 @@ ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/7_contribution.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/7_contribution.svg", width = 10, height = 5)
-
+ggsave("./Results/Figures/7_contribution.pdf", plotContrib, width = 10, height = 5)
+ggsave("./Results/Presentation/7_contribution.svg", plotContrib, width = 10, height = 5)
+plotContrib
 
 # Plot revenue_scurve_diff, costs_scurve_diff, and contribution_scurve_diff for selected job number
-ggplot(dfSample, aes(x = date)) +
+plotDiff <- ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = revenue_scurve_diff, color = vColor[1])) +
   geom_line(aes(y = costs_scurve_diff, color = vColor[3])) +
   geom_line(aes(y = contribution_scurve_diff, color = vColor[2])) +
@@ -262,27 +267,28 @@ ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/8_diff.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/8_diff.svg", width = 10, height = 5)
+ggsave("./Results/Figures/8_diff.pdf", plotDiff, width = 10, height = 5)
+ggsave("./Results/Presentation/8_diff.svg", plotDiff, width = 10, height = 5)
+plotDiff
 
 # Plot hours
-ggplot(dfSample, aes(x = date)) +
-  geom_line(aes(y = billable_hours_qty, color = vColor[1])) +
-  geom_line(aes(y = earned_time_off_qty, color = vColor[3])) +
-  geom_line(aes(y = over_time_qty, color = vColor[2])) +
-  geom_line(aes(y = allowance_qty, color = vColor[5])) +
+plotHours <- ggplot(dfSample, aes(x = date)) +
+  geom_line(aes(y = earned_time_off_rate, color = vColor[3])) +
+  geom_line(aes(y = over_time_rate, color = vColor[2])) +
+  geom_line(aes(y = billable_rate_dep, color = vColor[5])) +
   scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2],vColor[5]),
-                     labels = c('Billable', 'Earned time off', 'Over-time','Allowance')) +
+                     labels = c('Earned time off', 'Over-time','Allowance')) +
   labs(title = '', x = 'Date', y = 'Hours',
        caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
-  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  scale_y_continuous(labels = scales::percent_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/9_hours.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/9_hours.svg", width = 10, height = 5)
+ggsave("./Results/Figures/9_hours.pdf", plotHours, width = 10, height = 5)
+ggsave("./Results/Presentation/9_hours.svg", plotHours, width = 10, height = 5)
+plotHours
 
 # Plot risk
-ggplot(dfSample, aes(x = date)) +
+plotRisk <- ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = risk, color = vColor[1])) +
   scale_color_manual(name = '', values = vColor[1],
                      labels = 'Risk') +
@@ -291,7 +297,74 @@ ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/10_risk.pdf", width = 10, height = 5)
-ggsave("./Results/Presentation/10_risk.svg", width = 10, height = 5)
+ggsave("./Results/Figures/10_risk.pdf", plotRisk, width = 10, height = 5)
+ggsave("./Results/Presentation/10_risk.svg", plotRisk, width = 10, height = 5)
+plotRisk
 
 beep()
+
+# Subplot with all plots
+plotAll <- plotCost + plotRevenue + plotContrib + plotDiff + plotHours + plotRisk
+plotAll
+
+# Select top 5 job with highest risk
+dfRisk <- dfDataX %>%
+  group_by(job_no) %>%
+  summarise(risk = sum(-risk, na.rm = T)) %>%
+  arrange(desc(risk)) %>%
+  head(5)
+
+dfRisk
+
+
+# Sum risk by date and department and plot time series
+# Date as date format ymd
+dfData$date <- lubridate::ymd(dfData$date)
+
+dfRiskTS <- dfData %>%
+  group_by(date,department) %>%
+  summarise(risk = sum(risk, na.rm = T),
+            contribution_scurve_diff = sum(contribution_scurve_diff, na.rm = T),
+            revenue_scurve_diff = sum(revenue_scurve_diff, na.rm = T),
+            costs_scurve_diff = sum(costs_scurve_diff, na.rm = T)) %>%
+  arrange(date)
+
+# Plot risk by department
+ggplot(dfRiskTS, aes(x = date, y = contribution_scurve_diff, color = department)) +
+  geom_line() +
+  labs(title = '', x = 'Date', y = 'Risk',caption = paste0("Source: ELCON A/S")) +
+    scale_color_manual(name = '', values = c(vColor[1], vColor[3])) +
+  scale_x_date(date_breaks = '6 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
+
+plotELCON_505 <- ggplot(dfRiskTS[which(dfRiskTS$department == '505'),], aes(x = date)) +
+  geom_line(aes(y = revenue_scurve_diff, color = 'revenue')) +
+  geom_line(aes(y = costs_scurve_diff, color = 'costs')) +
+  geom_line(aes(y = contribution_scurve_diff, color = 'contribution')) +
+  geom_line(aes(y = risk, color = 'risk')) +
+  scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2], vColor[5]),
+                     labels = c('Revenue', 'Costs', 'Contribution','Risk')) +
+  labs(title = '505', x = 'Date', y = 'Difference',
+       caption = paste0("Source: ELCON A/S")) +
+  scale_x_date(date_breaks = '12 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
+plotELCON_515 <- ggplot(dfRiskTS[which(dfRiskTS$department == '515'),], aes(x = date)) +
+  geom_line(aes(y = revenue_scurve_diff, color = 'revenue')) +
+  geom_line(aes(y = costs_scurve_diff, color = 'costs')) +
+  geom_line(aes(y = contribution_scurve_diff, color = 'contribution')) +
+  geom_line(aes(y = risk, color = 'risk')) +
+  scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2], vColor[5]),
+                     labels = c('Revenue', 'Costs', 'Contribution','Risk')) +
+  labs(title = '515', x = 'Date', y = 'Difference',
+       caption = paste0("Source: ELCON A/S")) +
+  scale_x_date(date_breaks = '12 months', date_labels = '%m %Y') +
+  scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
+  theme_elcon()
+
+plotELCON_505 + plotELCON_515
+
+
+
+

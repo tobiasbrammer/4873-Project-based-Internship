@@ -14,6 +14,7 @@ library(readxl)
 library(MASS)
 library(purrr)
 library(arrow)
+library(mice)
 
 rm(list=ls())
 
@@ -59,6 +60,10 @@ eda_3
 colNum <- names(dfData)[sapply(dfData, is.numeric)]
 colNum <- colNum[!grepl("_share",colNum)]
 colNum <- colNum[!grepl("_rate",colNum)]
+colNum <- colNum[!grepl("_ratio",colNum)]
+colNum <- colNum[!grepl("_margin",colNum)]
+#colNum <- colNum[!grepl("_estimate",colNum)]
+colNum <- colNum[!grepl("_cumsum",colNum)]
 colCumSum <- colNum[!grepl("budget_",colNum)]
 
 
@@ -77,21 +82,6 @@ dfData$days_until_end[dfData$days_until_end < 0] <- 0
 dfData$days_until_end <- as.numeric(dfData$days_until_end)
 
 ##### Feature engineering #####
-# Difference between sales_estimate and production_estimate
-dfData$sales_production_diff <- dfData$sales_estimate_contribution - dfData$production_estimate_contribution
-
-# Difference between sales_estimate and final_estimate
-dfData$sales_final_diff <- dfData$sales_estimate_contribution - dfData$final_estimate_contribution
-
-# Difference between realized contribution and sales_estimate_contribution
-dfData$contribution_sales_diff <- dfData$contribution - dfData$sales_estimate_contribution
-
-# Difference between realized contribution and production_estimate_contribution
-dfData$contribution_production_diff <- dfData$contribution - dfData$production_estimate_contribution
-
-# Difference between realized contribution and final_estimate_contribution
-dfData$contribution_final_diff <- dfData$contribution - dfData$final_estimate_contribution
-
 # Change in sales_estimate_contribution from previous observation. Group by job_no and order by date
 dfData <- dfData %>%
   group_by(job_no) %>%
@@ -121,14 +111,8 @@ dfData <- dfData %>%
          costs_scurve = scurve * budget_costs,
          revenue_scurve_diff = revenue_scurve - revenue_cumsum,
          costs_scurve_diff = costs_scurve - costs_cumsum,
-         contribution_scurve = scurve * contribution,
-         contribution_scurve_diff = contribution_scurve - contribution_cumsum,
-         sales_estimate_contribution_scurve = sales_estimate_contribution * scurve,
-         production_estimate_contribution_scurve = production_estimate_contribution * scurve,
-         final_estimate_contribution_scurve = final_estimate_contribution * scurve,
-         sales_estimate_contribution_scurve_diff = sales_estimate_contribution_scurve - sales_estimate_contribution_cumsum,
-         production_estimate_contribution_scurve_diff = production_estimate_contribution_scurve - production_estimate_contribution_cumsum,
-         final_estimate_contribution_scurve_diff = final_estimate_contribution_scurve - final_estimate_contribution
+         contribution_scurve = scurve * (budget_revenue - budget_costs),
+         contribution_scurve_diff = contribution_scurve - contribution_cumsum
          )
 
 # Read xlxs file with cvr, equity ratio and quick ratio
@@ -157,6 +141,21 @@ dfData <- left_join(dfData,dfCvr,by="cvr")
 dfData$customer_equity_ratio[is.na(dfData$customer_equity_ratio)] <- mean(dfData$customer_equity_ratio, na.rm = T)
 dfData$customer_quick_ratio[is.na(dfData$customer_quick_ratio)] <- mean(dfData$customer_quick_ratio, na.rm = T)
 
+dfOutstanding <- read_excel("./.AUX/Debitorer.xlsx")
+dfOutstanding <- dfOutstanding %>%
+  na.omit()
+# Drop column 3
+dfOutstanding <- dfOutstanding[,-3]
+# Rename columns
+colnames(dfOutstanding) <- c("date","department","outstanding","cvr")
+# Set cvr as character
+dfOutstanding$cvr <- as.character(dfOutstanding$cvr)
+dfOutstanding$department <- as.factor(dfOutstanding$department)
+
+dfData <- left_join(dfData,dfOutstanding,by=c("cvr"="cvr","department"="department","date"="date"))
+
+dfData$outstanding[is.na(dfData$outstanding)] <- 0
+
 # Replace NaN & Inf with NA
 dfData <- replace(dfData, is.infinite(as.matrix(dfData)), NA)
 dfData <- replace(dfData, is.nan(as.matrix(dfData)), NA)
@@ -166,25 +165,42 @@ dfData <- replace(dfData, is.nan(as.matrix(dfData)), NA)
 # Replace Inf with NA
 dfData <- replace(dfData, is.infinite(as.matrix(dfData)), NA)
 
+# Get the last observation of each job_no and determine if total contribution is positive or negative
+dfDataContrib <- dfData %>%
+  group_by(job_no) %>%
+  mutate_at(colNum, cumsum) %>%
+  filter(date == max(date))
+
+# If contribution_cumsum is positive, set contribution_positive to 1, else set to 0
+dfDataContrib$profitable <- ifelse(dfDataContrib$contribution_cumsum > 0, 1, 0)
+
+# Omit all columns except job_no and profitable
+dfDataContrib <- dfDataContrib[,c("job_no","profitable")]
+
+# Join dfDataContrib on dfData
+dfData <- left_join(dfData,dfDataContrib,by="job_no")
+
 # Define risk as the log of the ratio between the realized and the S-curve. Omit NaN
 dfData <- dfData %>%
   group_by(job_no) %>%
   arrange(date) %>%
   mutate(
-    labor_cost_risk_measure = (costs_scurve_diff * costs_of_labor / costs),
-    material_cost_risk_measure = (costs_scurve_diff * costs_of_materials / costs)
+    efficiency_risk = (costs_scurve_diff * costs_of_labor_share -(billable_rate_dep -0.90) + illness_rate_dep
+                               + internal_rate_dep + earned_time_off_rate + allowance_rate)^(2),
+    overrun_risk = (costs_scurve_diff * costs_of_materials_share + costs_of_materials_share * billable_rate_dep
+                                  + costs_of_materials_share)^(2)
   ) %>%
   do({
     if (any(is.na(.$contribution_scurve_diff)) || any(is.na(.$contribution_cumsum))) {
       data.frame(., risk = NA_real_)
     } else {
-      model <- lm(contribution_scurve_diff ~ revenue_scurve_diff + costs_scurve_diff + 1
+      model <- lm(contribution_scurve_diff ~ revenue_scurve_diff + costs_scurve_diff + 1 +
+                                             billable_rate_dep + illness_rate_dep + internal_rate_dep
       , data = .)
-      data.frame(., risk = -model$residuals)
+      data.frame(., risk = exp(model$residuals))
     }
   })
 
-dfData$risk <- (dfData$risk)^(1/2)
 
 library(ExPanDaR)
 
