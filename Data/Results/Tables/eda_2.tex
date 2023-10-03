@@ -1,53 +1,110 @@
-% latex table generated in R 4.2.3 by xtable 1.8-4 package
-% Mon Oct  2 10:16:04 2023
-\begin{sidewaystable}[ht]
-\centering
-\caption{Summary of Variables} 
-\begin{tabular}{rllrrrrr}
-  \hline
- & Variable\_Name & Variable\_Type & Sample\_n & Missing\_Count & Per\_of\_Missing & No\_of\_distinct\_values & mean \\ 
-  \hline
-1 & date & Date & 3788 &   0 & 0.00 &  70 &  \\ 
-  2 & month & factor & 3788 &   0 & 0.00 &  12 &  \\ 
-  3 & year & factor & 3788 &   0 & 0.00 &   6 &  \\ 
-  4 & job\_posting\_group & factor & 3788 &   0 & 0.00 &   2 &  \\ 
-  5 & department & factor & 3788 &   0 & 0.00 &   2 &  \\ 
-  6 & job\_no & character & 3788 &   0 & 0.00 & 335 &  \\ 
-  7 & status & factor & 3788 &   0 & 0.00 &   2 &  \\ 
-  8 & description & character & 3788 &   0 & 0.00 & 332 &  \\ 
-  9 & customer & character & 3788 &   0 & 0.00 & 150 &  \\ 
-  10 & cvr & character & 3729 &  59 & 0.02 & 148 &  \\ 
-  11 & customer\_zip & character & 3788 &   0 & 0.00 &  82 &  \\ 
-  12 & address & character & 3788 &   0 & 0.00 & 222 &  \\ 
-  13 & zip & character & 3400 & 388 & 0.10 &  93 &  \\ 
-  14 & responsible & factor & 3788 &   0 & 0.00 &  49 &  \\ 
-  15 & end\_date & Date & 3788 &   0 & 0.00 &  81 &  \\ 
-  16 & sales\_estimate\_contribution & numeric & 3788 &   0 & 0.00 & 259 & 0.84 \\ 
-  17 & production\_estimate\_contribution & numeric & 3788 &   0 & 0.00 & 967 & 2.26 \\ 
-  18 & final\_estimate\_contribution & numeric & 3788 &   0 & 0.00 & 1010 & 0.89 \\ 
-  19 & budget\_revenue & numeric & 3788 &   0 & 0.00 & 293 & 8.50 \\ 
-  20 & budget\_costs & numeric & 3788 &   0 & 0.00 & 285 & 7.78 \\ 
-  21 & budget\_contribution & numeric & 3788 &   0 & 0.00 & 291 & 0.72 \\ 
-  22 & revenue & numeric & 3788 &   0 & 0.00 & 2261 & 0.29 \\ 
-  23 & revenue\_budget\_share & numeric & 3659 & 129 & 0.03 & 2313 & 0.06 \\ 
-  24 & costs & numeric & 3788 &   0 & 0.00 & 3529 & 0.27 \\ 
-  25 & costs\_budget\_share & numeric & 3634 & 154 & 0.04 & 3348 & 0.06 \\ 
-  26 & costs\_of\_labor\_share & numeric & 3615 & 173 & 0.05 & 2821 & 0.48 \\ 
-  27 & costs\_of\_materials\_share & numeric & 3615 & 173 & 0.05 & 2935 & 224.16 \\ 
-  28 & other\_costs\_share & numeric & 3615 & 173 & 0.05 & 1720 & -223.64 \\ 
-  29 & contribution\_margin & numeric & 2470 & 1318 & 0.35 & 2331 & 0.00 \\ 
-  30 & contribution & numeric & 3788 &   0 & 0.00 & 3637 & 0.02 \\ 
-  31 & estimated\_revenue & numeric & 3788 &   0 & 0.00 & 3462 & 0.37 \\ 
-  32 & estimated\_contribution & numeric & 3788 &   0 & 0.00 & 3578 & 0.10 \\ 
-  33 & billable\_hours\_qty & numeric & 3788 &   0 & 0.00 & 1544 & 287.64 \\ 
-  34 & earned\_time\_off\_rate & numeric & 3061 & 727 & 0.19 & 360 & 0.00 \\ 
-  35 & over\_time\_rate & numeric & 3061 & 727 & 0.19 & 1042 & 0.00 \\ 
-  36 & allowance\_rate & numeric & 3061 & 727 & 0.19 & 647 & 0.00 \\ 
-  37 & billable\_rate\_dep & numeric & 3787 &   1 & 0.00 & 138 & 0.00 \\ 
-  38 & illness\_rate\_dep & numeric & 3787 &   1 & 0.00 & 138 & 0.00 \\ 
-  39 & long\_term\_illness\_rate\_dep & numeric & 3787 &   1 & 0.00 &  84 & 0.00 \\ 
-  40 & internal\_rate\_dep & numeric & 3787 &   1 & 0.00 & 127 & 0.00 \\ 
-  41 & long\_term\_illness\_share\_dep & numeric & 3787 &   1 & 0.00 &  84 & 0.26 \\ 
-   \hline
-\end{tabular}
-\end{sidewaystable}
+\begingroup\fontsize{9}{11}\selectfont
+
+\begin{landscape}
+\begin{longtable}[t]{llrrrrrr}
+\caption{Summary of Variables}\\
+\toprule
+Variable\_Name & Variable\_Type & Sample\_n & Missing\_Count & Per\_of\_Missing & No\_of\_distinct\_values & mean & sd\\
+\midrule
+\endfirsthead
+\caption[]{Summary of Variables }\\
+\toprule
+Variable\_Name & Variable\_Type & Sample\_n & Missing\_Count & Per\_of\_Missing & No\_of\_distinct\_values & mean & sd\\
+\midrule
+\endhead
+
+\endfoot
+\bottomrule
+\endlastfoot
+date & Date & 5372 & 0 & 0.000 & 122 & NA & NA\\
+month & factor & 5372 & 0 & 0.000 & 12 & NA & NA\\
+year & factor & 5372 & 0 & 0.000 & 11 & NA & NA\\
+job\_posting\_group & factor & 5372 & 0 & 0.000 & 2 & NA & NA\\
+department & factor & 5372 & 0 & 0.000 & 2 & NA & NA\\
+job\_no & factor & 5372 & 0 & 0.000 & 501 & NA & NA\\
+status & factor & 5372 & 0 & 0.000 & 2 & NA & NA\\
+customer & factor & 5372 & 0 & 0.000 & 170 & NA & NA\\
+cvr & factor & 5372 & 0 & 0.000 & 168 & NA & NA\\
+customer\_zip & character & 5372 & 0 & 0.000 & 90 & NA & NA\\
+address & factor & 5372 & 0 & 0.000 & 264 & NA & NA\\
+zip & character & 4759 & 613 & 0.114 & 107 & NA & NA\\
+responsible & factor & 5372 & 0 & 0.000 & 55 & NA & NA\\
+end\_date & Date & 5372 & 0 & 0.000 & 116 & NA & NA\\
+sales\_estimate\_revenue & numeric & 5372 & 0 & 0.000 & 278 & 4.39 & 11.26\\
+production\_estimate\_revenue & numeric & 5372 & 0 & 0.000 & 1060 & 7.01 & 15.70\\
+final\_estimate\_revenue & numeric & 5372 & 0 & 0.000 & 1087 & 6.15 & 12.68\\
+sales\_estimate\_costs & numeric & 5372 & 0 & 0.000 & 282 & -3.70 & 9.52\\
+production\_estimate\_costs & numeric & 5372 & 0 & 0.000 & 938 & -5.26 & 10.83\\
+final\_estimate\_costs & numeric & 5372 & 0 & 0.000 & 1161 & -6.51 & 11.37\\
+sales\_estimate\_contribution & numeric & 5372 & 0 & 0.000 & 276 & 0.69 & 1.81\\
+production\_estimate\_contribution & numeric & 5372 & 0 & 0.000 & 1082 & 1.75 & 8.05\\
+final\_estimate\_contribution & numeric & 5372 & 0 & 0.000 & 1128 & 0.78 & 2.20\\
+budget\_revenue & numeric & 5372 & 0 & 0.000 & 342 & 8.05 & 10.09\\
+budget\_costs & numeric & 5372 & 0 & 0.000 & 334 & -7.24 & 9.40\\
+budget\_contribution & numeric & 5372 & 0 & 0.000 & 339 & 0.81 & 2.34\\
+revenue & numeric & 5372 & 0 & 0.000 & 3207 & 0.27 & 0.55\\
+revenue\_budget\_share & numeric & 5061 & 311 & 0.058 & 3234 & 0.06 & 0.16\\
+costs & numeric & 5372 & 0 & 0.000 & 4875 & -0.25 & 0.49\\
+costs\_budget\_share & numeric & 5034 & 338 & 0.063 & 4576 & 15.45 & 641.82\\
+costs\_of\_labor\_share & numeric & 4979 & 393 & 0.073 & 3802 & -0.47 & 1.70\\
+costs\_of\_materials\_share & numeric & 4979 & 393 & 0.073 & 3941 & -162.92 & 15364.03\\
+other\_costs\_share & numeric & 4979 & 393 & 0.073 & 2251 & 162.39 & 15364.03\\
+contribution\_margin & numeric & 3599 & 1773 & 0.330 & 3246 & 0.00 & 0.00\\
+contribution & numeric & 5372 & 0 & 0.000 & 5146 & 0.03 & 0.35\\
+estimated\_revenue & numeric & 5372 & 0 & 0.000 & 4761 & -0.20 & 31.22\\
+estimated\_contribution & numeric & 5372 & 0 & 0.000 & 4935 & -0.45 & 31.22\\
+billable\_hours\_qty & numeric & 5372 & 0 & 0.000 & 1797 & 250.96 & 455.44\\
+billable\_rate\_dep & numeric & 5369 & 3 & 0.001 & 196 & 0.00 & 0.00\\
+illness\_rate\_dep & numeric & 5369 & 3 & 0.001 & 195 & 0.00 & 0.00\\
+long\_term\_illness\_rate\_dep & numeric & 5369 & 3 & 0.001 & 106 & 0.00 & 0.00\\
+internal\_rate\_dep & numeric & 5369 & 3 & 0.001 & 169 & 0.00 & 0.00\\
+long\_term\_illness\_share\_dep & numeric & 5019 & 353 & 0.066 & 106 & 0.24 & 0.21\\
+sales\_estimate\_revenue\_cumsum & numeric & 5372 & 0 & 0.000 & 2143 & 50.96 & 157.74\\
+production\_estimate\_revenue\_cumsum & numeric & 5372 & 0 & 0.000 & 3077 & 77.34 & 195.48\\
+final\_estimate\_revenue\_cumsum & numeric & 5372 & 0 & 0.000 & 3078 & 69.98 & 176.07\\
+sales\_estimate\_costs\_cumsum & numeric & 5372 & 0 & 0.000 & 2177 & -42.84 & 132.53\\
+production\_estimate\_costs\_cumsum & numeric & 5372 & 0 & 0.000 & 3100 & -59.46 & 148.64\\
+final\_estimate\_costs\_cumsum & numeric & 5372 & 0 & 0.000 & 3101 & -60.17 & 150.50\\
+sales\_estimate\_contribution\_cumsum & numeric & 5372 & 0 & 0.000 & 2133 & 8.12 & 25.81\\
+production\_estimate\_contribution\_cumsum & numeric & 5372 & 0 & 0.000 & 3056 & 17.88 & 74.74\\
+final\_estimate\_contribution\_cumsum & numeric & 5372 & 0 & 0.000 & 3055 & 9.80 & 28.23\\
+revenue\_cumsum & numeric & 5372 & 0 & 0.000 & 3453 & 4.02 & 6.95\\
+costs\_cumsum & numeric & 5372 & 0 & 0.000 & 4964 & -3.54 & 6.32\\
+contribution\_cumsum & numeric & 5372 & 0 & 0.000 & 5235 & 0.49 & 1.40\\
+estimated\_revenue\_cumsum & numeric & 5372 & 0 & 0.000 & 4813 & 0.77 & 94.70\\
+estimated\_contribution\_cumsum & numeric & 5372 & 0 & 0.000 & 4954 & -2.77 & 94.34\\
+billable\_hours\_qty\_cumsum & numeric & 5372 & 0 & 0.000 & 3363 & 3523.45 & 6383.73\\
+days\_until\_end & numeric & 5372 & 0 & 0.000 & 207 & 357.21 & 311.63\\
+sales\_estimate\_contribution\_change & numeric & 5372 & 0 & 0.000 & 287 & 0.03 & 0.68\\
+production\_estimate\_contribution\_change & numeric & 5372 & 0 & 0.000 & 1038 & 0.10 & 2.94\\
+final\_estimate\_contribution\_change & numeric & 5372 & 0 & 0.000 & 1069 & 0.02 & 0.81\\
+days\_since\_start & difftime & 5372 & 0 & 0.000 & 189 & NA & NA\\
+total\_days & difftime & 5372 & 0 & 0.000 & 123 & NA & NA\\
+progress & numeric & 5241 & 131 & 0.024 & 2889 & Inf & NaN\\
+scurve & numeric & 5241 & 131 & 0.024 & 2889 & 0.34 & 0.34\\
+revenue\_scurve & numeric & 5241 & 131 & 0.024 & 5026 & 2.87 & 5.65\\
+costs\_scurve & numeric & 5241 & 131 & 0.024 & 5004 & -2.60 & 5.29\\
+revenue\_scurve\_diff & numeric & 5241 & 131 & 0.024 & 5110 & -1.25 & 3.08\\
+costs\_scurve\_diff & numeric & 5241 & 131 & 0.024 & 5182 & 1.02 & 2.68\\
+contribution\_scurve & numeric & 5241 & 131 & 0.024 & 5041 & 5.47 & 10.88\\
+contribution\_scurve\_diff & numeric & 5241 & 131 & 0.024 & 5235 & 4.97 & 10.45\\
+outstanding & numeric & 5372 & 0 & 0.000 & 810 & 432209.90 & 1086892.78\\
+profitable & numeric & 5372 & 0 & 0.000 & 2 & 0.76 & 0.43\\
+efficiency\_risk & numeric & 4939 & 433 & 0.081 & 4344 & 116.81 & 7890.25\\
+overrun\_risk & numeric & 4939 & 433 & 0.081 & 4413 & 254558706.84 & 16634023000.80\\
+risk & numeric & 5232 & 140 & 0.026 & 4740 & 77399859374124265632440.00 & 4849034321251418044044460.00\\
+total\_costs & numeric & 5372 & 0 & 0.000 & 390 & -6.55 & 8.82\\
+total\_contribution & numeric & 5372 & 0 & 0.000 & 482 & 0.63 & 1.89\\
+total\_margin & numeric & 5358 & 14 & 0.003 & 343 & NaN & NaN\\
+wip & numeric & 5372 & 0 & 0.000 & 1 & 0.00 & 0.00\\
+dep\_505 & numeric & 5372 & 0 & 0.000 & 2 & 0.58 & 0.49\\
+posting\_group\_projekt & numeric & 5372 & 0 & 0.000 & 2 & 0.12 & 0.33\\
+eks & numeric & 5372 & 0 & 0.000 & 2 & 0.02 & 0.16\\
+panum & numeric & 5372 & 0 & 0.000 & 2 & 0.02 & 0.15\\
+bol & numeric & 5372 & 0 & 0.000 & 2 & 0.03 & 0.17\\
+skol & numeric & 5372 & 0 & 0.000 & 2 & 0.05 & 0.23\\
+ombygning & numeric & 5372 & 0 & 0.000 & 2 & 0.06 & 0.24\\
+train & numeric & 5372 & 0 & 0.000 & 2 & 0.85 & 0.36\\*
+\end{longtable}
+\end{landscape}
+\endgroup{}

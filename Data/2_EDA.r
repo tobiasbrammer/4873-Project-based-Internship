@@ -78,15 +78,15 @@ multivariate_outlier <- function(df_id_plus_var,cut_off){
   return(m_outliers)
 }
 
-mahaVar <- c('revenue','costs_of_labor_share','costs_of_materials_share',
-             'estimated_revenue','sales_estimate_contribution',
-             'production_estimate_contribution',
-             'final_estimate_contribution')
+mahaVar <- c('revenue',
+             'costs',
+             'budget_costs'
+      )
 
 # Row number of dfDataX
 dfDataX$row <- seq_len(nrow(dfDataX))
 
-lOutlier <- multivariate_outlier(df_id_plus_var = dfDataX[,c('row',mahaVar)], cut_off = 6)
+lOutlier <- multivariate_outlier(df_id_plus_var = dfDataX[,c('row',mahaVar)], cut_off = 5)
 
 # Get job numbers of outliers
 lOutlier$job_no <- dfDataX[lOutlier$ID,]$job_no
@@ -271,22 +271,6 @@ ggsave("./Results/Figures/8_diff.pdf", plotDiff, width = 10, height = 5)
 ggsave("./Results/Presentation/8_diff.svg", plotDiff, width = 10, height = 5)
 plotDiff
 
-# Plot hours
-plotHours <- ggplot(dfSample, aes(x = date)) +
-  geom_line(aes(y = earned_time_off_rate, color = vColor[3])) +
-  geom_line(aes(y = over_time_rate, color = vColor[2])) +
-  geom_line(aes(y = billable_rate_dep, color = vColor[5])) +
-  scale_color_manual(name = '', values = c(vColor[1], vColor[3], vColor[2],vColor[5]),
-                     labels = c('Earned time off', 'Over-time','Allowance')) +
-  labs(title = '', x = 'Date', y = 'Hours',
-       caption = paste0('Job Number: ', sJobNo,"\n Source: ELCON A/S")) +
-  scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
-  scale_y_continuous(labels = scales::percent_format(big.mark = ".", decimal.mark = ",")) +
-  theme_elcon()
-ggsave("./Results/Figures/9_hours.pdf", plotHours, width = 10, height = 5)
-ggsave("./Results/Presentation/9_hours.svg", plotHours, width = 10, height = 5)
-plotHours
-
 # Plot risk
 plotRisk <- ggplot(dfSample, aes(x = date)) +
   geom_line(aes(y = risk, color = vColor[1])) +
@@ -301,10 +285,8 @@ ggsave("./Results/Figures/10_risk.pdf", plotRisk, width = 10, height = 5)
 ggsave("./Results/Presentation/10_risk.svg", plotRisk, width = 10, height = 5)
 plotRisk
 
-beep()
-
 # Subplot with all plots
-plotAll <- plotCost + plotRevenue + plotContrib + plotDiff + plotHours + plotRisk
+plotAll <- plotCost + plotRevenue + plotContrib + plotDiff + plotRisk
 plotAll
 
 # Select top 5 job with highest risk
@@ -312,7 +294,7 @@ dfRisk <- dfDataX %>%
   group_by(job_no) %>%
   summarise(risk = sum(-risk, na.rm = T)) %>%
   arrange(desc(risk)) %>%
-  head(5)
+  tail(5)
 
 dfRisk
 

@@ -60,7 +60,7 @@ set nocount on
 		INNER JOIN #Sager Sager
 		ON Sager.[No_]=Sagsposter.[Job No_]
 		WHERE 1=1
-		AND Year(Sagsposter.[Posting Date]) >= 2018
+		AND Year(Sagsposter.[Posting Date]) >= 2010
 		GROUP BY 
 		Sagsposter.[Global Dimension 1 Code],
 		Sagsposter.[Job No_],
@@ -103,7 +103,7 @@ set nocount on
 		[Month]
 		INTO #Cal
 		FROM [ElconDW].[dim].[Calendar]
-		WHERE [Year] >= '2018'
+		WHERE [Year] >= '2015'
 
 		SELECT
 			FORMAT(j.[WIP Date],'yyyy-MM-01') AS 'date',
@@ -167,7 +167,7 @@ set nocount on
 			WHERE b4.job_no = ac.job_no AND b4.date < ac.date
 		)
 	) la
-	WHERE YEAR(ac.date) >= 2018
+	WHERE YEAR(ac.date) >= 2015
 
 
 	SELECT  
@@ -305,24 +305,31 @@ set nocount on
 	,CASE 
 		WHEN Sager.[Status] = 3 THEN
 			CASE 
-				WHEN ISNULL(Sagsbudget.Slutdato, 0) = 0 THEN  FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy')
+				WHEN ISNULL(Sagsbudget.Slutdato, 0)=0 THEN  FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy')
+				WHEN Sagsbudget.Slutdato = '01-01-1753' THEN  FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy')
 				ELSE FORMAT(CAST(Sagsbudget.Slutdato AS date), '01-MM-yyyy')
 			END
 		ELSE FORMAT(CAST(Sagsbudget.Slutdato AS date), '01-MM-yyyy')
 	END AS 'end_date'
+	,ISNULL(Budget_final.sales_estimate_sales,0) 'sales_estimate_revenue'
+	,ISNULL(Budget_final.estimate_sales,0) 'production_estimate_revenue'
+	,ISNULL(Budget_final.final_estimate_sales,0) 'final_estimate_revenue'
+	,ISNULL(-Budget_final.sales_estimate_cost,0) 'sales_estimate_costs'
+	,ISNULL(-Budget_final.estimate_cost,0) 'production_estimate_costs'
+	,ISNULL(-Budget_final.final_estimate_cost,0) 'final_estimate_costs'
 	,ISNULL(Budget_final.sales_estimate_sales - Budget_final.sales_estimate_cost,0) 'sales_estimate_contribution'
 	,ISNULL(Budget_final.estimate_sales - Budget_final.estimate_cost,0) 'production_estimate_contribution'
 	,ISNULL(Budget_final.final_estimate_sales - Budget_final.final_estimate_cost,0) 'final_estimate_contribution'
     ,(ISNULL(Sagsbudget.[Indtaegtsbudget],0)) AS 'budget_revenue'
-    ,(ISNULL(Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
+    ,(ISNULL(-Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
     ,((ISNULL(Sagsbudget.[Indtaegtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
     ,(ISNULL(Sagsposter.[revenue],0)) AS 'revenue'
 	,(ISNULL(Sagsposter.[revenue],0))/(NULLIF(Sagsbudget.[Indtaegtsbudget],0)) AS 'revenue_budget_share'
-    ,(ISNULL(Sagsposter.costs,0)) 'costs'
+    ,(ISNULL(-Sagsposter.costs,0)) 'costs'
 	,(ISNULL(Sagsposter.costs,0))/(NULLIF(Sagsbudget.[Omkostningsbudget],0)) AS 'costs_budget_share'
-    ,(ISNULL(Sagsposter.costs_of_labor,0))/(NULLIF(Sagsposter.costs,0)) AS 'costs_of_labor_share'
-    ,(ISNULL(Sagsposter.costs_of_materials,0))/(NULLIF(Sagsposter.costs,0)) AS 'costs_of_materials_share'
-    ,(ISNULL(Sagsposter.other_costs,0))/(NULLIF(Sagsposter.costs,0)) AS  'other_costs_share'
+    ,(ISNULL(-Sagsposter.costs_of_labor,0))/(NULLIF(Sagsposter.costs,0)) AS 'costs_of_labor_share'
+    ,(ISNULL(-Sagsposter.costs_of_materials,0))/(NULLIF(Sagsposter.costs,0)) AS 'costs_of_materials_share'
+    ,(ISNULL(-Sagsposter.other_costs,0))/(NULLIF(Sagsposter.costs,0)) AS  'other_costs_share'
 	,(ISNULL(Sagsposter.revenue,0) - ISNULL(Sagsposter.costs,0))/(NULLIF(Sagsposter.revenue,0)) AS 'contribution_margin'
 	,(ISNULL(Sagsposter.revenue,0) - ISNULL(Sagsposter.costs,0)) AS 'contribution'
 	,(CASE 
@@ -350,20 +357,11 @@ set nocount on
             END 
     END) - (ISNULL(Sagsposter.costs,0)) AS 'estimated_contribution'
 	,ISNULL(#rle_2.billable_hours_qty,0) 'billable_hours_qty'
-	,ISNULL(#rle_2.earned_time_off_qty,0)/NULLIF(ISNULL(#rle_2.billable_hours_qty,0),0) 'earned_time_off_rate'
-	,ISNULL(#rle_2.over_time_qty,0)/NULLIF(ISNULL(#rle_2.billable_hours_qty,0),0) 'over_time_rate'
-	,ISNULL(#rle_2.allowance_qty,0)/NULLIF(ISNULL(#rle_2.billable_hours_qty,0),0) 'allowance_rate'
-	--,ISNULL(#Faktureringsgrad.[Jobtimer],0) 'work_hours_dep'
-	--,ISNULL(#Faktureringsgrad.[Fakturerbar tid],0) 'billable_dep'
 	,(ISNULL(#Faktureringsgrad.[Fakturerbar tid],0)/NULLIF(ISNULL(#Faktureringsgrad.[Jobtimer],0),0)) 'billable_rate_dep'
 	,(ISNULL(#Faktureringsgrad.[Sygdom],0)/NULLIF((ISNULL(#Faktureringsgrad.[Jobtimer],0)+ISNULL(#Faktureringsgrad.[Skoleophold],0)),0)) 'illness_rate_dep'
 	,(ISNULL(#Faktureringsgrad.[Langtidssygdom],0)/NULLIF((ISNULL(#Faktureringsgrad.[Jobtimer],0)+ISNULL(#Faktureringsgrad.[Skoleophold],0)),0)) 'long_term_illness_rate_dep'
 	,(ISNULL(#Faktureringsgrad.[Intern tid],0)/NULLIF(ISNULL(#Faktureringsgrad.[Jobtimer],0),0)) 'internal_rate_dep'
 	,(ISNULL(#Faktureringsgrad.[Langtidssygdom],0)/NULLIF(ISNULL(#Faktureringsgrad.[Sygdom],0),0)) 'long_term_illness_share_dep'
---	,ISNULL(#rle_2.billable_hours,0) 'billable_hours'
---	,ISNULL(#rle_2.earned_time_off,0) 'earned_time_off'
---	,ISNULL(#rle_2.over_time,0) 'over_time'
---	,ISNULL(#rle_2.allowance,0) 'allowance'
     FROM #Regnskab as Sagsposter
     Left JOIN #Sagsopgaver Sagsopgaver
     ON  Sagsopgaver.[Job No_] = Sagsposter.[Job No_]
@@ -384,10 +382,6 @@ set nocount on
 	LEFT JOIN #Faktureringsgrad
 	ON CONCAT(Sagsposter.[date], CASE WHEN Sagsposter.[department]  = '421' THEN '505' ELSE Sagsposter.[department] END) = CONCAT(FORMAT(#Faktureringsgrad.Dato,'dd-MM-yyyy'),#Faktureringsgrad.Afdeling)
     WHERE 1=1
-	AND (CASE WHEN ISNULL(Sagsbudget.[Indtaegtsbudget],0) = 0 THEN 0 ELSE 1 END +
-		 CASE WHEN ISNULL(Sagsbudget.[Omkostningsbudget],0) = 0 THEN 0 ELSE 1 END +
-		 CASE WHEN ISNULL(Sagsposter.costs,0) = 0 THEN 0 ELSE 1 END +
-		 CASE WHEN ISNULL(Sagsposter.revenue,0) = 0 THEN 0 ELSE 1 END) <> 0
 	AND Sagsposter.[department] IN ('421','515','505')
 	ORDER BY Sager.[No_], [year], [month] ASC
 
