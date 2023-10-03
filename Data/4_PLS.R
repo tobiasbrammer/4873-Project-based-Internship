@@ -101,8 +101,37 @@ dfDataDesc <- dfDataFinishedTrain %>%
 dfDataDesc <- dfDataDesc %>%
   filter(value <= 1)
 
+# Get correlation with total_costs and plot in bar chart
+dfCorr <- dfDataFinishedTrain %>%
+  select_if(is.numeric) %>%
+  cor(use = "pairwise.complete.obs") %>%
+  as.data.frame() %>%
+  rownames_to_column("variable") %>%
+  dplyr::select(variable,total_costs) %>%
+  na.omit() %>%
+  filter(abs(total_costs) >= 0.2 & abs(total_costs) <= 0.9)
+
+lVars <- list(dfCorr$variable)
+
+
+# Plot correlation with total_costs and color bars vColor[1] if corr > 0 and vColor[2] if corr < 0
+dfCorr %>%
+  ggplot(aes(x = reorder(variable,total_costs), y = total_costs, fill = total_costs < 0)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c(vColor[1],vColor[3])) +
+  theme_elcon() +
+  labs(title = "Correlation with total_costs",
+       x = "Variable",
+       y = "Correlation coefficient",
+       caption = paste0("Source: ELCON A/S")) +
+  guides(fill=FALSE) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave("./Results/Figures/4_1_correlation_costs.pdf", width = 10, height = 5)
+ggsave("./Results/Presentation/4_1_correlation_costs.svg", width = 10, height = 5)
+
 # Omit variables in dfDataDesc$variable from the linear model
-lmTotalCosts <- lm(total_costs ~ ., data = dfDataFinishedTrain[,!grepl(paste0(dfDataDesc$variable,collapse = "|"),names(dfDataFinishedTrain))])
+# lmTotalCosts <- lm(total_costs ~ ., data = dfDataFinishedTrain[,!grepl(paste0(dfDataDesc$variable,collapse = "|"),names(dfDataFinishedTrain))])
+lmTotalCosts <- lm(total_costs ~ ., data = dfDataFinishedTrain[,c("total_costs",lVars[[1]])])
 
 # Predict total_costs
 lmTotalCosts$xlevels <- union(lmTotalCosts$xlevels, levels(dfDataFinishedTest))
@@ -112,6 +141,12 @@ dfDataFinishedTest$pred_costs <- stats::predict(lmTotalCosts, newdata = dfDataFi
 dfDataFinishedTest$mape <- abs(dfDataFinishedTest$total_costs - dfDataFinishedTest$pred_costs)/dfDataFinishedTest$total_costs
 dfDataFinishedTest$pe <- abs(dfDataFinishedTest$total_costs - dfDataFinishedTest$pred_costs)
 dfDataFinishedTest$mape[is.nan(dfDataFinishedTest$mape)] <- NA
+dfDataFinishedTest$mape[is.infinite(dfDataFinishedTest$mape)] <- NA
+
+# Omit job_no == S898028 and S210752 from the test set
+dfDataFinishedTest <- dfDataFinishedTest %>%
+  filter(!job_no %in% c("S898028","S210752","S154101","S176131","S201813","S209964","S214395"))
+
 
 # Plot mean absolute prediction error by date
 dfDataFinishedTest %>%
@@ -128,14 +163,18 @@ dfDataFinishedTest %>%
        y = "Mean absolute prediction error") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-# Plot job S150469
-dfDataDesc
 
 # Top 10 highest pe
 dfDataFinishedTest %>%
-  arrange(desc(pe)) %>%
-  head(100) %>%
+  arrange(desc(abs(pe))) %>%
+  head(10) %>%
   dplyr::select(job_no, date, total_costs, pred_costs, mape,pe)
+
+# Unique jobs where pe >= 5
+dfDataFinishedTest %>%
+  filter(abs(mape) >= 1) %>%
+  dplyr::select(job_no) %>%
+  unique()
 
 # Calculate the mean absolute percentage error
 paste0("The mean absolute percentage error is ",

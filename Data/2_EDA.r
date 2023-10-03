@@ -116,8 +116,8 @@ ggplot(tOutlier, aes(x = reorder(department, n), y = n, fill = status)) +
   scale_fill_manual(values = c(vColor[1], vColor[3])) +
   facet_wrap(~job_posting_group)
 # annotate figure with method
-ggsave('./Results/Figures/1_outlier.pdf', width = 10, height = 5)
-ggsave('./Results/Presentation/1_outlier.svg', width = 10, height = 5)
+ggsave('./Results/Figures/2_1_outlier.pdf', width = 10, height = 5)
+ggsave('./Results/Presentation/2_1_outlier.svg', width = 10, height = 5)
 
 # Summary of Data
 eda_5 <- kable(ExpData(data=dfDataX,type=1), format = "latex", booktabs = T, longtable = T,
@@ -161,16 +161,16 @@ ggplot(dfDataX, aes(x = contribution_margin)) +
   labs(title = '', x = 'Contribution Margin', y = 'Count',caption = paste0('Source: ELCON A/S')) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
   theme_elcon()
-ggsave('./Results/Figures/2_margin.pdf', width = 10, height = 5)
-ggsave('./Results/Presentation/2_margin.svg', width = 10, height = 5)
+ggsave('./Results/Figures/2_2_margin.pdf', width = 10, height = 5)
+ggsave('./Results/Presentation/2_2_margin.svg', width = 10, height = 5)
 
 ggplot(dfDataX, aes(x = budget_contribution_margin)) +
   geom_histogram(bins = 50, fill = vColor[1]) +
   labs(title = '', x = 'Budget Contribution Margin', y = 'Count',caption = paste0('Source: ELCON A/S')) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
   theme_elcon()
-ggsave('./Results/Figures/3_budget_margin.pdf', width = 10, height = 5)
-ggsave('./Results/Presentation/3_budget_margin.svg', width = 10, height = 5)
+ggsave('./Results/Figures/2_3_budget_margin.pdf', width = 10, height = 5)
+ggsave('./Results/Presentation/2_3_budget_margin.svg', width = 10, height = 5)
 
 dfCorr <- dfDataX %>%
   mutate(across(everything(), ~replace(., is.infinite(.), NA))) %>%
@@ -197,8 +197,8 @@ ggplot(dfCorr, aes(x = Var1, y = Var2, fill = value)) +
   labs(title = '', x = '', y = '',caption = paste0("Source: ELCON A/S")) +
   #geom_text(aes(label = round(value, 2)), color = 'black', size = 3) +
   theme(plot.title = element_text(hjust = 0.5))
-ggsave('./Results/Figures/4_corr.pdf', width = 20, height = 20)
-ggsave('./Results/Presentation/4_corr.svg', width = 20, height = 20)
+ggsave('./Results/Figures/2_4_corr.pdf', width = 20, height = 20)
+ggsave('./Results/Presentation/2_4_corr.svg', width = 20, height = 20)
 
 
 # Select random job number
@@ -219,8 +219,8 @@ plotCost <- ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/5_costs.pdf", plotCost, width = 10, height = 5)
-ggsave("./Results/Presentation/5_costs.svg", plotCost, width = 10, height = 5)
+ggsave("./Results/Figures/2_5_costs.pdf", plotCost, width = 10, height = 5)
+ggsave("./Results/Presentation/2_5_costs.svg", plotCost, width = 10, height = 5)
 plotCost
 
 # Plot revenue_scurve for selected job number
@@ -235,8 +235,8 @@ plotRevenue <- ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/6_revenue.pdf", plotRevenue, width = 10, height = 5)
-ggsave("./Results/Presentation/6_revenue.svg", plotRevenue, width = 10, height = 5)
+ggsave("./Results/Figures/2_6_revenue.pdf", plotRevenue, width = 10, height = 5)
+ggsave("./Results/Presentation/2_6_revenue.svg", plotRevenue, width = 10, height = 5)
 plotRevenue
 
 # Plot contribution_scurve for selected job number
@@ -251,8 +251,8 @@ plotContrib <- ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/7_contribution.pdf", plotContrib, width = 10, height = 5)
-ggsave("./Results/Presentation/7_contribution.svg", plotContrib, width = 10, height = 5)
+ggsave("./Results/Figures/2_7_contribution.pdf", plotContrib, width = 10, height = 5)
+ggsave("./Results/Presentation/2_7_contribution.svg", plotContrib, width = 10, height = 5)
 plotContrib
 
 # Plot revenue_scurve_diff, costs_scurve_diff, and contribution_scurve_diff for selected job number
@@ -267,8 +267,8 @@ plotDiff <- ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/8_diff.pdf", plotDiff, width = 10, height = 5)
-ggsave("./Results/Presentation/8_diff.svg", plotDiff, width = 10, height = 5)
+ggsave("./Results/Figures/2_8_diff.pdf", plotDiff, width = 10, height = 5)
+ggsave("./Results/Presentation/2_8_diff.svg", plotDiff, width = 10, height = 5)
 plotDiff
 
 # Plot risk
@@ -281,8 +281,8 @@ plotRisk <- ggplot(dfSample, aes(x = date)) +
   scale_x_date(date_breaks = '3 months', date_labels = '%m %Y') +
   scale_y_continuous(labels = scales::comma_format(big.mark = ".", decimal.mark = ",")) +
   theme_elcon()
-ggsave("./Results/Figures/10_risk.pdf", plotRisk, width = 10, height = 5)
-ggsave("./Results/Presentation/10_risk.svg", plotRisk, width = 10, height = 5)
+ggsave("./Results/Figures/2_10_risk.pdf", plotRisk, width = 10, height = 5)
+ggsave("./Results/Presentation/2_10_risk.svg", plotRisk, width = 10, height = 5)
 plotRisk
 
 # Subplot with all plots
