@@ -24,7 +24,7 @@ con <- dbConnect(odbc::odbc(),
                  user = paste0("NRGI","\"",Sys.getenv("USERNAME")),
                  Trusted_Connection = "True")
 
-sQuery <- paste(readLines(".SQL/Data_v3.sql"), collapse = "\n")
+sQuery <- paste(readLines(".SQL/Data_v4.sql"), collapse = "\n")
 
 dfData <- data.frame(dbFetch(dbSendQuery(con,sQuery)))
 

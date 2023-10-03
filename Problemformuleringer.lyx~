@@ -76,8 +76,8 @@
 \begin_body
 
 \begin_layout Part*
-Kan integrerede maskinlæringsmodeller, ved udnyttelse af afvigelser fra
- S-kurver og ledende indikatorer, nøjagtigt forudsige marginer og risici
+Kan integrerede ensemble maskinlæringsmodeller, ved udnyttelse af afvigelser
+ fra S-kurver og ledende indikatorer, nøjagtigt forudsige marginer og risici
  ved byggeprojekter?
 \end_layout
 
@@ -111,22 +111,6 @@ I forbindelse med byggeprojektledelse kan maskinlæringsmodeller specialiseres
 \end_layout
 
 \begin_layout Subsubsection*
-PLS-SEM (Partial Least Squares Structural Equation Modeling)
-\end_layout
-
-\begin_layout Standard
-PLS-SEM er især nyttigt, når man håndterer komplekse scenarier, hvor flere
- variabler interagerer med hinanden på forskellige måder.
- I tilfælde af byggeri, kan vi have flere faktorer som faktureringsgrad,
- materialeomkostninger, skred i tidsplan og endda vejrforhold, som alle
- kan påvirke projektets samlede rentabilitet.
- PLS-SEM gør det muligt at analysere, hvordan hver af disse variabler bidrager
- til rentabiliteten, mens de tager højde for deres indbyrdes sammenhænge.
- Det kan isolere de mest afgørende faktorer, der påvirker rentabiliteten,
- og hjælpe beslutningstagere med at fokusere deres indsats mere effektivt.
-\end_layout
-
-\begin_layout Subsubsection*
 Ensemble modeller
 \end_layout
 
@@ -141,6 +125,22 @@ ning, kan have sit eget sæt begrænsninger.
  enkelt forudsigelse ved at give hver models output vægte.
  Det ultimative mål er at skabe en forudsigelse, der både er mere nøjagtig
  og mere robust end hvad en enkelt model kunne producere.
+\end_layout
+
+\begin_layout Subsubsection*
+PLS-SEM (Partial Least Squares Structural Equation Modeling)
+\end_layout
+
+\begin_layout Standard
+PLS-SEM er især nyttigt, når man håndterer komplekse scenarier, hvor flere
+ variabler interagerer med hinanden på forskellige måder.
+ I tilfælde af byggeri, kan vi have flere faktorer som faktureringsgrad,
+ materialeomkostninger, skred i tidsplan og endda vejrforhold, som alle
+ kan påvirke projektets samlede rentabilitet.
+ PLS-SEM gør det muligt at analysere, hvordan hver af disse variabler bidrager
+ til rentabiliteten, mens de tager højde for deres indbyrdes sammenhænge.
+ Det kan isolere de mest afgørende faktorer, der påvirker rentabiliteten,
+ og hjælpe beslutningstagere med at fokusere deres indsats mere effektivt.
 \end_layout
 
 \begin_layout Standard
