@@ -226,15 +226,6 @@ dfDesc <- dfDesc %>%
   filter(date == max(date)) %>%
   ungroup()
 dfDesc <- dfDesc[,c('job_no','description')]
-# # Remove punctuation
-# dfDesc$description <- gsub("[[:punct:]]", "", dfDesc$description)
-# # Remove numbers
-# dfDesc$description <- gsub("[[:digit:]]", "", dfDesc$description)
-# # Remove extra white spaces
-# dfDesc$description <- gsub("\\s+", " ", dfDesc$description)
-# # Remove leading and trailing white spaces
-# dfDesc$description <- trimws(dfDesc$description)
-# Remove empty rows
 dfDesc <- dfDesc[dfDesc$description != "",]
 lText_Corpus <- Corpus(VectorSource(dfDesc$description)) # The corpus is a list object in R of type CORPUS
 

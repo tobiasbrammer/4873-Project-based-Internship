@@ -22,8 +22,6 @@ rm(list=ls()[!grepl("dfData",ls())])
 invisible(source('theme_elcon.R'))
 rm(list=ls()[!grepl("vColor|theme_elcon|dfData",ls())])
 
-# Describe variables in dfData and data type of each variable.
-str(dfData)
 
 ### Split data into wip and finished jobs ###
 dfDataFinished <- dfData %>% filter(wip == 0)
