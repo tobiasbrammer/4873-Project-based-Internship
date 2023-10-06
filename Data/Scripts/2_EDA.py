@@ -10,8 +10,8 @@ import os
 from matplotlib import rc
 
 # Read data
+sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 # sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship /Data"
 
 os.chdir(sDir)
 dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
@@ -21,11 +21,13 @@ dfData['date'] = pd.to_datetime(dfData['date'], format='%Y-%m-%d')
 
 # Summary of Data
 summary_data = dfData.describe().transpose()
-# Format all numerical values in DataFrame with thousands separator
-formatted_df = summary_data.applymap(lambda x: '{:,.2f}'.format(x) if isinstance(x, (int, float)) else x)
+# Format all numerical values in DataFrame with thousands separator.
+formatted_df_eda_1 = summary_data.map(lambda x: '{:,.2f}'.format(x) if isinstance(x, (int, float)) else x)
 # Replace all percent signs % with \%
-latex_str = formatted_df.style.to_latex().replace('%', '\\%')
+eda_1 = formatted_df_eda_1.to_latex(index=False, caption='Variables',longtable=True,label='eda_1').replace('%', '\\%')
+
+eda_1 = eda_1.replace('NaN', 'Missing')
 
 # Save as LaTeX using Styler
 with open('./Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
-    f.write(latex_str)
+    f.write(eda_1)
