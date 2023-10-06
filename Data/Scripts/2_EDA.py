@@ -26,9 +26,8 @@ dfData['date'] = dfData['date'].dt.strftime('%d-%m-%Y')
 dfData['end_date'] = dfData['end_date'].dt.strftime('%d-%m-%Y')
 summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.
-formatted_df_eda_1 = summary_data.map(lambda x: '{:,.2f}'.format(x) if isinstance(x, (int, float)) else x)
 # Keep index, min, max, mean, std.
-formatted_df_eda_1 = formatted_df_eda_1[['mean', 'std', 'min', 'max']]
+formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
 # Count number of missing values for each variable
 missing_values = dfData.isnull().sum().to_frame()
 # Rename column
@@ -37,6 +36,8 @@ missing_values = missing_values.rename(columns={0: 'Missing'})
 missing_values['\% Missing'] = missing_values['Missing'] / len(dfData) * 100
 # Add missing values to formatted_df_eda_1
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
+
+formatted_df_eda_1 = formatted_df_eda_1.map(lambda x: '{:,.2f}'.format(x) if isinstance(x, (int, float)) else x)
 
 # Output to LaTeX with landscape orientation
 
