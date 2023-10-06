@@ -10,7 +10,9 @@ import os
 from matplotlib import rc
 
 # Read data
-sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship /Data"
+
 os.chdir(sDir)
 dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
 
