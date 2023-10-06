@@ -1,9 +1,14 @@
-import pyodbc
 import pandas as pd
+import numpy as np
 import os
 import datetime
-from pyarrow import parquet as pq
+import sqlalchemy as sa
+import pyodbc
+import urllib
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine.url import URL
 import pyarrow as pa
+import pyarrow.parquet as pq
 
 # Start timing
 start_time = datetime.datetime.now()
@@ -12,20 +17,59 @@ start_time = datetime.datetime.now()
 directory = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 os.chdir(directory)
 
-# Connect to the database using pyodbc
+# If time is 05:00 - 05:15, then wait until 05:15
+if datetime.datetime.now().hour == 5 and datetime.datetime.now().minute < 15:
+    print("Waiting 15 minutes...")
+    while datetime.datetime.now().minute < 15:
+        pass
+# If time is 8:00 - 8:15, then wait until 8:15
+elif datetime.datetime.now().hour == 8 and datetime.datetime.now().minute < 15:
+    print("Waiting 15 minutes...")
+    while datetime.datetime.now().minute < 15:
+        pass
+# If time is 11:30 - 11:45, then wait until 11:45
+elif datetime.datetime.now().hour == 11 and datetime.datetime.now().minute < 45:
+    print("Waiting 15 minutes...")
+    while datetime.datetime.now().minute < 45:
+        pass
+# If time is 14:00 - 14:15, then wait until 14:15
+elif datetime.datetime.now().hour == 14 and datetime.datetime.now().minute < 15:
+    print("Waiting 15 minutes...")
+    while datetime.datetime.now().minute < 15:
+        pass
+# If time is 17:00 - 17:15, then wait until 17:15
+elif datetime.datetime.now().hour == 17 and datetime.datetime.now().minute < 15:
+    print("Waiting 15 minutes...")
+    while datetime.datetime.now().minute < 15:
+        pass
+# If time is 21:00 - 21:15, then wait until 21:15
+elif datetime.datetime.now().hour == 21 and datetime.datetime.now().minute < 15:
+    print("Waiting 15 minutes...")
+    while datetime.datetime.now().minute < 15:
+        pass
+# If time is 02:00 - 02:15, then wait until 02:15
+elif datetime.datetime.now().hour == 2 and datetime.datetime.now().minute < 15:
+    print("Waiting 15 minutes...")
+    while datetime.datetime.now().minute < 15:
+        pass
+
+# Connect to the database using SQLAlchemy
 username = os.getenv("USERNAME")
-connection_string = f'DRIVER={{SQL Server}}; DATABASE=NRGIDW_Extract; SERVER=SARDUSQLBI01; UID=NRGI\\{username}; Trusted_Connection=True'
-con = pyodbc.connect(connection_string)
+server = "SARDUSQLBI01"
+database = "NRGIDW_Extract"
+params = urllib.parse.quote_plus("DRIVER={SQL Server};"
+                                 "SERVER=" + server + ";"
+                                                      "DATABASE=" + database + ";"
+                                                                               "trusted_connection=yes")
+engine = sa.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 
 # Read SQL query from file
 with open(".SQL/Data_v4.sql", "r") as file:
     sQuery = file.read()
 
-# Fetch data into DataFrame
-dfData = pd.read_sql(sQuery, con)
-
-# Close the database connection
-con.close()
+# Test connection
+with engine.begin() as conn:
+    dfData = pd.read_sql_query(sa.text(sQuery), conn)
 
 # Convert date columns to datetime format
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
