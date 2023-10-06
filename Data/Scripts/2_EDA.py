@@ -34,7 +34,7 @@ missing_values = dfData.isnull().sum().to_frame()
 # Rename column
 missing_values = missing_values.rename(columns={0: 'Missing'})
 # Percentage of missing values
-missing_values['% Missing'] = missing_values['Missing'] / len(dfData) * 100
+missing_values['\% Missing'] = missing_values['Missing'] / len(dfData) * 100
 # Add missing values to formatted_df_eda_1
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
 
