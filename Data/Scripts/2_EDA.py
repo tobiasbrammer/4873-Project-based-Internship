@@ -46,9 +46,9 @@ eda_1 = formatted_df_eda_1.to_latex(index=True,
                                     bold_rows=True,
                                     escape=True,
                                     label='eda_1').replace('%', '\\%')
-# Make table landscape
-eda_1 = eda_1.replace('\\begin{tabular}', '\\begin{landscape}\\begin{tabular}')
-eda_1 = eda_1.replace('\\end{tabular}', '\\end{tabular}\\end{landscape}')
+# Make table landscape orientation (replace \begin{longtable} with \begin{landscape}\begin{longtable})
+eda_1 = eda_1.replace('\\begin{longtable}', '\\begin{landscape}\\begin{longtable}')
+eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 
 # Output to LaTeX with landscape orientation
 with open(f"{sDir}/eda_1.tex", "w") as f:
