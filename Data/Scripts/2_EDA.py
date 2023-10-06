@@ -23,8 +23,10 @@ dfData['date'] = pd.to_datetime(dfData['date'], format='%Y-%m-%d')
 summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.
 formatted_df_eda_1 = summary_data.map(lambda x: '{:,.2f}'.format(x) if isinstance(x, (int, float)) else x)
+# Keep index, min, max, mean, std.
+formatted_df_eda_1 = formatted_df_eda_1[['mean', 'std', 'min', 'max']]
 # Replace all percent signs % with \%
-eda_1 = formatted_df_eda_1.to_latex(index=False, caption='Variables',longtable=True,label='eda_1').replace('%', '\\%')
+eda_1 = formatted_df_eda_1.to_latex(index=True, caption='Variables',longtable=True,label='eda_1').replace('%', '\\%')
 
 eda_1 = eda_1.replace('NaN', 'Missing')
 
