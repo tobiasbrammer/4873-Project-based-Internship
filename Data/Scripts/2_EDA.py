@@ -38,11 +38,18 @@ missing_values['% Missing'] = missing_values['Missing'] / len(dfData) * 100
 # Add missing values to formatted_df_eda_1
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
 
-# Replace all percent signs % with \%
-eda_1 = formatted_df_eda_1.to_latex(index=True, caption='Variables',longtable=True,label='eda_1').replace('%', '\\%')
-# set font size
-eda_1 = eda_1.replace('small', 'footnotesize')
-eda_1 = eda_1.replace('NaN', 'Missing')
-# Save as LaTeX using Styler
-with open('./Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
+# Output to LaTeX with landscape orientation
+
+eda_1 = formatted_df_eda_1.to_latex(index=True,
+                                    caption='Variables',
+                                    longtable=True,
+                                    bold_rows=True,
+                                    escape=True,
+                                    label='eda_1').replace('%', '\\%')
+# Make table landscape
+eda_1 = eda_1.replace('\\begin{tabular}', '\\begin{landscape}\\begin{tabular}')
+eda_1 = eda_1.replace('\\end{tabular}', '\\end{tabular}\\end{landscape}')
+
+# Output to LaTeX with landscape orientation
+with open(f"{sDir}/eda_1.tex", "w") as f:
     f.write(eda_1)
