@@ -25,11 +25,10 @@ summary_data = dfData.describe().transpose()
 formatted_df_eda_1 = summary_data.map(lambda x: '{:,.2f}'.format(x) if isinstance(x, (int, float)) else x)
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = formatted_df_eda_1[['mean', 'std', 'min', 'max']]
+formatted_df_eda_1.loc['date', 'mean'] = dfData['date'].min().strftime('%d-%m-%Y')
 # Replace all percent signs % with \%
 eda_1 = formatted_df_eda_1.to_latex(index=True, caption='Variables',longtable=True,label='eda_1').replace('%', '\\%')
-
 eda_1 = eda_1.replace('NaN', 'Missing')
-
 # Save as LaTeX using Styler
 with open('./Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
