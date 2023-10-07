@@ -19,11 +19,11 @@ dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
 # Convert the 'date' column to date format (assuming it's in 'YYYY-MM-DD' format)
 dfData['date'] = pd.to_datetime(dfData['date'], format='%Y-%m-%d')
 dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%Y-%m-%d')
-
-# Summary of Data
 # Format date and end_date as dd-mm-yyyy
 dfData['date'] = dfData['date'].dt.strftime('%d-%m-%Y')
 dfData['end_date'] = dfData['end_date'].dt.strftime('%d-%m-%Y')
+
+# Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.
 # Keep index, min, max, mean, std.
@@ -42,9 +42,8 @@ formatted_df_eda_1 = formatted_df_eda_1.map(lambda x: '{:,.2f}'.format(x) if isi
 # Output to LaTeX with landscape orientation
 
 eda_1 = formatted_df_eda_1.to_latex(index=True,
-                                    caption='Variables',
+                                    caption='List of Variables',
                                     longtable=True,
-                                    bold_rows=True,
                                     escape=True,
                                     label='eda_1').replace('%', '\\%')
 
@@ -54,3 +53,4 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 # Output to LaTeX with landscape orientation
 with open(f"{sDir}/Results/Tables/2_eda_1.tex", "w") as f:
     f.write(eda_1)
+
