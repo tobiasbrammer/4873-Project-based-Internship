@@ -162,6 +162,23 @@ def calculate_risk(group):
 
 dfData = dfData.groupby('job_no', group_keys=False).apply(calculate_risk)
 
+# Determine the PACF and ACF of revenue, costs and contribution
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+for col in ['revenue', 'costs', 'contribution']:
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    plot_acf(dfData[col], ax=ax[0], lags=5)
+    plot_pacf(dfData[col], ax=ax[1], lags=5)
+    fig.suptitle(f'PACF and ACF of {col}')
+    plt.tight_layout()
+    plt.savefig(f"./Results/Figures/1_6_{col}_acf_pacf.png")
+    plt.savefig(f"./Results/Presentation/1_6_{col}_acf_pacf.svg")
+    plt.show()
+    plt.draw()
+
+# Get 5 lagged values for revenue, costs and contribution for each job_no
+for col in ['revenue', 'costs', 'contribution']:
+    for i in range(1, 6):
+        dfData[f'{col}_lag{i}'] = dfData.groupby('job_no',observed = True)[col].shift(i)
 
 # Calculate total costs at the end of the job
 dfData['total_costs'] = dfData.groupby('job_no')['costs_cumsum'].transform('last')
