@@ -1,0 +1,50 @@
+\begin{center}
+\begin{tabular}{lclc}
+\toprule
+\textbf{Dep. Variable:}                     & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.417   \\
+\textbf{Model:}                             &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.414   \\
+\textbf{Method:}                            &    Least Squares    & \textbf{  F-statistic:       }          &     137.3   \\
+\textbf{Date:}                              &   Mon, 09 Oct 2023  & \textbf{  Prob (F-statistic):}          & 1.96e-280   \\
+\textbf{Time:}                              &       20:48:30      & \textbf{  Log-Likelihood:    }          &   -4673.7   \\
+\textbf{No. Observations:}                  &          2503       & \textbf{  AIC:               }          &     9373.   \\
+\textbf{Df Residuals:}                      &          2490       & \textbf{  BIC:               }          &     9449.   \\
+\textbf{Df Model:}                          &            13       & \textbf{                     }          &             \\
+\textbf{Covariance Type:}                   &      nonrobust      & \textbf{                     }          &             \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lcccccc}
+                                            & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+\midrule
+\textbf{total\_days}                        &      -0.0015  &        0.004     &    -0.368  &         0.713        &       -0.010    &        0.007     \\
+\textbf{costs\_scurve\_diff}                &       0.2244  &        0.017     &    13.031  &         0.000        &        0.191    &        0.258     \\
+\textbf{days\_since\_start}                 &       0.0026  &        0.004     &     0.620  &         0.535        &       -0.006    &        0.011     \\
+\textbf{billable\_hours\_qty\_cumsum}       &   -4.575e-05  &     8.96e-06     &    -5.105  &         0.000        &    -6.33e-05    &    -2.82e-05     \\
+\textbf{days\_until\_end}                   &       0.0021  &        0.004     &     0.499  &         0.618        &       -0.006    &        0.010     \\
+\textbf{contribution\_lag1}                 &       0.5718  &        0.068     &     8.363  &         0.000        &        0.438    &        0.706     \\
+\textbf{revenue\_lag1}                      &       0.2359  &        0.061     &     3.842  &         0.000        &        0.116    &        0.356     \\
+\textbf{costs\_lag1}                        &       0.3359  &        0.081     &     4.136  &         0.000        &        0.177    &        0.495     \\
+\textbf{contribution\_lag2}                 &       0.5736  &        0.069     &     8.272  &         0.000        &        0.438    &        0.710     \\
+\textbf{revenue\_lag2}                      &       0.1658  &        0.071     &     2.321  &         0.020        &        0.026    &        0.306     \\
+\textbf{costs\_lag2}                        &       0.4078  &        0.093     &     4.384  &         0.000        &        0.225    &        0.590     \\
+\textbf{contribution\_lag3}                 &       0.5863  &        0.068     &     8.591  &         0.000        &        0.452    &        0.720     \\
+\textbf{revenue\_lag3}                      &       0.2789  &        0.064     &     4.328  &         0.000        &        0.153    &        0.405     \\
+\textbf{costs\_lag3}                        &       0.3074  &        0.082     &     3.745  &         0.000        &        0.146    &        0.468     \\
+\textbf{production\_estimate\_contribution} &      -0.0054  &        0.004     &    -1.384  &         0.166        &       -0.013    &        0.002     \\
+\textbf{sales\_estimate\_contribution}      &       0.3233  &        0.027     &    12.033  &         0.000        &        0.271    &        0.376     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 503.193 & \textbf{  Durbin-Watson:     } &    1.707  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 5902.560  \\
+\textbf{Skew:}          &   0.600 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &  10.427 & \textbf{  Cond. No.          } & 1.79e+19  \\
+\bottomrule
+\end{tabular}
+%\caption{OLS Regression Results}
+\end{center}
+
+Notes: \newline
+ [1] R² is computed without centering (uncentered) since the model does not contain a constant. \newline
+ [2] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
+ [3] The smallest eigenvalue is 3.52e-28. This might indicate that there are \newline
+ strong multicollinearity problems or that the design matrix is singular.

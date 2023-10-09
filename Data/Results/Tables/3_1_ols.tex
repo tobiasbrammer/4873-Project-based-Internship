@@ -1,13 +1,13 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}               & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.277   \\
-\textbf{Model:}                       &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.276   \\
-\textbf{Method:}                      &    Least Squares    & \textbf{  F-statistic:       }          &     245.5   \\
-\textbf{Date:}                        &   Mon, 09 Oct 2023  & \textbf{  Prob (F-statistic):}          & 1.51e-222   \\
-\textbf{Time:}                        &       19:46:22      & \textbf{  Log-Likelihood:    }          &   -6188.8   \\
-\textbf{No. Observations:}            &          3210       & \textbf{  AIC:               }          & 1.239e+04   \\
-\textbf{Df Residuals:}                &          3205       & \textbf{  BIC:               }          & 1.242e+04   \\
+\textbf{Dep. Variable:}               & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.279   \\
+\textbf{Model:}                       &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.278   \\
+\textbf{Method:}                      &    Least Squares    & \textbf{  F-statistic:       }          &     239.9   \\
+\textbf{Date:}                        &   Mon, 09 Oct 2023  & \textbf{  Prob (F-statistic):}          & 5.05e-217   \\
+\textbf{Time:}                        &       20:46:30      & \textbf{  Log-Likelihood:    }          &   -5933.2   \\
+\textbf{No. Observations:}            &          3103       & \textbf{  AIC:               }          & 1.188e+04   \\
+\textbf{Df Residuals:}                &          3098       & \textbf{  BIC:               }          & 1.191e+04   \\
 \textbf{Df Model:}                    &             5       & \textbf{                     }          &             \\
 \textbf{Covariance Type:}             &      nonrobust      & \textbf{                     }          &             \\
 \bottomrule
@@ -15,18 +15,18 @@
 \begin{tabular}{lcccccc}
                                       & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{total\_days}                  &       0.0009  &        0.003     &     0.341  &         0.733        &       -0.005    &        0.006     \\
-\textbf{dnu}                          &       1.7378  &        0.137     &    12.643  &         0.000        &        1.468    &        2.007     \\
-\textbf{billable\_hours\_qty\_cumsum} &    6.544e-05  &     5.84e-06     &    11.206  &         0.000        &      5.4e-05    &     7.69e-05     \\
-\textbf{days\_since\_start}           &      -0.0005  &        0.003     &    -0.198  &         0.843        &       -0.006    &        0.005     \\
-\textbf{days\_until\_end}             &      -0.0001  &        0.003     &    -0.051  &         0.959        &       -0.006    &        0.005     \\
+\textbf{total\_days}                  &       0.0018  &        0.002     &     0.834  &         0.404        &       -0.002    &        0.006     \\
+\textbf{costs\_scurve\_diff}          &       0.2461  &        0.016     &    15.750  &         0.000        &        0.215    &        0.277     \\
+\textbf{days\_since\_start}           &      -0.0005  &        0.002     &    -0.214  &         0.831        &       -0.005    &        0.004     \\
+\textbf{billable\_hours\_qty\_cumsum} &   -4.514e-05  &     8.17e-06     &    -5.526  &         0.000        &    -6.12e-05    &    -2.91e-05     \\
+\textbf{days\_until\_end}             &      -0.0012  &        0.002     &    -0.554  &         0.580        &       -0.006    &        0.003     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 619.182 & \textbf{  Durbin-Watson:     } &    1.907  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 9386.923  \\
-\textbf{Skew:}          &  -0.471 & \textbf{  Prob(JB):          } &     0.00  \\
-\textbf{Kurtosis:}      &  11.324 & \textbf{  Cond. No.          } & 3.25e+04  \\
+\textbf{Omnibus:}       & 555.059 & \textbf{  Durbin-Watson:     } &    1.805  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 6174.613  \\
+\textbf{Skew:}          &   0.507 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &   9.836 & \textbf{  Cond. No.          } & 3.20e+03  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
@@ -35,5 +35,5 @@
 Notes: \newline
  [1] R² is computed without centering (uncentered) since the model does not contain a constant. \newline
  [2] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
- [3] The condition number is large, 3.25e+04. This might indicate that there are \newline
+ [3] The condition number is large, 3.2e+03. This might indicate that there are \newline
  strong multicollinearity or other numerical problems.

@@ -13,6 +13,7 @@ from plot_config import *
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+
 # Load ./dfData.parquet
 # sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
@@ -85,8 +86,6 @@ scaled_train, scaled_test, scaler = scale_data(train_data, test_data)
 # To invert scaling
 # inverted_train = pd.DataFrame(scaler.inverse_transform(scaled_train), columns=train_data.columns)
 
-
-
 # Loop through all jobs in dfDataFinishedTes
 
 # Split into dependent and independent variables
@@ -98,68 +97,4 @@ dfDataFinishedTestIndep = dfDataFinishedTest[colIndepVar]
 
 dfDataFinishedTrainDep = dfDataFinishedTrain[['date', 'job_no', sDepVar]]
 dfDataFinishedTestDep = dfDataFinishedTest[['date', 'job_no', sDepVar]]
-
-### Predict sDepVar using OLS ###
-# Import required libraries
-import statsmodels.api as sm
-
-# Get the 5 most correlated variables (of numeric variables)
-corr = dfDataFinishedTrain[numeric_cols].corr()
-corr = corr.sort_values(by=sDepVar, ascending=False)
-corr = corr[sDepVar]
-# Filter out variables with "contribution" or "revenue" in the name
-corr = corr[~corr.index.str.contains('contribution|revenue')]
-corr = corr[1:6]
-# Save the 5 most correlated variables in a list
-lIndepVar = corr.index.tolist()
-
-
-
-# Run OLS
-model = sm.OLS(dfDataFinishedTrain[sDepVar], dfDataFinishedTrain[lIndepVar])
-results = model.fit()
-print(results.summary())
-# Save results to LaTeX
-ols = results.summary().as_latex()
-with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
-    f.write(ols)
-
-# Predict sDepVar using OLS
-dfDataFinishedTrain['predicted'] = results.predict(dfDataFinishedTrain[lIndepVar])
-dfDataFinishedTest['predicted'] = results.predict(dfDataFinishedTest[lIndepVar])
-
-# Plot the sum of predicted and actual sDepVar by date
-dfDataFinishedTrain['date'] = pd.to_datetime(dfDataFinishedTrain['date'])
-dfDataFinishedTest['date'] = pd.to_datetime(dfDataFinishedTest['date'])
-
-dfDataFinishedTrain = dfDataFinishedTrain.sort_values(by='date')
-dfDataFinishedTest = dfDataFinishedTest.sort_values(by='date')
-
-dfDataFinishedTrain['sum'] = dfDataFinishedTrain.groupby('date')['total_contribution'].transform('sum')
-dfDataFinishedTrain['sum_predicted'] = dfDataFinishedTrain.groupby('date')['predicted'].transform('sum')
-
-dfDataFinishedTest['sum'] = dfDataFinishedTest.groupby('date')['total_contribution'].transform('sum')
-dfDataFinishedTest['sum_predicted'] = dfDataFinishedTest.groupby('date')['predicted'].transform('sum')
-
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum'], label='Actual')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_predicted'], label='Predicted')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
-ax.legend()
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
-plt.savefig("./Results/Figures/3_1_ols.png")
-plt.savefig("./Results/Presentation/3_1_ols.svg")
-plt.show()
 

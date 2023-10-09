@@ -1,0 +1,48 @@
+\begin{center}
+\begin{tabular}{lclc}
+\toprule
+\textbf{Dep. Variable:}               & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.377   \\
+\textbf{Model:}                       &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.374   \\
+\textbf{Method:}                      &    Least Squares    & \textbf{  F-statistic:       }          &     137.0   \\
+\textbf{Date:}                        &   Mon, 09 Oct 2023  & \textbf{  Prob (F-statistic):}          & 2.20e-246   \\
+\textbf{Time:}                        &       20:46:31      & \textbf{  Log-Likelihood:    }          &   -4758.0   \\
+\textbf{No. Observations:}            &          2503       & \textbf{  AIC:               }          &     9538.   \\
+\textbf{Df Residuals:}                &          2492       & \textbf{  BIC:               }          &     9602.   \\
+\textbf{Df Model:}                    &            11       & \textbf{                     }          &             \\
+\textbf{Covariance Type:}             &      nonrobust      & \textbf{                     }          &             \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lcccccc}
+                                      & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+\midrule
+\textbf{total\_days}                  &      -0.0018  &        0.004     &    -0.412  &         0.680        &       -0.010    &        0.007     \\
+\textbf{costs\_scurve\_diff}          &       0.2928  &        0.017     &    17.260  &         0.000        &        0.260    &        0.326     \\
+\textbf{days\_since\_start}           &       0.0030  &        0.004     &     0.684  &         0.494        &       -0.006    &        0.011     \\
+\textbf{billable\_hours\_qty\_cumsum} &   -6.202e-06  &     8.71e-06     &    -0.712  &         0.476        &    -2.33e-05    &     1.09e-05     \\
+\textbf{days\_until\_end}             &       0.0023  &        0.004     &     0.530  &         0.596        &       -0.006    &        0.011     \\
+\textbf{contribution\_lag1}           &       0.6373  &        0.070     &     9.043  &         0.000        &        0.499    &        0.775     \\
+\textbf{revenue\_lag1}                &       0.2353  &        0.063     &     3.708  &         0.000        &        0.111    &        0.360     \\
+\textbf{costs\_lag1}                  &       0.4020  &        0.084     &     4.797  &         0.000        &        0.238    &        0.566     \\
+\textbf{contribution\_lag2}           &       0.6666  &        0.071     &     9.349  &         0.000        &        0.527    &        0.806     \\
+\textbf{revenue\_lag2}                &       0.1548  &        0.074     &     2.097  &         0.036        &        0.010    &        0.300     \\
+\textbf{costs\_lag2}                  &       0.5118  &        0.096     &     5.341  &         0.000        &        0.324    &        0.700     \\
+\textbf{contribution\_lag3}           &       0.7160  &        0.070     &    10.255  &         0.000        &        0.579    &        0.853     \\
+\textbf{revenue\_lag3}                &       0.2052  &        0.066     &     3.110  &         0.002        &        0.076    &        0.334     \\
+\textbf{costs\_lag3}                  &       0.5108  &        0.083     &     6.153  &         0.000        &        0.348    &        0.674     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 430.377 & \textbf{  Durbin-Watson:     } &    1.741  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 4804.098  \\
+\textbf{Skew:}          &   0.461 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &   9.724 & \textbf{  Cond. No.          } & 1.80e+19  \\
+\bottomrule
+\end{tabular}
+%\caption{OLS Regression Results}
+\end{center}
+
+Notes: \newline
+ [1] R² is computed without centering (uncentered) since the model does not contain a constant. \newline
+ [2] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
+ [3] The smallest eigenvalue is 3.45e-28. This might indicate that there are \newline
+ strong multicollinearity problems or that the design matrix is singular.
