@@ -33,16 +33,13 @@ missing_values = dfData.isnull().sum().to_frame()
 # Rename column
 missing_values = missing_values.rename(columns={0: 'Missing'})
 # Percentage of missing values
-missing_values['Perc. missing'] = missing_values['Missing'] / len(dfData) * 100
+missing_values['% missing'] = missing_values['Missing'] / len(dfData) * 100
 # Add missing values to formatted_df_eda_1
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
 # Format to show two decimals and use thousands separator
 formatted_df_eda_1 = formatted_df_eda_1.round(2).applymap('{:,.2f}'.format)
 
-
-
 # Output to LaTeX with landscape orientation
-
 eda_1 = formatted_df_eda_1.style.to_latex(
     caption='List of Variables',
     position='h!',
@@ -56,3 +53,4 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 # Output to LaTeX with landscape orientation
 with open(f"{sDir}/Results/Tables/2_eda_1.tex", "w") as f:
     f.write(eda_1)
+
