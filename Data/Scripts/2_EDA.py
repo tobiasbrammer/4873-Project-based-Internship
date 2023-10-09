@@ -49,7 +49,7 @@ eda_1 = formatted_df_eda_1.style.to_latex(
 eda_1 = eda_1.replace('\\begin{longtable}', '\\begin{landscape}\\begin{longtable}')
 eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 
-# Output to LaTeX with encoding to show æ,ø,å
+# Output to LaTeX with encoding
 with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
 
@@ -66,4 +66,5 @@ for i in dfData.select_dtypes(include=np.number).columns:
                                                      'W': [stat],
                                                      'p-value': [p]}),
                                        ignore_index=True)
+
 

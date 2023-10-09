@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import sys
 import datetime
 import sqlalchemy as sa
 import pyodbc
@@ -67,6 +68,8 @@ engine = sa.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 with open(".SQL/Data_v4.sql", "r") as file:
     sQuery = file.read()
 
+dfData = pd.DataFrame()
+
 # Test connection
 with engine.begin() as conn:
     dfData = pd.read_sql_query(sa.text(sQuery), conn)
@@ -98,3 +101,6 @@ pq.write_table(pa.table(dfData), "dfData.parquet")
 # End timing and print duration
 end_time = datetime.datetime.now()
 print(f"Time taken: {end_time - start_time}")
+
+
+sys.modules[__name__].__dict__.clear()

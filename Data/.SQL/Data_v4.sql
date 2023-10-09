@@ -327,9 +327,9 @@ set nocount on
 	,(ISNULL(Sagsposter.[revenue],0))/(NULLIF(Sagsbudget.[Indtaegtsbudget],0)) AS 'revenue_budget_share'
     ,(ISNULL(-Sagsposter.costs,0)) 'costs'
 	,(ISNULL(Sagsposter.costs,0))/(NULLIF(Sagsbudget.[Omkostningsbudget],0)) AS 'costs_budget_share'
-    ,(ISNULL(-Sagsposter.costs_of_labor,0))/(NULLIF(Sagsposter.costs,0)) AS 'costs_of_labor_share'
-    ,(ISNULL(-Sagsposter.costs_of_materials,0))/(NULLIF(Sagsposter.costs,0)) AS 'costs_of_materials_share'
-    ,(ISNULL(-Sagsposter.other_costs,0))/(NULLIF(Sagsposter.costs,0)) AS  'other_costs_share'
+    ,(ISNULL(-Sagsposter.costs_of_labor,0)) AS 'costs_of_labor'
+    ,(ISNULL(-Sagsposter.costs_of_materials,0)) AS 'costs_of_materials'
+    ,(ISNULL(-Sagsposter.other_costs,0)) AS  'other_costs'
 	,(ISNULL(Sagsposter.revenue,0) - ISNULL(Sagsposter.costs,0))/(NULLIF(Sagsposter.revenue,0)) AS 'contribution_margin'
 	,(ISNULL(Sagsposter.revenue,0) - ISNULL(Sagsposter.costs,0)) AS 'contribution'
 	,(CASE 

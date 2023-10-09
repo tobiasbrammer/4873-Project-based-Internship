@@ -63,19 +63,19 @@ sns.kdeplot(data=dfData, x='production_estimate_costs', label='production estima
 sns.kdeplot(data=dfData, x='final_estimate_costs', label='final estimate costs')
 plt.xlabel("Costs (mDKK)")
 plt.ylabel("Density")
-plt.xlim(dfData['budget_costs'].quantile(0.00000000001),10)
+plt.xlim(dfData['budget_costs'].quantile(0.00000000001), 10)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4)
 plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.25),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
+             xy=(1.0, -0.25),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
 plt.show()
-plt.savefig("./Results/Figures/1_0_costs.pdf")
+plt.savefig("./Results/Figures/1_0_costs.png")
 plt.savefig("./Results/Presentation/1_0_costs.svg")
 
 # Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
@@ -93,15 +93,16 @@ plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4)
 plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.25),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
+             xy=(1.0, -0.25),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
 plt.show()
-plt.savefig("./Results/Figures/1_1_revenue.pdf")
+plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
+
 
 # Calculate risks and other variables
 def calculate_risk(group):
@@ -109,11 +110,11 @@ def calculate_risk(group):
         group['risk'] = np.nan
     else:
         X = group[
-            ['revenue_scurve_diff', 'costs_scurve_diff', 'billable_rate_dep', 'illness_rate_dep', 'internal_rate_dep']]
+            ['revenue_scurve_diff', 'costs_scurve_diff', 'billable_rate_dep']]
         y = group['contribution_scurve_diff']
         model = LinearRegression().fit(X, y)
         residuals = y - model.predict(X)
-        group['risk'] = residuals
+        group['risk'] = residuals*group['budget_costs']
     return group
 
 
@@ -139,7 +140,7 @@ plt.annotate('Source: ELCON A/S',
              va="center",
              fontsize=10)
 plt.show()
-plt.savefig("./Results/Figures/1_2_risk.pdf")
+plt.savefig("./Results/Figures/1_2_risk.png")
 plt.savefig("./Results/Presentation/1_2_risk.svg")
 
 # Select random job and plot risk
@@ -150,12 +151,12 @@ plt.ylabel("Risk")
 plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
+             xy=(1.0, -0.15),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
 plt.show()
 
 # Calculate total costs at the end of the job
@@ -166,6 +167,13 @@ dfData['total_margin'] = dfData['total_contribution'] / dfData['total_costs']
 # Calculate contribution margin as contribution_cumsum / costs_cumsum
 dfData['contribution_margin'] = dfData['contribution_cumsum'] / dfData['costs_cumsum']
 
+# Calculate share of labor cost, material cost and other cost cumsum
+dfData['labor_cost_share'] = dfData['costs_of_labor_cumsum'] / dfData['costs_cumsum']
+dfData['material_cost_share'] = dfData['costs_of_materials_cumsum'] / dfData['costs_cumsum']
+dfData['other_cost_share'] = dfData['other_costs_cumsum'] / dfData['costs_cumsum']
+
+# Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
+dfData.drop(columns=['costs_of_labor_cumsum', 'costs_of_materials_cumsum', 'other_costs_cumsum'], inplace=True)
 
 # Function to set to NA if NaN, inf or -inf
 def set_na(x):
@@ -173,6 +181,7 @@ def set_na(x):
         return np.nan
     else:
         return x
+
 
 # Set total_margin, contribution_margin and progress to NA if NaN, inf or -inf
 dfData['total_margin'] = dfData['total_margin'].apply(set_na)
@@ -198,12 +207,14 @@ dfDesc = dfDesc[dfDesc['description'] != ""]
 stemmer = DanishStemmer()
 stop_words = stopwords.words('danish')
 
+
 def preprocess(text):
     text = text.lower()
     text = re.sub(r'[^\w\s]', '', text)
     text = re.sub(r'\d+', '', text)
     text = ' '.join([stemmer.stem(word) for word in text.split() if word not in stop_words])
     return text.strip()
+
 
 dfDesc['description'] = dfDesc['description'].apply(preprocess)
 
@@ -229,7 +240,7 @@ plt.annotate('Source: ELCON A/S',
              va="center",
              fontsize=10)
 plt.show()
-plt.savefig("./Results/Figures/1_3_description.pdf")
+plt.savefig("./Results/Figures/1_3_description.png")
 plt.savefig("./Results/Presentation/1_3_description.svg")
 
 # Step 6: Append the Document-Term Matrix to the original DataFrame
@@ -272,7 +283,7 @@ plt.annotate('Source: ELCON A/S',
              va="center",
              fontsize=10)
 plt.show()
-plt.savefig("./Results/Figures/1_4_missing.pdf")
+plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
 
 ### Split test and train ###
@@ -282,5 +293,3 @@ dfData['train'] = dfData['job_no'].isin(lJobNoTrain).astype(int)
 
 # Save dfData to parquet file
 dfData.to_parquet("./dfData.parquet")
-
-
