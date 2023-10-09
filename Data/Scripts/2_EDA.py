@@ -10,8 +10,8 @@ import os
 from matplotlib import rc
 
 # Read data
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 
 os.chdir(sDir)
 dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
@@ -33,19 +33,21 @@ missing_values = dfData.isnull().sum().to_frame()
 # Rename column
 missing_values = missing_values.rename(columns={0: 'Missing'})
 # Percentage of missing values
-missing_values['\% Missing'] = missing_values['Missing'] / len(dfData) * 100
+missing_values['Perc. missing'] = missing_values['Missing'] / len(dfData) * 100
 # Add missing values to formatted_df_eda_1
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
+# Format to 2 decimals
+formatted_df_eda_1 = formatted_df_eda_1.round(2)
 
-formatted_df_eda_1 = formatted_df_eda_1.map(lambda x: '{:,.2f}'.format(x) if isinstance(x, (int, float)) else x)
 
 # Output to LaTeX with landscape orientation
 
-eda_1 = formatted_df_eda_1.to_latex(index=True,
-                                    caption='List of Variables',
-                                    longtable=True,
-                                    escape=True,
-                                    label='eda_1').replace('%', '\\%')
+eda_1 = formatted_df_eda_1.style.to_latex(
+    caption='List of Variables',
+    position='h!',
+    hrules=True,
+    environment='longtable',
+    label='eda_1').replace('%', '\\%')
 
 eda_1 = eda_1.replace('\\begin{longtable}', '\\begin{landscape}\\begin{longtable}')
 eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
@@ -53,4 +55,3 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 # Output to LaTeX with landscape orientation
 with open(f"{sDir}/Results/Tables/2_eda_1.tex", "w") as f:
     f.write(eda_1)
-
