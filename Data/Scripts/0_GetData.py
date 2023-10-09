@@ -97,7 +97,9 @@ numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" no
 dfData[numeric_cols] = dfData[numeric_cols] / 1000000
 
 # If zip code is more than 4 digits, set to NA
-dfData.loc[dfData['zip_code'].astype(str).str.len() > 4, 'zip_code'] = np.nan
+dfData.loc[dfData['zip'].astype(str).str.len() > 4, 'zip'] = np.nan
+dfData.loc[dfData['customer_zip'].astype(str).str.len() > 4, 'customer_zip'] = np.nan
+
 
 # Convert specified columns to categorical data type
 factor_cols = ['month', 'year', 'job_posting_group', 'department', 'status', 'responsible']
