@@ -36,8 +36,9 @@ missing_values = missing_values.rename(columns={0: 'Missing'})
 missing_values['Perc. missing'] = missing_values['Missing'] / len(dfData) * 100
 # Add missing values to formatted_df_eda_1
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
-# Format to 2 decimals
-formatted_df_eda_1 = formatted_df_eda_1.round(2)
+# Format to show two decimals and use thousands separator
+formatted_df_eda_1 = formatted_df_eda_1.round(2).applymap('{:,.2f}'.format)
+
 
 
 # Output to LaTeX with landscape orientation
