@@ -16,18 +16,16 @@ sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 os.chdir(sDir)
 dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
 
-# Convert the 'date' column to date format (assuming it's in 'YYYY-MM-DD' format)
-dfData['date'] = pd.to_datetime(dfData['date'], format='%Y-%m-%d')
-dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%Y-%m-%d')
-# Format date and end_date as dd-mm-yyyy
-dfData['date'] = dfData['date'].dt.strftime('%d-%m-%Y')
-dfData['end_date'] = dfData['end_date'].dt.strftime('%d-%m-%Y')
+dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
+dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%d-%m-%Y')
 
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
+# Upper case column names
+formatted_df_eda_1.columns = formatted_df_eda_1.columns.str.upper()
 # Count number of missing values for each variable
 missing_values = dfData.isnull().sum().to_frame()
 # Rename column
@@ -47,10 +45,25 @@ eda_1 = formatted_df_eda_1.style.to_latex(
     environment='longtable',
     label='eda_1').replace('%', '\\%')
 
+
 eda_1 = eda_1.replace('\\begin{longtable}', '\\begin{landscape}\\begin{longtable}')
 eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 
-# Output to LaTeX with landscape orientation
-with open(f"{sDir}/Results/Tables/2_eda_1.tex", "w") as f:
+# Output to LaTeX with encoding to show æ,ø,å
+with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
+
+
+# Perform Shapiro-Wilk test for normality
+# Create empty DataFrame
+shapiro_test = pd.DataFrame()
+# Loop through all numerical variables in dfData
+for i in dfData.select_dtypes(include=np.number).columns:
+    # Perform Shapiro-Wilk test
+    stat, p = stats.shapiro(dfData[i])
+    # Append results to DataFrame Use pandas.concat instead.
+    shapiro_test = shapiro_test.append(pd.DataFrame({'Variable': [i],
+                                                     'W': [stat],
+                                                     'p-value': [p]}),
+                                       ignore_index=True)
 
