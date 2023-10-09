@@ -78,7 +78,7 @@ test_data.fillna(test_data.mean(), inplace=True)
 scaled_train, scaled_test, scaler = scale_data(train_data, test_data)
 
 # To invert scaling
-# inverted_train = pd.DataFrame(scaler.inverse_transform(scaled_train), columns=train_data.columns)
+inverted_train = pd.DataFrame(scaler.inverse_transform(scaled_train), columns=train_data.columns)
 
 # Split into dependent and independent variables
 sDepVar = 'final_estimate_costs'

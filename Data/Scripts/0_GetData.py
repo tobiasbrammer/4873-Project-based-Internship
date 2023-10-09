@@ -230,6 +230,26 @@ dfDesc.reset_index(drop=True, inplace=True)
 df_matrix.reset_index(drop=True, inplace=True)
 processed_data = pd.concat([dfDesc[['job_no']], df_matrix], axis=1)
 
+term_frequencies = df_matrix.sum(axis=0).sort_values(ascending=False)
+plt.figure(figsize=(10, 5))
+sns.barplot(x=term_frequencies.index, y=term_frequencies.values)
+plt.xticks(rotation=90)
+plt.xlabel("Terms")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+             xy=(1.0, -0.35),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.savefig("./Results/Figures/1_3_description.png")
+plt.savefig("./Results/Presentation/1_3_description.svg")
+plt.show()
+plt.draw()
+
 # Left join with the original DataFrame
 dfData = pd.merge(dfData, processed_data, on="job_no", how="left")
 
