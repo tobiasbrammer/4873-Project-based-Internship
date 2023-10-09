@@ -115,5 +115,5 @@ results = model.fit()
 print(results.summary())
 # Save results to LaTeX
 ols = results.summary().as_latex()
-with open('Results/Tables/2_ols.tex', 'w', encoding='utf-8') as f:
+with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
