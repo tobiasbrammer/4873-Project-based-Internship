@@ -21,6 +21,171 @@ dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
 dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%d-%m-%Y')
 
+# Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
+plt.figure(figsize=(10, 5))
+sns.kdeplot(data=dfData, x='budget_costs', label='budget costs')
+sns.kdeplot(data=dfData, x='sales_estimate_costs', label='sales estimate costs')
+sns.kdeplot(data=dfData, x='production_estimate_costs', label='production estimate costs')
+sns.kdeplot(data=dfData, x='final_estimate_costs', label='final estimate costs')
+plt.xlabel("Costs (mDKK)")
+plt.ylabel("Density")
+plt.xlim(dfData['budget_costs'].quantile(0.00000000001), 10)
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+             xy=(1.0, -0.25),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.savefig("./Results/Figures/1_0_costs.png")
+plt.savefig("./Results/Presentation/1_0_costs.svg")
+plt.show()
+plt.draw()
+
+
+# Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
+plt.figure(figsize=(10, 5))
+sns.kdeplot(data=dfData, x='budget_revenue', label='budget revenue')
+sns.kdeplot(data=dfData, x='sales_estimate_revenue', label='sales estimate revenue')
+sns.kdeplot(data=dfData, x='production_estimate_revenue', label='production estimate revenue')
+sns.kdeplot(data=dfData, x='final_estimate_revenue', label='final estimate revenue')
+# limit x-axis to cover 99.99% of the data
+plt.xlim(-10, dfData['budget_revenue'].quantile(0.9999999999))
+plt.xlabel("Revenue (mDKK)")
+plt.ylabel("Density")
+# legend below x-axis label
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+             xy=(1.0, -0.25),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.savefig("./Results/Figures/1_1_revenue.png")
+plt.savefig("./Results/Presentation/1_1_revenue.svg")
+plt.show()
+plt.draw()
+
+
+# Plot sum of risk by date for each department
+plt.figure(figsize=(10, 5))
+sns.lineplot(x='date', y='risk', hue='department', data=dfData)
+plt.xlabel("Date")
+plt.ylabel("Risk")
+# legend below x-axis label
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+             xy=(1.0, -0.15),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.savefig("./Results/Figures/1_2_risk.png")
+plt.savefig("./Results/Presentation/1_2_risk.svg")
+plt.show()
+plt.draw()
+
+# Select random job and plot risk
+job_no = dfData['job_no'].drop_duplicates().sample().values[0]
+dfData[dfData['job_no'] == job_no].plot(x='date', y='risk', figsize=(10, 5))
+plt.xlabel("Date")
+plt.ylabel("Risk")
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+             xy=(1.0, -0.15),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.show()
+plt.draw()
+
+# Plot kde of labor_cost_share, material_cost_share and other_cost_share
+plt.figure(figsize=(10, 5))
+sns.kdeplot(data=dfData, x='labor_cost_share', label='labor cost share')
+sns.kdeplot(data=dfData, x='material_cost_share', label='material cost share')
+plt.xlabel("Share")
+plt.ylabel("Density")
+plt.xlim(0, 1)
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+                xy=(1.0, -0.25),
+                color='grey',
+                xycoords='axes fraction',
+                ha='right',
+                va="center",
+                fontsize=10)
+plt.savefig("./Results/Figures/1_5_cost_share.png")
+plt.savefig("./Results/Presentation/1_5_cost_share.svg")
+plt.show()
+plt.draw()
+
+term_frequencies = df_matrix.sum(axis=0).sort_values(ascending=False)
+plt.figure(figsize=(10, 5))
+sns.barplot(x=term_frequencies.index, y=term_frequencies.values)
+plt.xticks(rotation=90)
+plt.xlabel("Terms")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+             xy=(1.0, -0.35),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.savefig("./Results/Figures/1_3_description.png")
+plt.savefig("./Results/Presentation/1_3_description.svg")
+plt.show()
+plt.draw()
+
+### Missing Data Analysis ###
+# Calculate missing values
+dfMissing = dfData.isna().sum().reset_index()
+dfMissing.columns = ['column', 'missing']
+
+# Calculate missing percentage
+dfMissing['missing_pct'] = dfMissing['missing'] / dfData.shape[0]
+
+# Sort by missing percentage
+dfMissing.sort_values('missing_pct', ascending=False, inplace=True)
+
+# Plot missing percentage above 0%
+plt.figure(figsize=(10, 5))
+sns.barplot(x=dfMissing[dfMissing['missing_pct'] > 0]['column'],
+            y=dfMissing[dfMissing['missing_pct'] > 0]['missing_pct'])
+plt.xticks(rotation=90)
+plt.xlabel("Columns")
+plt.ylabel("Missing Percentage")
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.annotate('Source: ELCON A/S',
+             xy=(1.0, -0.9),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.savefig("./Results/Figures/1_4_missing.png")
+plt.savefig("./Results/Presentation/1_4_missing.svg")
+plt.show()
+plt.draw()
+
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.

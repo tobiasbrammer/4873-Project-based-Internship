@@ -1,4 +1,5 @@
 # Import required libraries
+import os
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -7,7 +8,6 @@ import seaborn as sns
 import scipy.stats as stats
 from pandas import DataFrame
 from scipy.spatial import distance
-import os
 from matplotlib import rc
 from plot_config import *
 
@@ -74,7 +74,6 @@ test_data.replace([np.inf, -np.inf], np.nan, inplace=True)
 train_data.fillna(train_data.mean(), inplace=True)
 test_data.fillna(test_data.mean(), inplace=True)
 
-
 # Scale the data
 scaled_train, scaled_test, scaler = scale_data(train_data, test_data)
 
@@ -90,3 +89,4 @@ dfDataFinishedTestIndep = dfDataFinishedTest[colIndepVar]
 
 dfDataFinishedTrainDep = dfDataFinishedTrain[['date', 'job_no', sDepVar]]
 dfDataFinishedTestDep = dfDataFinishedTest[['date', 'job_no', sDepVar]]
+
