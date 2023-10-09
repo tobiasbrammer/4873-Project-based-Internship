@@ -169,8 +169,7 @@ dfData['contribution_margin'] = dfData['contribution_cumsum'] / dfData['costs_cu
 
 # Calculate share of labor cost, material cost and other cost cumsum
 dfData['labor_cost_share'] = dfData['costs_of_labor_cumsum'] / dfData['costs_cumsum']
-dfData['material_cost_share'] = dfData['costs_of_materials_cumsum'] / dfData['costs_cumsum']
-dfData['other_cost_share'] = dfData['other_costs_cumsum'] / dfData['costs_cumsum']
+dfData['material_cost_share'] = (dfData['costs_of_materials_cumsum']+dfData['other_costs_cumsum']) / dfData['costs_cumsum']
 
 # Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
 dfData.drop(columns=['costs_of_labor_cumsum', 'costs_of_materials_cumsum', 'other_costs_cumsum'], inplace=True)
@@ -182,6 +181,26 @@ def set_na(x):
     else:
         return x
 
+# Plot kde of labor_cost_share, material_cost_share and other_cost_share
+plt.figure(figsize=(10, 5))
+sns.kdeplot(data=dfData, x='labor_cost_share', label='labor cost share')
+sns.kdeplot(data=dfData, x='material_cost_share', label='material cost share')
+plt.xlabel("Share")
+plt.ylabel("Density")
+plt.xlim(0, 1)
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3)
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+                xy=(1.0, -0.25),
+                color='grey',
+                xycoords='axes fraction',
+                ha='right',
+                va="center",
+                fontsize=10)
+plt.show()
+plt.savefig("./Results/Figures/1_5_cost_share.png")
+plt.savefig("./Results/Presentation/1_5_cost_share.svg")
 
 # Set total_margin, contribution_margin and progress to NA if NaN, inf or -inf
 dfData['total_margin'] = dfData['total_margin'].apply(set_na)

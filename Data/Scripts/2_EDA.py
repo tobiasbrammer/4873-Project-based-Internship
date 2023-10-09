@@ -8,6 +8,7 @@ from pandas import DataFrame
 from scipy.spatial import distance
 import os
 from matplotlib import rc
+from plot_config import *
 
 # Read data
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
@@ -53,18 +54,21 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
 
-
-# Perform Shapiro-Wilk test for normality
+# Perform Anderson-Darling test for normality
 # Create empty DataFrame
-shapiro_test = pd.DataFrame()
+anderson_test = pd.DataFrame(columns=['Variable', 'Statistic', 'Critical value', 'Significance level', 'Normal'])
+
 # Loop through all numerical variables in dfData
 for i in dfData.select_dtypes(include=np.number).columns:
-    # Perform Shapiro-Wilk test
-    stat, p = stats.shapiro(dfData[i])
-    # Append results to DataFrame Use pandas.concat instead.
-    shapiro_test = shapiro_test.append(pd.DataFrame({'Variable': [i],
-                                                     'W': [stat],
-                                                     'p-value': [p]}),
-                                       ignore_index=True)
+    # Perform Anderson-Darling test
+    result = stats.anderson(dfData[i])
+    # Create a temporary DataFrame to hold the results
+    temp_df = pd.DataFrame({'Variable': [i],
+                            'Statistic': [result.statistic],
+                            'Critical value': [result.critical_values[2]],
+                            'Significance level': [result.significance_level[2]],
+                            'Normal': [result.statistic < result.critical_values[2]]})
+    # Append results to DataFrame using pandas.concat
+    anderson_test = pd.concat([anderson_test, temp_df], ignore_index=True)
 
 
