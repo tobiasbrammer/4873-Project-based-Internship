@@ -96,6 +96,9 @@ numeric_cols = dfData.select_dtypes(include=['number']).columns
 numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" not in col]
 dfData[numeric_cols] = dfData[numeric_cols] / 1000000
 
+# If zip code is more than 4 digits, set to NA
+dfData.loc[dfData['zip_code'].astype(str).str.len() > 4, 'zip_code'] = np.nan
+
 # Convert specified columns to categorical data type
 factor_cols = ['month', 'year', 'job_posting_group', 'department', 'status', 'responsible']
 dfData[factor_cols] = dfData[factor_cols].astype('category')
@@ -159,8 +162,6 @@ def calculate_risk(group):
 
 dfData = dfData.groupby('job_no', group_keys=False).apply(calculate_risk)
 
-# Show jobs with highest risk
-dfData.sort_values('risk', ascending=False).head(15)
 
 # Calculate total costs at the end of the job
 dfData['total_costs'] = dfData.groupby('job_no')['costs_cumsum'].transform('last')
