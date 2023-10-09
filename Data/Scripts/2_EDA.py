@@ -13,8 +13,9 @@ from plot_config import *
 # Read data
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-
 os.chdir(sDir)
+exec(open("./Scripts/1_FeatureEngineering.py").read())
+
 dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
 
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')

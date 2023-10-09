@@ -101,6 +101,3 @@ pq.write_table(pa.table(dfData), "dfData.parquet")
 # End timing and print duration
 end_time = datetime.datetime.now()
 print(f"Time taken: {end_time - start_time}")
-
-
-sys.modules[__name__].__dict__.clear()

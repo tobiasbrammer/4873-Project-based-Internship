@@ -32,6 +32,10 @@ for col in colCumSum:
 dfData['days_until_end'] = (dfData['end_date'] - dfData['date']).dt.days
 dfData.loc[dfData['days_until_end'] < 0, 'days_until_end'] = 0
 
+# Calculate share of budget costs and budget revenue
+dfData['budget_costs_share'] = dfData['revenue'] / dfData['budget_revenue']
+dfData['budget_revenue_share'] = dfData['costs'] / dfData['budget_costs']
+
 ##### Feature engineering #####
 # Calculate change in various estimates
 for estimate_type in ['sales', 'production', 'final']:
@@ -74,9 +78,11 @@ plt.annotate('Source: ELCON A/S',
              ha='right',
              va="center",
              fontsize=10)
-plt.show()
 plt.savefig("./Results/Figures/1_0_costs.png")
 plt.savefig("./Results/Presentation/1_0_costs.svg")
+plt.show()
+plt.draw()
+
 
 # Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
 plt.figure(figsize=(10, 5))
@@ -99,10 +105,10 @@ plt.annotate('Source: ELCON A/S',
              ha='right',
              va="center",
              fontsize=10)
-plt.show()
 plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
-
+plt.show()
+plt.draw()
 
 # Calculate risks and other variables
 def calculate_risk(group):
@@ -139,9 +145,10 @@ plt.annotate('Source: ELCON A/S',
              ha='right',
              va="center",
              fontsize=10)
-plt.show()
 plt.savefig("./Results/Figures/1_2_risk.png")
 plt.savefig("./Results/Presentation/1_2_risk.svg")
+plt.show()
+plt.draw()
 
 # Select random job and plot risk
 job_no = dfData['job_no'].drop_duplicates().sample().values[0]
@@ -158,6 +165,7 @@ plt.annotate('Source: ELCON A/S',
              va="center",
              fontsize=10)
 plt.show()
+plt.draw()
 
 # Calculate total costs at the end of the job
 dfData['total_costs'] = dfData.groupby('job_no')['costs_cumsum'].transform('last')
@@ -198,9 +206,10 @@ plt.annotate('Source: ELCON A/S',
                 ha='right',
                 va="center",
                 fontsize=10)
-plt.show()
 plt.savefig("./Results/Figures/1_5_cost_share.png")
 plt.savefig("./Results/Presentation/1_5_cost_share.svg")
+plt.show()
+plt.draw()
 
 # Set total_margin, contribution_margin and progress to NA if NaN, inf or -inf
 dfData['total_margin'] = dfData['total_margin'].apply(set_na)
@@ -258,9 +267,10 @@ plt.annotate('Source: ELCON A/S',
              ha='right',
              va="center",
              fontsize=10)
-plt.show()
 plt.savefig("./Results/Figures/1_3_description.png")
 plt.savefig("./Results/Presentation/1_3_description.svg")
+plt.show()
+plt.draw()
 
 # Step 6: Append the Document-Term Matrix to the original DataFrame
 dfDesc.reset_index(drop=True, inplace=True)
@@ -301,9 +311,10 @@ plt.annotate('Source: ELCON A/S',
              ha='right',
              va="center",
              fontsize=10)
-plt.show()
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
+plt.show()
+plt.draw()
 
 ### Split test and train ###
 # Sample 80% of the jobs for training
