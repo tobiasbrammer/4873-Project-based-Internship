@@ -26,8 +26,8 @@ summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
-# Upper case column names
-formatted_df_eda_1.columns = formatted_df_eda_1.columns.str.upper()
+# Capitalize first letter of each word in column names
+formatted_df_eda_1.columns = formatted_df_eda_1.columns.str.capitalize()
 # Count number of missing values for each variable
 missing_values = dfData.isnull().sum().to_frame()
 # Rename column
