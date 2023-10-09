@@ -46,7 +46,7 @@ eda_1 = formatted_df_eda_1.style.to_latex(
     label='eda_1').replace('%', '\\%')
 
 
-eda_1 = eda_1.replace('\begin{longtable}', '\\begin{landscape}\\begin{longtable}')
+eda_1 = eda_1.replace('\\begin{longtable}', '\\begin{landscape}\\begin{longtable}')
 eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 
 # Output to LaTeX with encoding to show æ,ø,å
