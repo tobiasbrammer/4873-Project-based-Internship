@@ -5,7 +5,7 @@ set nocount on
 		INTO #Sager
         FROM [NRGIDW_Extract].[elcon].[Job]
         WHERE [Status] IN (2,3)
-        AND [Global Dimension 1 Code] IN ('515','505','421')
+        AND [Global Dimension 1 Code] IN ('510','515','505','421')
         AND [Job Posting Group] IN ('FASTPRIS','PROJEKT')
 
         SELECT
@@ -234,7 +234,7 @@ set nocount on
 	LEFT JOIN [NRGIDW_Extract].[elcon].[Dimension Value] dv ON rle.[Global Dimension 1 Code] = dv.Code
 	WHERE rle.[Entry Type] = 0
 	AND dv.[Dimension Code] = 'AFDELING'
-	AND dv.[Code] IN ('421','505','515')
+	AND dv.[Code] IN ('421','510','505','515')
 	AND Tidstype <> 'Bruges ikke'
 	 --GROUP BY rle.[Resource No_], dv.[Consolidation Code],[Code], rle.[Posting Date], Tidstype
 	 --HAVING (Quantity) <> 0
@@ -291,6 +291,7 @@ set nocount on
     ,Sager.[Job Posting Group] AS 'job_posting_group'
 	,CASE
 		WHEN Sagsposter.[department]  = '421' THEN '505'
+		WHEN Sagsposter.[department]  = '510' THEN '505'
 		ELSE Sagsposter.[department]
 	END AS 'department'
     ,Sager.[No_] AS 'job_no'
@@ -328,7 +329,6 @@ set nocount on
     ,(ISNULL(-Sagsposter.costs_of_labor,0)) AS 'costs_of_labor'
     ,(ISNULL(-Sagsposter.costs_of_materials,0)) AS 'costs_of_materials'
     ,(ISNULL(-Sagsposter.other_costs,0)) AS  'other_costs'
-	,(ISNULL(Sagsposter.revenue,0) - ISNULL(Sagsposter.costs,0))/(NULLIF(Sagsposter.revenue,0)) AS 'contribution_margin'
 	,(ISNULL(Sagsposter.revenue,0) - ISNULL(Sagsposter.costs,0)) AS 'contribution'
 	,(CASE 
         WHEN 
@@ -378,9 +378,13 @@ set nocount on
 	LEFT JOIN #rle_2
 	ON CONCAT(#rle_2.[date],#rle_2.[job_no]) = CONCAT(Sagsposter.[date],Sagsposter.[Job No_])
 	LEFT JOIN #Faktureringsgrad
-	ON CONCAT(Sagsposter.[date], CASE WHEN Sagsposter.[department]  = '421' THEN '505' ELSE Sagsposter.[department] END) = CONCAT(FORMAT(#Faktureringsgrad.Dato,'dd-MM-yyyy'),#Faktureringsgrad.Afdeling)
+	ON CONCAT(Sagsposter.[date], CASE 
+	WHEN Sagsposter.[department]  = '421' THEN '505' 
+	WHEN Sagsposter.[department]  = '510' THEN '505' 
+	ELSE Sagsposter.[department] END) = CONCAT(FORMAT(#Faktureringsgrad.Dato,'dd-MM-yyyy'),#Faktureringsgrad.Afdeling)
     WHERE 1=1
-	AND Sagsposter.[department] IN ('421','515','505')
+	AND Sagsposter.[department] IN ('421','510','515','505')
+	AND Budget_final.sales_estimate_cost >= 1000000
 	ORDER BY Sager.[No_], [year], [month] ASC
 
 

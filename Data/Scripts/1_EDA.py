@@ -14,9 +14,8 @@ from plot_config import *
 sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
-exec(open("./Scripts/1_FeatureEngineering.py").read())
 
-dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
+exec(open("Scripts/O_GetData.py").read())
 
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
 dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%d-%m-%Y')
@@ -191,7 +190,6 @@ eda_1 = formatted_df_eda_1.style.to_latex(
     hrules=True,
     environment='longtable',
     label='eda_1').replace('%', '\\%')
-
 
 eda_1 = eda_1.replace('\\begin{longtable}', '\\begin{landscape}\\begin{longtable}')
 eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')

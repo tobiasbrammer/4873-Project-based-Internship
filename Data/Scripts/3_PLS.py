@@ -17,12 +17,14 @@ from sklearn.metrics import mean_squared_error, r2_score
 import statsmodels.api as sm
 
 # Load ./dfData.parquet
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
-### Predict sDepVar using OLS ###
+# Run Scripts/2_PreProcess.py
+exec(open("Scripts/2_PreProcess.py").read())
 
+### Predict sDepVar using OLS ###
 # Get the 5 most correlated variables (of numeric variables)
 corr = dfDataFinishedTrain[numeric_cols].corr()
 corr = corr.sort_values(by=sDepVar, ascending=False)
@@ -63,9 +65,9 @@ dfDataFinishedTest['sum_budget'] = dfDataFinishedTest.groupby('date')['final_est
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum'], label='Actual')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_predicted'], label='Predicted')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_budget'], label='Budget')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum'], label='Actual')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_predicted'], label='Predicted')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_budget'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -109,9 +111,9 @@ dfDataFinishedTest['sum_predicted_lag'] = dfDataFinishedTest.groupby('date')['pr
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum'], label='Actual')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_predicted_lag'], label='Predicted')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_budget'], label='Budget')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum'], label='Actual')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_predicted_lag'], label='Predicted')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_budget'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -152,9 +154,9 @@ dfDataFinishedTest['sum_predicted_lag_budget'] = dfDataFinishedTest.groupby('dat
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum'], label='Actual')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_predicted_lag_budget'], label='Predicted')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_budget'], label='Budget')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum'], label='Actual')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_predicted_lag_budget'], label='Predicted')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_budget'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -178,34 +180,26 @@ plt.show()
 pls = PLSRegression(n_components=5)
 pls.fit(scaled_train[lIndepVar_lag_budget], dfDataFinishedTrain[sDepVar])
 
-# Cross-validation
-y_cv = cross_val_predict(pls, scaled_train[lIndepVar_lag_budget], dfDataFinishedTrain[sDepVar], cv=10)
-
-# Calculate RMSE and R^2
-rmse = np.sqrt(mean_squared_error(dfDataFinishedTrain[sDepVar], y_cv))
-
-
-# Save results to LaTeX
-pls = DataFrame(pls.coef_, index=lIndepVar_lag_budget, columns=['PLS'])
-with open('Results/Tables/3_4_pls.tex', 'w', encoding='utf-8') as f:
-    f.write(pls.to_latex())
-
 # Predict sDepVar using PLS
 dfDataFinishedTrain['predicted_pls'] = pls.predict(scaled_train[lIndepVar_lag_budget])
 dfDataFinishedTest['predicted_pls'] = pls.predict(scaled_test[lIndepVar_lag_budget])
+# Reshape predicted values
+dfDataFinishedTrain['predicted_pls'] = dfDataFinishedTrain['predicted_pls'].values.reshape(-1, 1)
+dfDataFinishedTest['predicted_pls'] = dfDataFinishedTest['predicted_pls'].values.reshape(-1, 1)
 
-# Rescale predicted values
-dfDataFinishedTrain['predicted_pls'] = scaler.inverse_transform(dfDataFinishedTrain['predicted_pls'])
+# Invert scaling
+dfDataFinishedTrain['predicted_pls'] = scaler.inverse_transform(pd.DataFrame(dfDataFinishedTest['predicted_pls']))
 dfDataFinishedTest['predicted_pls'] = scaler.inverse_transform(dfDataFinishedTest['predicted_pls'])
+
 
 dfDataFinishedTrain['sum_predicted_pls'] = dfDataFinishedTrain.groupby('date')['predicted_pls'].transform('sum')
 dfDataFinishedTest['sum_predicted_pls'] = dfDataFinishedTest.groupby('date')['predicted_pls'].transform('sum')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum'], label='Actual')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_predicted_pls'], label='Predicted')
-ax.plot(dfDataFinishedTrain['date'], dfDataFinishedTrain['sum_budget'], label='Budget')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum'], label='Actual')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_predicted_pls'], label='Predicted')
+ax.plot(dfDataFinishedTest['date'], dfDataFinishedTest['sum_budget'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')

@@ -1,39 +1,47 @@
+\begin{table}
+\caption{Results: Ordinary least squares}
+\label{}
 \begin{center}
-\begin{tabular}{lclc}
-\toprule
-\textbf{Dep. Variable:}               & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.279   \\
-\textbf{Model:}                       &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.278   \\
-\textbf{Method:}                      &    Least Squares    & \textbf{  F-statistic:       }          &     239.9   \\
-\textbf{Date:}                        &   Mon, 09 Oct 2023  & \textbf{  Prob (F-statistic):}          & 5.05e-217   \\
-\textbf{Time:}                        &       20:46:30      & \textbf{  Log-Likelihood:    }          &   -5933.2   \\
-\textbf{No. Observations:}            &          3103       & \textbf{  AIC:               }          & 1.188e+04   \\
-\textbf{Df Residuals:}                &          3098       & \textbf{  BIC:               }          & 1.191e+04   \\
-\textbf{Df Model:}                    &             5       & \textbf{                     }          &             \\
-\textbf{Covariance Type:}             &      nonrobust      & \textbf{                     }          &             \\
-\bottomrule
+\begin{tabular}{llll}
+\hline
+Model:                  & OLS                 & Adj. R-squared (uncentered): & 0.215      \\
+Dependent Variable:     & total\_contribution & AIC:                         & 3354.2316  \\
+Date:                   & 2023-10-10 12:59    & BIC:                         & 3379.4035  \\
+No. Observations:       & 1135                & Log-Likelihood:              & -1672.1    \\
+Df Model:               & 5                   & F-statistic:                 & 63.25      \\
+Df Residuals:           & 1130                & Prob (F-statistic):          & 2.98e-58   \\
+R-squared (uncentered): & 0.219               & Scale:                       & 1.1196     \\
+\hline
 \end{tabular}
-\begin{tabular}{lcccccc}
-                                      & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
-\midrule
-\textbf{total\_days}                  &       0.0018  &        0.002     &     0.834  &         0.404        &       -0.002    &        0.006     \\
-\textbf{costs\_scurve\_diff}          &       0.2461  &        0.016     &    15.750  &         0.000        &        0.215    &        0.277     \\
-\textbf{days\_since\_start}           &      -0.0005  &        0.002     &    -0.214  &         0.831        &       -0.005    &        0.004     \\
-\textbf{billable\_hours\_qty\_cumsum} &   -4.514e-05  &     8.17e-06     &    -5.526  &         0.000        &    -6.12e-05    &    -2.91e-05     \\
-\textbf{days\_until\_end}             &      -0.0012  &        0.002     &    -0.554  &         0.580        &       -0.006    &        0.003     \\
-\bottomrule
-\end{tabular}
-\begin{tabular}{lclc}
-\textbf{Omnibus:}       & 555.059 & \textbf{  Durbin-Watson:     } &    1.805  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 6174.613  \\
-\textbf{Skew:}          &   0.507 & \textbf{  Prob(JB):          } &     0.00  \\
-\textbf{Kurtosis:}      &   9.836 & \textbf{  Cond. No.          } & 3.20e+03  \\
-\bottomrule
-\end{tabular}
-%\caption{OLS Regression Results}
 \end{center}
 
-Notes: \newline
- [1] R² is computed without centering (uncentered) since the model does not contain a constant. \newline
- [2] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
- [3] The condition number is large, 3.2e+03. This might indicate that there are \newline
- strong multicollinearity or other numerical problems.
+\begin{center}
+\begin{tabular}{lrrrrrr}
+\hline
+                   &  Coef. & Std.Err. &       t & P$> |$t$|$ &  [0.025 & 0.975]  \\
+\hline
+skol               & 0.5231 &   0.1566 &  3.3398 &      0.0009 &  0.2158 & 0.8304  \\
+udskiftning        & 0.6507 &   0.1627 &  3.9989 &      0.0001 &  0.3315 & 0.9700  \\
+rosenvæng          & 0.1456 &   0.2489 &  0.5852 &      0.5585 & -0.3427 & 0.6339  \\
+viborg             & 0.3111 &   0.1386 &  2.2438 &      0.0250 &  0.0391 & 0.5831  \\
+days\_since\_start & 0.0011 &   0.0001 & 12.3107 &      0.0000 &  0.0009 & 0.0012  \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{llll}
+\hline
+Omnibus:       & 459.804 & Durbin-Watson:    & 1.923     \\
+Prob(Omnibus): & 0.000   & Jarque-Bera (JB): & 2484.904  \\
+Skew:          & 1.807   & Prob(JB):         & 0.000     \\
+Kurtosis:      & 9.284   & Condition No.:    & 3503      \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+\bigskip
+Notes: \newline 
+[1] R² is computed without centering (uncentered) since the                 model does not contain a constant. \newline 
+[2] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline 
+[3] The condition number is large, 3.5e+03. This might indicate                that there are strong multicollinearity or other numerical                problems.

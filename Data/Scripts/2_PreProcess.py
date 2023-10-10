@@ -15,10 +15,12 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 # Load ./dfData.parquet
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
-dfData = pd.read_parquet(f"{sDir}/dfData.parquet")
+
+exec(open("Scripts/1_EDA.py").read())
+
 dfData.loc[dfData['zip'].astype(str).str.len() > 4, 'zip'] = np.nan
 dfData.loc[dfData['customer_zip'].astype(str).str.len() > 4, 'customer_zip'] = np.nan
 
@@ -39,12 +41,12 @@ print(f"The max number of observations per finished job is {obs.max()}.")
 print(f"The min number of observations per finished job is {obs.min()}.")
 
 # Fraction of finished jobs with less than 4 observations
-fraction = (dfDataFinished.groupby('job_no', observed=True).filter(lambda x: len(x) < 4)[
+fraction = (dfDataFinished.groupby('job_no', observed=True).filter(lambda x: len(x) < 6)[
                 'job_no'].nunique() / nFinished) * 100
-print(f"The fraction of finished jobs with less than 4 observations is {round(fraction, 2)}%.")
+print(f"The fraction of finished jobs with less than 6 observations is {round(fraction, 2)}%.")
 
-# Omit finished jobs with less than 4 observations
-dfDataFinished = dfDataFinished.groupby('job_no').filter(lambda x: len(x) >= 4)
+# Omit finished jobs with less than 6 observations
+dfDataFinished = dfDataFinished.groupby('job_no').filter(lambda x: len(x) >= 6)
 
 # Split the finished jobs into train and test (Assuming 'train' column exists and is binary)
 dfDataFinishedTrain = dfDataFinished[dfDataFinished['train'] == 1]
