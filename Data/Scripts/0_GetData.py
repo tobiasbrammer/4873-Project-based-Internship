@@ -1,4 +1,6 @@
 # Import required libraries
+import PyDST
+
 for name in dir():
     if not name.startswith('_'):
         del globals()[name]
@@ -9,7 +11,8 @@ import os
 import sys
 import datetime
 import sqlalchemy as sa
-import pyodbc
+import matplotlib.pyplot as plt
+# import pyodbc
 import urllib
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine.url import URL
@@ -22,10 +25,9 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
 from plot_config import *
-pip3 install git+https://github.com/Kristianuruplarsen/pydst.git
-import pydst
-# https://kristianuruplarsen.github.io/pydst/build/html/index.html
+from PyDST import *
 
+# https://kristianuruplarsen.github.io/pydst/build/html/index.html
 
 # Start timing
 start_time = datetime.datetime.now()
@@ -157,7 +159,6 @@ dfData['costs_scurve_diff'] = dfData['costs_scurve'] - dfData['costs_cumsum']
 dfData['contribution_scurve'] = dfData['scurve'] * (dfData['budget_revenue'] - dfData['budget_costs'])
 dfData['contribution_scurve_diff'] = dfData['contribution_scurve'] - dfData['contribution_cumsum']
 
-
 # Calculate contribution margin as contribution_cumsum / costs_cumsum
 dfData['contribution_margin'] = dfData['contribution_cumsum'] / dfData['costs_cumsum']
 
@@ -197,8 +198,6 @@ dfData = pd.merge(dfData, dfDebitorer, on=['cvr', 'date'], how='left')
 dfData['overdue'] = dfData['overdue'].fillna(0)
 # Divide overdue by 1,000,000
 dfData['overdue'] = dfData['overdue'] / 1000000
-
-
 
 
 # Calculate risks and other variables
@@ -330,8 +329,140 @@ dfData = pd.merge(dfData, processed_data, on="job_no", how="left")
 dfData.drop(columns=['description'], inplace=True)
 
 ### Join DST data ###
+info = PyDST.get_tableinfo(table_id='KBYG11').json()
+print(info)
+
+kbyg11 = PyDST.get_data(table_id='KBYG11',
+                        variables={'BRANCHE07': '43201',
+                                   'INDIKATOR': 'VIAK',
+                                   'BEDØMMELSE': 'NET',
+                                   'FORLØB': 'FAK',
+                                   'TID': '*'})
+kbyg11 = PyDST.utils.to_dataframe(kbyg11)
+# Extract date from 'TID' column. (YYYY'M'MM) -> (YYYY-MM)
+kbyg11['date'] = kbyg11['TID'].str[:4] + '-' + kbyg11['TID'].str[5:7]
+# Convert date column to datetime format
+kbyg11['date'] = pd.to_datetime(kbyg11['date'], format='%Y-%m')
+# Convert to dd-mm-YYYY format
+kbyg11['date'] = kbyg11['date'].dt.strftime('%d-%m-%Y')
+kbyg11['date'] = pd.to_datetime(kbyg11['date'], format='%d-%m-%Y')
+# Rename INDHOLD to 'kbyg11'
+kbyg11.rename(columns={'INDHOLD': 'kbyg11'}, inplace=True)
+# Divide 'kbyg11' by 100
+kbyg11['kbyg11'] = kbyg11['kbyg11'] / 100
+# Omit all columns except 'date' and 'kbyg11'
+kbyg11 = kbyg11[['date', 'kbyg11']]
+# Convert 'kbyg11' to numeric
+kbyg11['kbyg11'] = pd.to_numeric(kbyg11['kbyg11'], errors='coerce')
+
+## KBYG22
+kbyg22 = PyDST.get_data(table_id='KBYG22',
+                        variables={'BRANCHE07': '43201',
+                                   'BEDØMMELSE': 'NET',
+                                   'TID': '*'})
+
+kbyg22 = PyDST.utils.to_dataframe(kbyg22)
+# Extract date from 'TID' column. (YYYY'M'MM) -> (YYYY-MM)
+kbyg22['date'] = kbyg22['TID'].str[:4] + '-' + kbyg22['TID'].str[5:7]
+# Convert date column to datetime format
+kbyg22['date'] = pd.to_datetime(kbyg22['date'], format='%Y-%m')
+# Convert to dd-mm-YYYY format
+kbyg22['date'] = kbyg22['date'].dt.strftime('%d-%m-%Y')
+kbyg22['date'] = pd.to_datetime(kbyg22['date'], format='%d-%m-%Y')
+# Rename INDHOLD to 'kbyg22'
+kbyg22.rename(columns={'INDHOLD': 'kbyg22'}, inplace=True)
+kbyg22['kbyg22'] = kbyg22['kbyg22'] / 100
+# Omit all columns except 'date' and 'kbyg22'
+kbyg22 = kbyg22[['date', 'kbyg22']]
+# Convert 'kbyg22' to numeric
+kbyg22['kbyg22'] = pd.to_numeric(kbyg22['kbyg22'], errors='coerce')
+
+kbyg33 = PyDST.get_data(table_id='KBYG33',
+                        variables={'BRANCHE07': '43201',
+                                   'TYPE': '*',
+                                   'TID': '*'})
+kbyg33 = PyDST.utils.to_dataframe(kbyg33)
+# Extract date from 'TID' column. (YYYY'M'MM) -> (YYYY-MM)
+kbyg33['date'] = kbyg33['TID'].str[:4] + '-' + kbyg33['TID'].str[5:7]
+# Convert date column to datetime format
+kbyg33['date'] = pd.to_datetime(kbyg33['date'], format='%Y-%m')
+# Convert to dd-mm-YYYY format
+kbyg33['date'] = kbyg33['date'].dt.strftime('%d-%m-%Y')
+kbyg33['date'] = pd.to_datetime(kbyg33['date'], format='%d-%m-%Y')
+# Rename INDHOLD to 'kbyg33'
+kbyg33.rename(columns={'INDHOLD': 'kbyg33'}, inplace=True)
+# Divide 'kbyg33' by 100
+kbyg33['kbyg33'] = kbyg33['kbyg33'] / 100
+# Omit all columns except 'date', 'TYPE' and 'kbyg33'
+kbyg33 = kbyg33[['date', 'TYPE', 'kbyg33']]
+# Pivot by 'TYPE'
+kbyg33 = kbyg33.pivot(index='date', columns='TYPE', values='kbyg33').reset_index()
+# rename columns lower case, prefix 'kbyg33_' and replace ' ' with '_'
+kbyg33.columns = kbyg33.columns.str.lower().str.replace(' ', '_')
+# Remove trailing _
+kbyg33.columns = kbyg33.columns.str.rstrip('_')
+# Prefix 'kbyg33_' to all columns except 'date'
+kbyg33.columns = ['date'] + ['kbyg33_' + col for col in kbyg33.columns if col != 'date']
+
+# KBYG44
+kbyg44 = PyDST.get_data(table_id='KBYG44',
+                        variables={'INDIKATOR': '*',
+                                   'SÆSON': 'SÆSON',
+                                   'TID': '*'})
+kbyg44 = PyDST.utils.to_dataframe(kbyg44)
+# Extract date from 'TID' column. (YYYY'M'MM) -> (YYYY-MM)
+kbyg44['date'] = kbyg44['TID'].str[:4] + '-' + kbyg44['TID'].str[5:7]
+# Convert date column to datetime format
+kbyg44['date'] = pd.to_datetime(kbyg44['date'], format='%Y-%m')
+# Convert to dd-mm-YYYY format
+kbyg44['date'] = kbyg44['date'].dt.strftime('%d-%m-%Y')
+kbyg44['date'] = pd.to_datetime(kbyg44['date'], format='%d-%m-%Y')
+# Rename INDHOLD to 'kbyg44'
+kbyg44.rename(columns={'INDHOLD': 'kbyg44'}, inplace=True)
+# Divide 'kbyg44' by 100
+kbyg44['kbyg44'] = kbyg44['kbyg44'] / 100
+# Omit all columns except 'date', 'INDIKATOR' and 'kbyg44'
+kbyg44 = kbyg44[['date', 'INDIKATOR', 'kbyg44']]
+# Pivot by 'INDIKATOR'
+kbyg44 = kbyg44.pivot(index='date', columns='INDIKATOR', values='kbyg44').reset_index()
+# rename columns lower case, prefix 'kbyg44_' and replace ' ' with '_'
+kbyg44.columns = kbyg44.columns.str.lower().str.replace(' ', '_')
+kbyg44.columns = kbyg44.columns.str.rstrip('_')
+# Replace ,_ by _
+kbyg44.columns = kbyg44.columns.str.replace(',_', '_')
+# Prefix 'kbyg44_' to all columns except 'date'
+kbyg44.columns = ['date'] + ['kbyg44_' + col for col in kbyg44.columns if col != 'date']
+
+# Join kbyg11 and kbyg22 on date
+dst_df = pd.merge(kbyg11, kbyg22, on='date', how='left')
+# Join dst_df and kbyg33 on date
+dst_df = pd.merge(dst_df, kbyg33, on='date', how='left')
+# Join dst_df and kbyg44 on date
+dst_df = pd.merge(dst_df, kbyg44, on='date', how='left')
+
+del kbyg11, kbyg22, kbyg33, kbyg44
+
+# Join dst_df on dfData by date
+dfData = pd.merge(dfData, dst_df, on='date', how='left')
 
 
+# Plot kbyg11, kbyg22, kbyg33_no_limitation and kbyg44_confidence_indicator_total by date
+fig, ax = plt.subplots(2, 2, figsize=(10, 5))
+ax[0, 0].plot(dst_df['date'], dst_df['kbyg11'])
+ax[0, 0].set_title('Change in Industry Revenue')
+ax[0, 1].plot(dst_df['date'], dst_df['kbyg22'])
+ax[0, 1].set_title('Assessment of Order Backlog')
+ax[1, 0].plot(dst_df['date'], dst_df['kbyg33_no_limitations'])
+ax[1, 0].set_title('Share with No Production Limitations')
+ax[1, 1].plot(dst_df['date'], dst_df['kbyg44_confidence_indicator_total'])
+ax[1, 1].set_title('Confidence indicator')
+fig.suptitle('DST data')
+plt.tight_layout()
+plt.savefig("./Results/Figures/1_4_dst_data.png")
+plt.savefig("./Results/Presentation/1_4_dst_data.svg")
+plt.show()
+
+del dst_df
 
 ### Split test and train ###
 # Sample 80% of the jobs for training
