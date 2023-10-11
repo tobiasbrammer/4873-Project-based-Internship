@@ -22,6 +22,10 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
 from plot_config import *
+pip3 install git+https://github.com/Kristianuruplarsen/pydst.git
+import pydst
+# https://kristianuruplarsen.github.io/pydst/build/html/index.html
+
 
 # Start timing
 start_time = datetime.datetime.now()
@@ -324,6 +328,10 @@ dfData = pd.merge(dfData, processed_data, on="job_no", how="left")
 
 # Remove description from dfData
 dfData.drop(columns=['description'], inplace=True)
+
+### Join DST data ###
+
+
 
 ### Split test and train ###
 # Sample 80% of the jobs for training
