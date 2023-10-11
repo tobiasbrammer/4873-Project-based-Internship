@@ -4,13 +4,13 @@
 \begin{center}
 \begin{tabular}{llll}
 \hline
-Model:                  & OLS                 & Adj. R-squared (uncentered): & 0.215      \\
-Dependent Variable:     & total\_contribution & AIC:                         & 3354.2316  \\
-Date:                   & 2023-10-10 12:59    & BIC:                         & 3379.4035  \\
-No. Observations:       & 1135                & Log-Likelihood:              & -1672.1    \\
-Df Model:               & 5                   & F-statistic:                 & 63.25      \\
-Df Residuals:           & 1130                & Prob (F-statistic):          & 2.98e-58   \\
-R-squared (uncentered): & 0.219               & Scale:                       & 1.1196     \\
+Model:                  & OLS                 & Adj. R-squared (uncentered): & 0.567      \\
+Dependent Variable:     & total\_contribution & AIC:                         & -5.1545    \\
+Date:                   & 2023-10-10 15:34    & BIC:                         & 19.9196    \\
+No. Observations:       & 1113                & Log-Likelihood:              & 7.5773     \\
+Df Model:               & 5                   & F-statistic:                 & 292.9      \\
+Df Residuals:           & 1108                & Prob (F-statistic):          & 8.86e-200  \\
+R-squared (uncentered): & 0.569               & Scale:                       & 0.058019   \\
 \hline
 \end{tabular}
 \end{center}
@@ -18,13 +18,13 @@ R-squared (uncentered): & 0.219               & Scale:                       & 1
 \begin{center}
 \begin{tabular}{lrrrrrr}
 \hline
-                   &  Coef. & Std.Err. &       t & P$> |$t$|$ &  [0.025 & 0.975]  \\
+                             &  Coef. & Std.Err. &       t & P$> |$t$|$ & [0.025 & 0.975]  \\
 \hline
-skol               & 0.5231 &   0.1566 &  3.3398 &      0.0009 &  0.2158 & 0.8304  \\
-udskiftning        & 0.6507 &   0.1627 &  3.9989 &      0.0001 &  0.3315 & 0.9700  \\
-rosenvæng          & 0.1456 &   0.2489 &  0.5852 &      0.5585 & -0.3427 & 0.6339  \\
-viborg             & 0.3111 &   0.1386 &  2.2438 &      0.0250 &  0.0391 & 0.5831  \\
-days\_since\_start & 0.0011 &   0.0001 & 12.3107 &      0.0000 &  0.0009 & 0.0012  \\
+aarhus                       & 0.2647 &   0.0414 &  6.3907 &      0.0000 & 0.1834 & 0.3460  \\
+billable\_hours\_qty\_cumsum & 0.6477 &   0.0363 & 17.8194 &      0.0000 & 0.5764 & 0.7190  \\
+billable\_hours\_qty         & 0.5567 &   0.0382 & 14.5625 &      0.0000 & 0.4817 & 0.6317  \\
+gødstrup                     & 0.2947 &   0.0586 &  5.0303 &      0.0000 & 0.1797 & 0.4096  \\
+rosenvæng                    & 0.2647 &   0.0434 &  6.0952 &      0.0000 & 0.1795 & 0.3499  \\
 \hline
 \end{tabular}
 \end{center}
@@ -32,10 +32,10 @@ days\_since\_start & 0.0011 &   0.0001 & 12.3107 &      0.0000 &  0.0009 & 0.001
 \begin{center}
 \begin{tabular}{llll}
 \hline
-Omnibus:       & 459.804 & Durbin-Watson:    & 1.923     \\
-Prob(Omnibus): & 0.000   & Jarque-Bera (JB): & 2484.904  \\
-Skew:          & 1.807   & Prob(JB):         & 0.000     \\
-Kurtosis:      & 9.284   & Condition No.:    & 3503      \\
+Omnibus:       & 62.781 & Durbin-Watson:    & 1.435    \\
+Prob(Omnibus): & 0.000  & Jarque-Bera (JB): & 153.344  \\
+Skew:          & -0.305 & Prob(JB):         & 0.000    \\
+Kurtosis:      & 4.713  & Condition No.:    & 2        \\
 \hline
 \end{tabular}
 \end{center}
@@ -43,5 +43,4 @@ Kurtosis:      & 9.284   & Condition No.:    & 3503      \\
 \bigskip
 Notes: \newline 
 [1] R² is computed without centering (uncentered) since the                 model does not contain a constant. \newline 
-[2] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline 
-[3] The condition number is large, 3.5e+03. This might indicate                that there are strong multicollinearity or other numerical                problems.
+[2] Standard Errors assume that the covariance matrix of the errors is correctly specified.

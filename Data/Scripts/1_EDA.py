@@ -15,7 +15,7 @@ sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
-exec(open("Scripts/O_GetData.py").read())
+exec(open("Scripts/0_GetData.py").read())
 
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
 dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%d-%m-%Y')
@@ -77,7 +77,6 @@ plt.figure(figsize=(10, 5))
 sns.lineplot(x='date', y='risk', hue='department', data=dfData)
 plt.xlabel("Date")
 plt.ylabel("Risk")
-# legend below x-axis label
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.35)
@@ -110,25 +109,26 @@ plt.annotate('Source: ELCON A/S',
 plt.show()
 plt.draw()
 
-# Plot kde of labor_cost_share, material_cost_share and other_cost_share
+
+# Plot kde of risk
+# Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
 plt.figure(figsize=(10, 5))
-sns.kdeplot(data=dfData, x='labor_cost_share', label='labor cost share')
-sns.kdeplot(data=dfData, x='material_cost_share', label='material cost share')
-plt.xlabel("Share")
+sns.kdeplot(data=dfData, x='risk', label='risk')
+plt.xlabel("Risk (mDKK)")
 plt.ylabel("Density")
-plt.xlim(0, 1)
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.xlim(dfData['risk'].quantile(0.001), dfData['risk'].quantile(0.999))
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.25),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
-plt.savefig("./Results/Figures/1_5_cost_share.png")
-plt.savefig("./Results/Presentation/1_5_cost_share.svg")
+             xy=(1.0, -0.25),
+             color='grey',
+             xycoords='axes fraction',
+             ha='right',
+             va="center",
+             fontsize=10)
+plt.savefig("./Results/Figures/1_3_risk.png")
+plt.savefig("./Results/Presentation/1_3_risk.svg")
 plt.show()
 plt.draw()
 
@@ -165,6 +165,28 @@ plt.savefig("./Results/Presentation/1_4_missing.svg")
 plt.show()
 plt.draw()
 
+# Plot kde of labor_cost_share, material_cost_share and other_cost_share
+plt.figure(figsize=(10, 5))
+sns.kdeplot(data=dfData, x='labor_cost_share', label='labor cost share')
+sns.kdeplot(data=dfData, x='material_cost_share', label='material cost share')
+plt.xlabel("Share")
+plt.ylabel("Density")
+plt.xlim(0, 1)
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.35)
+plt.annotate('Source: ELCON A/S',
+                xy=(1.0, -0.25),
+                color='grey',
+                xycoords='axes fraction',
+                ha='right',
+                va="center",
+                fontsize=10)
+plt.savefig("./Results/Figures/1_5_cost_share.png")
+plt.savefig("./Results/Presentation/1_5_cost_share.svg")
+plt.show()
+plt.draw()
+
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.
@@ -197,22 +219,3 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 # Output to LaTeX with encoding
 with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
-
-# Perform Anderson-Darling test for normality
-# Create empty DataFrame
-anderson_test = pd.DataFrame(columns=['Variable', 'Statistic', 'Critical value', 'Significance level', 'Normal'])
-
-# Loop through all numerical variables in dfData
-for i in dfData.select_dtypes(include=np.number).columns:
-    # Perform Anderson-Darling test
-    result = stats.anderson(dfData[i])
-    # Create a temporary DataFrame to hold the results
-    temp_df = pd.DataFrame({'Variable': [i],
-                            'Statistic': [result.statistic],
-                            'Critical value': [result.critical_values[2]],
-                            'Significance level': [result.significance_level[2]],
-                            'Normal': [result.statistic < result.critical_values[2]]})
-    # Append results to DataFrame using pandas.concat
-    anderson_test = pd.concat([anderson_test, temp_df], ignore_index=True)
-
-

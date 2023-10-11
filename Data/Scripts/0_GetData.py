@@ -1,3 +1,8 @@
+# Import required libraries
+for name in dir():
+    if not name.startswith('_'):
+        del globals()[name]
+
 import pandas as pd
 import numpy as np
 import os
@@ -12,6 +17,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_extraction.text import CountVectorizer
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
@@ -35,7 +41,7 @@ elif datetime.datetime.now().hour == 8 and datetime.datetime.now().minute < 15:
     while datetime.datetime.now().minute < 15:
         pass
 # If time is 11:30 - 11:45, then wait until 11:45
-elif datetime.datetime.now().hour == 11 and datetime.datetime.now().minute < 45:
+elif datetime.datetime.now().hour == 11 and 45 > datetime.datetime.now().minute >= 30:
     print("Waiting 15 minutes...")
     while datetime.datetime.now().minute < 45:
         pass
@@ -74,8 +80,6 @@ engine = sa.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 with open(".SQL/Data_v4.sql", "r") as file:
     sQuery = file.read()
 
-dfData = pd.DataFrame()
-
 # Test connection
 with engine.begin() as conn:
     dfData = pd.read_sql_query(sa.text(sQuery), conn)
@@ -93,13 +97,12 @@ dfData.loc[mask, 'end_date'] = dfData.loc[mask, 'date']
 
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns
-numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" not in col]
+numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" not in col and "_rate" not in col]
 dfData[numeric_cols] = dfData[numeric_cols] / 1000000
 
 # If zip code is more than 4 digits, set to NA
 dfData.loc[dfData['zip'].astype(str).str.len() > 4, 'zip'] = np.nan
 dfData.loc[dfData['customer_zip'].astype(str).str.len() > 4, 'customer_zip'] = np.nan
-
 
 # Convert specified columns to categorical data type
 factor_cols = ['month', 'year', 'job_posting_group', 'department', 'status', 'responsible']
@@ -111,7 +114,7 @@ dfData.sort_values('date', inplace=True)
 ### Explore numeric variables ###
 # Identify numeric columns based on conditions
 colNum = [col for col in dfData.select_dtypes(include=[np.number]).columns if
-          not any(sub in col for sub in ["_share", "_rate", "_ratio", "_margin", "_cumsum"])]
+          not any(sub in col for sub in ["_share", "_rate", "_ratio", "_margin", "_cumsum", "_estimate_"])]
 colCumSum = [col for col in colNum if "budget_" not in col]
 
 # Calculate cumulative sum for each variable in colCumSum grouped by 'job_no'
@@ -138,6 +141,7 @@ dfData['total_days'] = (
         dfData.groupby('job_no')['end_date'].transform('max') - dfData.groupby('job_no')['date'].transform(
     'min')).dt.days
 dfData['progress'] = dfData['days_since_start'] / dfData['total_days']
+dfData['completion_rate'] = dfData['costs_cumsum'] / dfData['production_estimate_costs']
 
 k = 6  # Coefficient for S-curve
 a = 2  # Exponent for S-curve
@@ -149,6 +153,50 @@ dfData['costs_scurve_diff'] = dfData['costs_scurve'] - dfData['costs_cumsum']
 dfData['contribution_scurve'] = dfData['scurve'] * (dfData['budget_revenue'] - dfData['budget_costs'])
 dfData['contribution_scurve_diff'] = dfData['contribution_scurve'] - dfData['contribution_cumsum']
 
+
+# Calculate contribution margin as contribution_cumsum / costs_cumsum
+dfData['contribution_margin'] = dfData['contribution_cumsum'] / dfData['costs_cumsum']
+
+### Gather data from .AUX/Igv.xlsx ###
+dfData['date'] = pd.to_datetime(dfData['date'])
+# Read data from .AUX/Igv.xlsx
+dfIgv = pd.read_excel(".AUX/Igv.xlsx", sheet_name="WIP")
+# Rename 'adjusted_WIP' to 'adjusted_wip'
+dfIgv.rename(columns={'adjusted_WIP': 'adjusted_wip'}, inplace=True)
+# Convert date column to datetime format
+dfIgv['date'] = dfIgv['date'].dt.strftime('%d-%m-%Y')
+dfIgv['date'] = pd.to_datetime(dfIgv['date'])
+# Divide adjusted_wip, adjusted_estimated_revenue by 1,000,000
+dfIgv[['adjusted_wip', 'adjusted_estimated_revenue']] = dfIgv[['adjusted_wip', 'adjusted_estimated_revenue']] / 1000000
+
+# Join on dfData by job_no and date
+dfData = pd.merge(dfData, dfIgv, on=['job_no', 'date'], how='left')
+# Calculate WIP as progress * budget_revenue - revenue_cumsum
+dfData['wip'] = dfData['completion_rate'] * dfData['production_estimate_revenue'] - dfData['revenue_cumsum']
+# If adjusted_wip is NA, then set to wip
+dfData['adjusted_wip'] = dfData['adjusted_wip'].fillna(dfData['wip'])
+# If adjusted_estimated_revenue is NA, then set to estimated_revenue
+dfData['adjusted_estimated_revenue'] = dfData['adjusted_estimated_revenue'].fillna(dfData['estimated_revenue'])
+# If adjusted_margin is NA, then set to contribution_margin
+dfData['adjusted_margin'] = dfData['adjusted_margin'].fillna(dfData['contribution_margin'])
+
+# Read data from .AUX/Debitor.xlsx
+dfDebitorer = pd.read_excel(".AUX/Debitorer.xlsx", sheet_name="overdue")
+# Omit all columns except cvr, date and overdue
+dfDebitorer = dfDebitorer[['cvr', 'date', 'overdue']]
+dfDebitorer['date'] = pd.to_datetime(dfDebitorer['date'])
+dfDebitorer['date'] = dfDebitorer['date'].dt.strftime('%d-%m-%Y')
+dfDebitorer['date'] = pd.to_datetime(dfDebitorer['date'])
+# Join on dfData by cvr and date
+dfData = pd.merge(dfData, dfDebitorer, on=['cvr', 'date'], how='left')
+# If overdue is NA, then set to 0
+dfData['overdue'] = dfData['overdue'].fillna(0)
+# Divide overdue by 1,000,000
+dfData['overdue'] = dfData['overdue'] / 1000000
+
+
+
+
 # Calculate risks and other variables
 def calculate_risk(group):
     if group['contribution_scurve_diff'].isna().any() or group['contribution_cumsum'].isna().any():
@@ -159,17 +207,19 @@ def calculate_risk(group):
         y = group['contribution_scurve_diff']
         model = LinearRegression().fit(X, y)
         residuals = y - model.predict(X)
-        group['risk'] = residuals*group['budget_costs']
+        group['risk'] = residuals * group['production_estimate_costs']
     return group
 
+
+# Apply calculation of risk to each job_no
 dfData = dfData.groupby('job_no', group_keys=False).apply(calculate_risk)
 
 # Determine the PACF and ACF of revenue, costs and contribution
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 for col in ['revenue', 'costs', 'contribution']:
     fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-    plot_acf(dfData[col], ax=ax[0], lags=5)
-    plot_pacf(dfData[col], ax=ax[1], lags=5)
+    plot_acf(dfData[col], ax=ax[0], lags=5, zero=False)
+    plot_pacf(dfData[col], ax=ax[1], lags=5, zero=False)
+    ax[0].set_ylim(-0.4, 0.4)
     fig.suptitle(f'PACF and ACF of {col}')
     plt.tight_layout()
     plt.savefig(f"./Results/Figures/1_6_{col}_acf_pacf.png")
@@ -180,22 +230,21 @@ for col in ['revenue', 'costs', 'contribution']:
 # Get 5 lagged values for revenue, costs and contribution for each job_no
 for col in ['revenue', 'costs', 'contribution']:
     for i in range(1, 6):
-        dfData[f'{col}_lag{i}'] = dfData.groupby('job_no',observed = True)[col].shift(i)
+        dfData[f'{col}_lag{i}'] = dfData.groupby('job_no', observed=True)[col].shift(i)
 
 # Calculate total costs at the end of the job
 dfData['total_costs'] = dfData.groupby('job_no')['costs_cumsum'].transform('last')
 dfData['total_contribution'] = dfData.groupby('job_no')['contribution_cumsum'].transform('last')
 dfData['total_margin'] = dfData['total_contribution'] / dfData['total_costs']
 
-# Calculate contribution margin as contribution_cumsum / costs_cumsum
-dfData['contribution_margin'] = dfData['contribution_cumsum'] / dfData['costs_cumsum']
-
 # Calculate share of labor cost, material cost and other cost cumsum
 dfData['labor_cost_share'] = dfData['costs_of_labor_cumsum'] / dfData['costs_cumsum']
-dfData['material_cost_share'] = (dfData['costs_of_materials_cumsum']+dfData['other_costs_cumsum']) / dfData['costs_cumsum']
+dfData['material_cost_share'] = (dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']) / dfData[
+    'costs_cumsum']
 
 # Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
 dfData.drop(columns=['costs_of_labor_cumsum', 'costs_of_materials_cumsum', 'other_costs_cumsum'], inplace=True)
+
 
 # Function to set to NA if NaN, inf or -inf
 def set_na(x):
@@ -288,3 +337,12 @@ pq.write_table(pa.table(dfData), "dfData.parquet")
 # End timing and print duration
 end_time = datetime.datetime.now()
 print(f"Time taken: {end_time - start_time}")
+
+# Get list of largest variables in memory
+lVariables = [var for var in dir() if not var.startswith('_') and sys.getsizeof(eval(var)) > 100]
+# Remove dfData if it is in the list
+if 'dfData' in lVariables:
+    lVariables.remove('dfData')
+# Remove all variables in the list from memory
+for var in lVariables:
+    del globals()[var]

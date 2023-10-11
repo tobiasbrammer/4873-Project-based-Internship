@@ -385,7 +385,7 @@ set nocount on
     WHERE 1=1
 	AND Sagsposter.[department] IN ('421','510','515','505')
 	AND Budget_final.sales_estimate_cost >= 1000000
-	ORDER BY Sager.[No_], [year], [month] ASC
+	ORDER BY Sager.[No_], [year], [month] DESC
 
 
 

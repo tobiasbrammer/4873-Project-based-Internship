@@ -4,13 +4,13 @@
 \begin{center}
 \begin{tabular}{llll}
 \hline
-Model:                  & OLS                 & Adj. R-squared (uncentered): & 0.367      \\
-Dependent Variable:     & total\_contribution & AIC:                         & 2606.4515  \\
-Date:                   & 2023-10-10 12:59    & BIC:                         & 2659.7912  \\
-No. Observations:       & 943                 & Log-Likelihood:              & -1292.2    \\
-Df Model:               & 11                  & F-statistic:                 & 50.69      \\
-Df Residuals:           & 932                 & Prob (F-statistic):          & 3.06e-87   \\
-R-squared (uncentered): & 0.374               & Scale:                       & 0.91808    \\
+Model:              & OLS                 & Adj. R-squared:     & 0.172       \\
+Dependent Variable: & total\_contribution & AIC:                & -1065.0490  \\
+Date:               & 2023-10-10 15:37    & BIC:                & -1006.9881  \\
+No. Observations:   & 933                 & Log-Likelihood:     & 544.52      \\
+Df Model:           & 11                  & F-statistic:        & 18.56       \\
+Df Residuals:       & 921                 & Prob (F-statistic): & 8.30e-34    \\
+R-squared:          & 0.181               & Scale:              & 0.018459    \\
 \hline
 \end{tabular}
 \end{center}
@@ -18,22 +18,22 @@ R-squared (uncentered): & 0.374               & Scale:                       & 0
 \begin{center}
 \begin{tabular}{lrrrrrr}
 \hline
-                   &   Coef. & Std.Err. &       t & P$> |$t$|$ &  [0.025 & 0.975]  \\
+                             &   Coef. & Std.Err. &       t & P$> |$t$|$ &  [0.025 &  0.975]  \\
 \hline
-skol               &  0.4137 &   0.1525 &  2.7124 &      0.0068 &  0.1144 & 0.7131  \\
-udskiftning        &  0.2671 &   0.1600 &  1.6693 &      0.0954 & -0.0469 & 0.5811  \\
-rosenvæng          &  0.1443 &   0.2392 &  0.6032 &      0.5466 & -0.3252 & 0.6137  \\
-viborg             &  0.2552 &   0.1327 &  1.9228 &      0.0548 & -0.0053 & 0.5158  \\
-days\_since\_start &  0.0009 &   0.0001 &  9.9783 &      0.0000 &  0.0007 & 0.0010  \\
-contribution\_lag1 &  0.4565 &   0.0776 &  5.8851 &      0.0000 &  0.3042 & 0.6087  \\
-revenue\_lag1      &  0.2394 &   0.0613 &  3.9072 &      0.0001 &  0.1192 & 0.3597  \\
-costs\_lag1        &  0.2170 &   0.0734 &  2.9578 &      0.0032 &  0.0730 & 0.3610  \\
-contribution\_lag2 &  0.5099 &   0.0734 &  6.9445 &      0.0000 &  0.3658 & 0.6539  \\
-revenue\_lag2      &  0.2280 &   0.0687 &  3.3200 &      0.0009 &  0.0932 & 0.3628  \\
-costs\_lag2        &  0.2818 &   0.0779 &  3.6177 &      0.0003 &  0.1289 & 0.4347  \\
-contribution\_lag3 &  0.3869 &   0.0708 &  5.4636 &      0.0000 &  0.2479 & 0.5259  \\
-revenue\_lag3      &  0.4029 &   0.0569 &  7.0868 &      0.0000 &  0.2914 & 0.5145  \\
-costs\_lag3        & -0.0160 &   0.0661 & -0.2426 &      0.8083 & -0.1457 & 0.1137  \\
+aarhus                       &  0.1467 &   0.0259 &  5.6715 &      0.0000 &  0.0959 &  0.1975  \\
+billable\_hours\_qty\_cumsum &  0.0927 &   0.0262 &  3.5400 &      0.0004 &  0.0413 &  0.1441  \\
+billable\_hours\_qty         & -0.0499 &   0.0365 & -1.3673 &      0.1719 & -0.1215 &  0.0217  \\
+gødstrup                     &  0.0939 &   0.0367 &  2.5555 &      0.0108 &  0.0218 &  0.1660  \\
+rosenvæng                    &  0.0728 &   0.0262 &  2.7830 &      0.0055 &  0.0215 &  0.1241  \\
+contribution\_lag1           &  0.5187 &   0.0885 &  5.8607 &      0.0000 &  0.3450 &  0.6924  \\
+revenue\_lag1                & -0.1736 &   0.0817 & -2.1244 &      0.0339 & -0.3339 & -0.0132  \\
+costs\_lag1                  & -0.1562 &   0.0598 & -2.6099 &      0.0092 & -0.2736 & -0.0387  \\
+contribution\_lag2           &  0.5613 &   0.0919 &  6.1064 &      0.0000 &  0.3809 &  0.7417  \\
+revenue\_lag2                & -0.1842 &   0.0769 & -2.3956 &      0.0168 & -0.3352 & -0.0333  \\
+costs\_lag2                  & -0.1155 &   0.0633 & -1.8252 &      0.0683 & -0.2397 &  0.0087  \\
+contribution\_lag3           &  0.5096 &   0.0872 &  5.8455 &      0.0000 &  0.3385 &  0.6807  \\
+revenue\_lag3                & -0.0913 &   0.0695 & -1.3144 &      0.1891 & -0.2277 &  0.0450  \\
+costs\_lag3                  & -0.2637 &   0.0649 & -4.0620 &      0.0001 & -0.3910 & -0.1363  \\
 \hline
 \end{tabular}
 \end{center}
@@ -41,16 +41,15 @@ costs\_lag3        & -0.0160 &   0.0661 & -0.2426 &      0.8083 & -0.1457 & 0.11
 \begin{center}
 \begin{tabular}{llll}
 \hline
-Omnibus:       & 341.197 & Durbin-Watson:    & 2.109                \\
-Prob(Omnibus): & 0.000   & Jarque-Bera (JB): & 1757.790             \\
-Skew:          & 1.585   & Prob(JB):         & 0.000                \\
-Kurtosis:      & 8.890   & Condition No.:    & 6108453884561465344  \\
+Omnibus:       & 356.616 & Durbin-Watson:    & 2.051              \\
+Prob(Omnibus): & 0.000   & Jarque-Bera (JB): & 2045.888           \\
+Skew:          & 1.647   & Prob(JB):         & 0.000              \\
+Kurtosis:      & 9.464   & Condition No.:    & 28702596514487136  \\
 \hline
 \end{tabular}
 \end{center}
 \end{table}
 \bigskip
 Notes: \newline 
-[1] R² is computed without centering (uncentered) since the                 model does not contain a constant. \newline 
-[2] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline 
-[3] The smallest eigenvalue is 5.03e-30. This might indicate that                there are strong multicollinearity problems or that the design                matrix is singular.
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline 
+[2] The smallest eigenvalue is 3.42e-30. This might indicate that                there are strong multicollinearity problems or that the design                matrix is singular.
