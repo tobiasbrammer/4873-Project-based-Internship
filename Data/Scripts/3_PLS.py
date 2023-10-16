@@ -27,7 +27,7 @@ sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 os.chdir(sDir)
 
 # Run Scripts/2_PreProcess.py
-# exec(open("Scripts/2_PreProcess.py").read())
+exec(open("Scripts/2_PreProcess.py").read())
 
 # Load ./dfDataTest.parquet and ./dfDataTrain.parquet
 dfDataTest = pd.read_parquet("./dfDataTest.parquet")
@@ -82,7 +82,7 @@ dfDataTrain['sum_predicted'] = dfDataTrain.groupby('date')['predicted_ols'].tran
 dfDataTrain['sum_budget'] = dfDataTrain.groupby('date')['final_estimate_contribution'].transform('sum')
 
 dfDataTest['sum'] = dfDataTest.groupby('date')['total_contribution'].transform('sum')
-dfDataTest['sum_predicted'] = dfDataTest.groupby('date')['predicted'].transform('sum')
+dfDataTest['sum_predicted'] = dfDataTest.groupby('date')['predicted_ols'].transform('sum')
 dfDataTest['sum_budget'] = dfDataTest.groupby('date')['final_estimate_contribution'].transform('sum')
 
 # Plot the sum of predicted and actual sDepVar by date
@@ -133,7 +133,7 @@ dfDataTrain['predicted_lag'] = results.predict(dfDataTrain[lIndepVar_lag])
 dfDataTest['predicted_lag'] = results.predict(dfDataTest[lIndepVar_lag])
 
 dfDataTrain['sum_predicted_lag'] = dfDataTrain.groupby('date')['predicted_lag'].transform('sum')
-dfDataTest['sum_predicted_lag'] = dfDataTest.groupby('date')['predicted'].transform('sum')
+dfDataTest['sum_predicted_lag'] = dfDataTest.groupby('date')['predicted_lag'].transform('sum')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(10, 5))
@@ -219,7 +219,7 @@ dfRMSE = pd.DataFrame({'RMSE': [rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rms
 dfRMSE = dfRMSE.round(4).applymap('{:,.4f}'.format)
 # Output to LaTeX with landscape orientation
 dfRMSE = dfRMSE.style.to_latex(
-    caption='RMSE of Naïve Methods',
+    caption='RMSE of Naive Methods',
     position='h!',
     hrules=True,
     label='naive_rmse')

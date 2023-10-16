@@ -1,6 +1,4 @@
 # Import required libraries
-import PyDST
-
 for name in dir():
     if not name.startswith('_'):
         del globals()[name]
@@ -25,7 +23,9 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
 from plot_config import *
+
 from PyDST import *
+import PyDST
 
 # https://kristianuruplarsen.github.io/pydst/build/html/index.html
 
@@ -329,9 +329,6 @@ dfData = pd.merge(dfData, processed_data, on="job_no", how="left")
 dfData.drop(columns=['description'], inplace=True)
 
 ### Join DST data ###
-info = PyDST.get_tableinfo(table_id='KBYG11').json()
-print(info)
-
 kbyg11 = PyDST.get_data(table_id='KBYG11',
                         variables={'BRANCHE07': '43201',
                                    'INDIKATOR': 'VIAK',

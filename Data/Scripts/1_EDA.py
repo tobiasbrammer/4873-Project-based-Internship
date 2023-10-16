@@ -15,7 +15,10 @@ sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
-exec(open("Scripts/0_GetData.py").read())
+# exec(open("Scripts/0_GetData.py").read())
+# Read dfData parquet file
+dfData = pd.read_parquet("dfData.parquet")
+
 
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
 dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%d-%m-%Y')
@@ -116,7 +119,7 @@ plt.figure(figsize=(10, 5))
 sns.kdeplot(data=dfData, x='risk', label='risk')
 plt.xlabel("Risk (mDKK)")
 plt.ylabel("Density")
-plt.xlim(dfData['risk'].quantile(0.001), dfData['risk'].quantile(0.999))
+plt.xlim(dfData['risk'].quantile(0.01), dfData['risk'].quantile(0.99))
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.35)
