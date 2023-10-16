@@ -1,4 +1,5 @@
 # Import required libraries
+import runpy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,10 +16,8 @@ sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
-exec(open("Scripts/0_GetData.py").read())
 # Read dfData parquet file
-# dfData = pd.read_parquet("dfData.parquet")
-
+dfData = pd.read_parquet("dfData.parquet")
 
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
 dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%d-%m-%Y')
@@ -96,7 +95,7 @@ plt.show()
 plt.draw()
 
 # Select random job and plot risk
-job_no = dfData['job_no'].drop_duplicates().sample().values[0]
+job_no = 'S161210'
 dfData[dfData['job_no'] == job_no].plot(x='date', y='risk', figsize=(10, 5))
 plt.xlabel("Date")
 plt.ylabel("Risk")

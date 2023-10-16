@@ -1,5 +1,6 @@
 # Import required libraries
 import os
+import runpy
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -21,9 +22,6 @@ from sklearn.metrics import mean_squared_error, r2_score
 sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
-
-# Run Scripts/2_PreProcess.py
-exec(open("Scripts/2_PreProcess.py").read())
 
 # Load ./dfDataTest.parquet and ./dfDataTrain.parquet
 dfDataTest = pd.read_parquet("./dfDataTest.parquet")
@@ -177,8 +175,6 @@ dfDataTest['predicted_lag_budget'] = results.predict(dfDataTest[lIndepVar_lag_bu
 dfDataTrain['predicted_lag_budget'] = y_scaler.inverse_transform(dfDataTrain['predicted_lag_budget'].values.reshape(-1, 1))
 dfDataTest['predicted_lag_budget'] = y_scaler.inverse_transform(dfDataTest['predicted_lag_budget'].values.reshape(-1, 1))
 
-
-
 dfDataTrain['sum_predicted_lag_budget'] = dfDataTrain.groupby('date')['predicted_lag_budget'].transform('sum')
 dfDataTest['sum_predicted_lag_budget'] = dfDataTest.groupby('date')['predicted_lag_budget'].transform('sum')
 
@@ -213,7 +209,9 @@ dfRMSE = pd.DataFrame({'RMSE': [rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rms
                         index=['OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'Final estimate'])
 
 dfRMSE = dfRMSE.round(4).applymap('{:,.4f}'.format)
-# Output to LaTeX with landscape orientation
+print(dfRMSE)
+
+# Output to LaTeX
 dfRMSE = dfRMSE.style.to_latex(
     caption='RMSE of Naive Methods',
     position_float='centering',
@@ -227,12 +225,12 @@ with open('Results/Tables/3_4_rmse.tex', 'w', encoding='utf-8') as f:
 
 ### Predict sDepVar using PLS ###
 # Run PLS
-pls = PLSRegression(n_components=5)
-pls.fit(scaled_train[lIndepVar_lag_budget], dfDataTrain[sDepVar])
+pls = PLSRegression(n_components=15)
+pls.fit(dfDataTrain[lIndepVar_lag], dfDataTrain[sDepVar])
 
 # Predict sDepVar using PLS
-dfDataTrain['predicted_pls'] = pls.predict(scaled_train[lIndepVar_lag_budget])
-dfDataTest['predicted_pls'] = pls.predict(scaled_test[lIndepVar_lag_budget])
+dfDataTrain['predicted_pls'] = pls.predict(dfDataTrain[lIndepVar_lag])
+dfDataTest['predicted_pls'] = pls.predict(dfDataTest[lIndepVar_lag])
 # Reshape predicted values
 dfDataTrain['predicted_pls'] = dfDataTrain['predicted_pls'].values.reshape(-1, 1)
 dfDataTest['predicted_pls'] = dfDataTest['predicted_pls'].values.reshape(-1, 1)
@@ -263,4 +261,22 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/3_4_pls.png")
 plt.savefig("./Results/Presentation/3_4_pls.svg")
 plt.show()
+
+
+### Get Prediction of job_no S161210 ###
+# Get the data of job_no S161210
+dfDataJob = dfData[dfData['job_no'] == 'S161210']
+dfDataJob = dfDataJob.sort_values(by='date')
+
+# Keep variables from dfDataTrain
+
+
+# Predict sDepVar using OLS
+dfDataJob['predicted_ols'] = results.predict(dfDataJob[lIndepVar_lag])
+dfDataJob['predicted_ols'] = y_scaler.inverse_transform(dfDataJob['predicted_ols'].values.reshape(-1, 1))
+
+# Predict sDepVar using PLS
+dfDataJob['predicted_pls'] = pls.predict(dfDataJob[lIndepVar_lag])
+dfDataJob['predicted_pls'] = dfDataJob['predicted_pls'].reshape(-1, 1)
+
 

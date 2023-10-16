@@ -10,7 +10,6 @@ import sys
 import datetime
 import sqlalchemy as sa
 import matplotlib.pyplot as plt
-# import pyodbc
 import urllib
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine.url import URL
@@ -23,7 +22,6 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
 from plot_config import *
-
 from PyDST import *
 import PyDST
 
@@ -38,37 +36,38 @@ os.chdir(directory)
 
 # If time is 05:00 - 05:15, then wait until 05:15
 if datetime.datetime.now().hour == 5 and datetime.datetime.now().minute < 15:
-    print("Waiting 15 minutes...")
+    print("Waiting until 5:15...")
     while datetime.datetime.now().minute < 15:
         pass
 # If time is 8:00 - 8:15, then wait until 8:15
 elif datetime.datetime.now().hour == 8 and datetime.datetime.now().minute < 15:
-    print("Waiting 15 minutes...")
+    print("Waiting until 8:15...")
     while datetime.datetime.now().minute < 15:
         pass
 # If time is 11:30 - 11:45, then wait until 11:45
 elif datetime.datetime.now().hour == 11 and 45 > datetime.datetime.now().minute >= 30:
-    print("Waiting 15 minutes...")
+    print("Waiting until 11:45...")
     while datetime.datetime.now().minute < 45:
+        print(datetime.datetime.now().strftime("%H:%M:%S"))
         pass
 # If time is 14:00 - 14:15, then wait until 14:15
 elif datetime.datetime.now().hour == 14 and datetime.datetime.now().minute < 15:
-    print("Waiting 15 minutes...")
+    print("Waiting until 14:15...")
     while datetime.datetime.now().minute < 15:
         pass
 # If time is 17:00 - 17:15, then wait until 17:15
 elif datetime.datetime.now().hour == 17 and datetime.datetime.now().minute < 15:
-    print("Waiting 15 minutes...")
+    print("Waiting until 17:15...")
     while datetime.datetime.now().minute < 15:
         pass
 # If time is 21:00 - 21:15, then wait until 21:15
 elif datetime.datetime.now().hour == 21 and datetime.datetime.now().minute < 15:
-    print("Waiting 15 minutes...")
+    print("Waiting until 21:15...")
     while datetime.datetime.now().minute < 15:
         pass
 # If time is 02:00 - 02:15, then wait until 02:15
 elif datetime.datetime.now().hour == 2 and datetime.datetime.now().minute < 15:
-    print("Waiting 15 minutes...")
+    print("Waiting until 2:15...")
     while datetime.datetime.now().minute < 15:
         pass
 
@@ -100,6 +99,23 @@ dfData['end_date'].fillna(dfData['date'], inplace=True)
 # Replace end_date with date if end_date is 1753-01-01
 mask = dfData['end_date'] == '1753-01-01'
 dfData.loc[mask, 'end_date'] = dfData.loc[mask, 'date']
+
+dfData.loc[dfData['zip'].astype(str).str.len() > 4, 'zip'] = np.nan
+dfData.loc[dfData['customer_zip'].astype(str).str.len() > 4, 'customer_zip'] = np.nan
+
+# If sales_estimate_revenue, sales_estimate_costs, production_estimate_revenue, production_estimate_costs, final_estimate_revenue or final_estimate_costs is 0, then set to budget_revenue or budget_costs
+dfData.loc[dfData['sales_estimate_revenue'] == 0, 'sales_estimate_revenue'] = dfData.loc[
+    dfData['sales_estimate_revenue'] == 0, 'budget_revenue']
+dfData.loc[dfData['sales_estimate_costs'] == 0, 'sales_estimate_costs'] = dfData.loc[
+    dfData['sales_estimate_costs'] == 0, 'budget_costs']
+dfData.loc[dfData['production_estimate_revenue'] == 0, 'production_estimate_revenue'] = dfData.loc[
+    dfData['production_estimate_revenue'] == 0, 'budget_revenue']
+dfData.loc[dfData['production_estimate_costs'] == 0, 'production_estimate_costs'] = dfData.loc[
+    dfData['production_estimate_costs'] == 0, 'budget_costs']
+dfData.loc[dfData['final_estimate_revenue'] == 0, 'final_estimate_revenue'] = dfData.loc[
+    dfData['final_estimate_revenue'] == 0, 'budget_revenue']
+dfData.loc[dfData['final_estimate_costs'] == 0, 'final_estimate_costs'] = dfData.loc[
+    dfData['final_estimate_costs'] == 0, 'budget_costs']
 
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns
@@ -163,19 +179,14 @@ dfData['contribution_scurve_diff'] = dfData['contribution_scurve'] - dfData['con
 dfData['contribution_margin'] = dfData['contribution_cumsum'] / dfData['costs_cumsum']
 
 ### Gather data from .AUX/Igv.xlsx ###
-dfData['date'] = pd.to_datetime(dfData['date'])
-# Read data from .AUX/Igv.xlsx
 dfIgv = pd.read_excel(".AUX/Igv.xlsx", sheet_name="WIP")
 # Rename 'adjusted_WIP' to 'adjusted_wip'
 dfIgv.rename(columns={'adjusted_WIP': 'adjusted_wip'}, inplace=True)
-# Convert date column to datetime format
-dfIgv['date'] = dfIgv['date'].dt.strftime('%d-%m-%Y')
-dfIgv['date'] = pd.to_datetime(dfIgv['date'])
 # Divide adjusted_wip, adjusted_estimated_revenue by 1,000,000
 dfIgv[['adjusted_wip', 'adjusted_estimated_revenue']] = dfIgv[['adjusted_wip', 'adjusted_estimated_revenue']] / 1000000
-
 # Join on dfData by job_no and date
 dfData = pd.merge(dfData, dfIgv, on=['job_no', 'date'], how='left')
+
 # Calculate WIP as progress * budget_revenue - revenue_cumsum
 dfData['wip'] = dfData['completion_rate'] * dfData['production_estimate_revenue'] - dfData['revenue_cumsum']
 # If adjusted_wip is NA, then set to wip
@@ -188,9 +199,7 @@ dfData['adjusted_margin'] = dfData['adjusted_margin'].fillna(dfData['contributio
 # Read data from .AUX/Debitor.xlsx
 dfDebitorer = pd.read_excel(".AUX/Debitorer.xlsx", sheet_name="overdue")
 # Omit all columns except cvr, date and overdue
-dfDebitorer = dfDebitorer[['cvr', 'date', 'overdue']]
-dfDebitorer['date'] = pd.to_datetime(dfDebitorer['date'])
-dfDebitorer['date'] = dfDebitorer['date'].dt.strftime('%d-%m-%Y')
+dfDebitorer = dfDebitorer[['date','cvr','overdue']]
 dfDebitorer['date'] = pd.to_datetime(dfDebitorer['date'])
 # Join on dfData by cvr and date
 dfData = pd.merge(dfData, dfDebitorer, on=['cvr', 'date'], how='left')
@@ -293,7 +302,7 @@ def preprocess(text):
 dfDesc['description'] = dfDesc['description'].apply(preprocess)
 
 # Step 3 and 4: Convert to Document-Term Matrix and remove sparse terms
-vectorizer = CountVectorizer(min_df=0.01, max_df=0.15)
+vectorizer = CountVectorizer(min_df=0.02, max_df=0.15)
 X = vectorizer.fit_transform(dfDesc['description'])
 df_matrix = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
 
@@ -439,6 +448,13 @@ dst_df = pd.merge(dst_df, kbyg44, on='date', how='left')
 
 del kbyg11, kbyg22, kbyg33, kbyg44
 
+# Rename kbyg44_construction_industry_total_employment_expectations to kbyg44_employment_expectations
+dst_df.rename(columns={'kbyg44_construction_industry_total_employment_expectations': 'kbyg44_employment_expectations',
+                       'kbyg44_confidence_indicator_total': 'kbyg44_confidence_indicator',
+                       'kbyg33_shortage_of_material_and/or_equipment': 'kbyg33_shortage_of_materials'},
+                inplace=True)
+
+
 # Join dst_df on dfData by date
 dfData = pd.merge(dfData, dst_df, on='date', how='left')
 
@@ -451,7 +467,7 @@ ax[0, 1].plot(dst_df['date'], dst_df['kbyg22'])
 ax[0, 1].set_title('Assessment of Order Backlog')
 ax[1, 0].plot(dst_df['date'], dst_df['kbyg33_no_limitations'])
 ax[1, 0].set_title('Share with No Production Limitations')
-ax[1, 1].plot(dst_df['date'], dst_df['kbyg44_confidence_indicator_total'])
+ax[1, 1].plot(dst_df['date'], dst_df['kbyg44_confidence_indicator'])
 ax[1, 1].set_title('Confidence indicator')
 fig.suptitle('DST data')
 plt.tight_layout()

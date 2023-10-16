@@ -386,9 +386,6 @@ set nocount on
 	AND Sagsposter.[department] IN ('421','510','515','505')
 	--AND Sagsopgaver.[Job No_] = 'S209726'
 	--AND Budget_final.sales_estimate_cost >= 1000000
-	ORDER BY Sager.[No_], [year], [month] DESC
-
-
-
+	ORDER BY Sager.[No_] DESC, [month], [year] ASC
 	  
 DROP TABLE #Sager, #Sagsbudget, #AllCombinations, #Arbejdssedler, #Budget, #Budget_final, #budget_v2, #Cal, #MaxArchive, #Regnskab, #Sagsopgaver, #Sagsposter, #RLE, #rle_2, #ArbejderTid, #ArbejderTimer, #Faktureringsgrad
