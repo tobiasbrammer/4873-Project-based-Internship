@@ -225,7 +225,7 @@ dfRMSE = dfRMSE.style.to_latex(
     label='naive_rmse')
 
 # Output to LaTeX with encoding
-with open('Results/Tables/3_pls_1.tex', 'w', encoding='utf-8') as f:
+with open('Results/Tables/3_4_rmse.tex', 'w', encoding='utf-8') as f:
     f.write(dfRMSE)
 
 ### Predict sDepVar using PLS ###
