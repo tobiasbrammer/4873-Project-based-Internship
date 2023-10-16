@@ -52,6 +52,12 @@ print(f"The min number of observations per finished job is {obs.min()}.")
 dfDataFinishedTrain = dfDataFinished[dfDataFinished['train'] == 1]
 dfDataFinishedTest = dfDataFinished[~dfDataFinished.index.isin(dfDataFinishedTrain.index)]
 
+# Rows in train and test
+print(f"The number of rows in train is {len(dfDataFinishedTrain)}.")
+print(f"The number of rows in test is {len(dfDataFinishedTest)}.")
+# Finished rows
+print(f"The number of finished rows in train is {len(dfDataFinishedTrain[dfDataFinishedTrain['wip'] == 0])}.")
+
 # Omit train column
 dfDataFinishedTrain.drop('train', axis=1, inplace=True)
 dfDataFinishedTest.drop('train', axis=1, inplace=True)
@@ -110,11 +116,11 @@ dfDataWIP_y_scaled = pd.concat([dfDataWIP_desc, dfDataWIP_y_scaled], axis=1)
 dfDataWIP_scaled = pd.merge(dfDataWIP_X_scaled,
                             dfDataWIP_y_scaled.drop_duplicates(inplace=True),
                             on=['date', 'job_no', 'department'])
-
+# Fill NaN with 0
+dfDataWIP_scaled.fillna(0, inplace=True)
 
 # Save dfDataWIP_scaled to parquet
 dfDataWIP_scaled.to_parquet('./dfDataWIP.parquet')
-
 
 # Join job_no, date and department to the scaled data (independent variables)
 # Get dimensions of train_data_X_scaled and test_data_X_scaled
@@ -147,9 +153,13 @@ test_data_scaled = pd.merge(test_data_y_scaled, test_data_X_scaled, on=['date', 
 test_data_scaled.fillna(0, inplace=True)
 train_data_scaled.fillna(0, inplace=True)
 
+# Merge train_data_scaled, test_data_scaled and dfDataWIP_scaled
+dfDataScaled = pd.concat([train_data_scaled, test_data_scaled, dfDataWIP_scaled], axis=0)
+
 # Save the scaled data
 train_data_scaled.to_parquet('./dfDataTrain.parquet')
 test_data_scaled.to_parquet('./dfDataTest.parquet')
+dfDataScaled.to_parquet('./dfDataScaled.parquet')
 
 # sDepVar value to file
 with open('./.AUX/sDepVar.txt', 'w') as f:

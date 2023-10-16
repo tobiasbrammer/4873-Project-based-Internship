@@ -265,18 +265,23 @@ plt.show()
 
 ### Get Prediction of job_no S161210 ###
 # Get the data of job_no S161210
-dfDataJob = dfData[dfData['job_no'] == 'S161210']
+dfDataJob = dfDataTrain[dfDataTrain['job_no'] == 'S161210']
 dfDataJob = dfDataJob.sort_values(by='date')
 
-# Keep variables from dfDataTrain
-
-
-# Predict sDepVar using OLS
-dfDataJob['predicted_ols'] = results.predict(dfDataJob[lIndepVar_lag])
-dfDataJob['predicted_ols'] = y_scaler.inverse_transform(dfDataJob['predicted_ols'].values.reshape(-1, 1))
-
-# Predict sDepVar using PLS
-dfDataJob['predicted_pls'] = pls.predict(dfDataJob[lIndepVar_lag])
-dfDataJob['predicted_pls'] = dfDataJob['predicted_pls'].reshape(-1, 1)
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(dfDataJob['date'], dfDataJob['total_contribution'], label='Actual')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_ols'], label='OLS')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_lag'], label='OLS with lagged variables')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_lag_budget'], label='OLS with lagged variables and budget')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_pls'], label='PLS')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Total Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.show()
 
 
