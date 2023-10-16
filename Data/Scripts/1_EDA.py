@@ -15,9 +15,9 @@ sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
-# exec(open("Scripts/0_GetData.py").read())
+exec(open("Scripts/0_GetData.py").read())
 # Read dfData parquet file
-dfData = pd.read_parquet("dfData.parquet")
+# dfData = pd.read_parquet("dfData.parquet")
 
 
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')

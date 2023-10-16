@@ -138,3 +138,39 @@ with open('./.AUX/sDepVar.txt', 'w') as f:
 # Save the scales to .AUX/
 joblib.dump(x_scaler, "./.AUX/x_scaler.save")
 joblib.dump(y_scaler, "./.AUX/y_scaler.save")
+
+
+### Principal Component Analysis ###
+# Run PCA on train_data_X_scaled and plot the explained variance ratio.
+from sklearn.decomposition import PCA
+from sklearn.ensemble import HistGradientBoostingRegressor
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from plot_config import *
+# Load train_data_X_scaled
+train_data_X_scaled = pd.read_parquet('./dfDataTrain.parquet')
+train_data_y_scaled = train_data_X_scaled[['total_contribution']]
+
+# Only keep numeric columns
+train_data_X_scaled = train_data_X_scaled.select_dtypes(include=[np.number])
+
+# Replace infinite values with NaN
+train_data_X_scaled.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+# Replace NaN with 0
+train_data_X_scaled.fillna(0, inplace=True)
+
+# Run PCA
+pca = PCA(n_components=20)
+pca.fit(train_data_X_scaled.select_dtypes(include=[np.number]))
+
+# Plot the explained variance ratio
+plt.figure(figsize=(10, 5))
+plt.plot(np.cumsum(pca.explained_variance_ratio_))
+plt.xlabel("Number of components")
+plt.ylabel("Cumulative explained variance")
+plt.grid(alpha=0.35)
+plt.tight_layout()
+plt.show()

@@ -1,7 +1,3 @@
-for name in dir():
-    if not name.startswith('_'):
-        del globals()[name]
-
 # Import required libraries
 import os
 import numpy as np
@@ -10,6 +6,8 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
+import statsmodels.api as sm
+import joblib
 from pandas import DataFrame
 from scipy.spatial import distance
 from matplotlib import rc
@@ -18,8 +16,6 @@ from scipy.signal import savgol_filter
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error, r2_score
-import statsmodels.api as sm
-import joblib
 
 # Load ./dfData.parquet
 sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
@@ -220,6 +216,7 @@ dfRMSE = dfRMSE.round(4).applymap('{:,.4f}'.format)
 # Output to LaTeX with landscape orientation
 dfRMSE = dfRMSE.style.to_latex(
     caption='RMSE of Naive Methods',
+    position_float='centering',
     position='h!',
     hrules=True,
     label='naive_rmse')

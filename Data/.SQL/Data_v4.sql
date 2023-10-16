@@ -384,7 +384,8 @@ set nocount on
 	ELSE Sagsposter.[department] END) = CONCAT(FORMAT(#Faktureringsgrad.Dato,'dd-MM-yyyy'),#Faktureringsgrad.Afdeling)
     WHERE 1=1
 	AND Sagsposter.[department] IN ('421','510','515','505')
-	AND Budget_final.sales_estimate_cost >= 1000000
+	--AND Sagsopgaver.[Job No_] = 'S209726'
+	--AND Budget_final.sales_estimate_cost >= 1000000
 	ORDER BY Sager.[No_], [year], [month] DESC
 
 

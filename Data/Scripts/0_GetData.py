@@ -474,11 +474,3 @@ pq.write_table(pa.table(dfData), "dfData.parquet")
 end_time = datetime.datetime.now()
 print(f"Time taken: {end_time - start_time}")
 
-# Get list of largest variables in memory
-lVariables = [var for var in dir() if not var.startswith('_') and sys.getsizeof(eval(var)) > 100]
-# Remove dfData if it is in the list
-if 'dfData' in lVariables:
-    lVariables.remove('dfData')
-# Remove all variables in the list from memory
-for var in lVariables:
-    del globals()[var]
