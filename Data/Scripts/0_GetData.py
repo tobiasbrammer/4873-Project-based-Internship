@@ -81,9 +81,13 @@ engine = sa.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 with open(".SQL/Data_v4.sql", "r") as file:
     sQuery = file.read()
 
+print('Getting data from database...')
+
 # Test connection
 with engine.begin() as conn:
     dfData = pd.read_sql_query(sa.text(sQuery), conn)
+
+print('Running feature engineering...')
 
 # Convert date columns to datetime format
 dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
@@ -174,6 +178,8 @@ dfData['contribution_scurve_diff'] = dfData['contribution_scurve'] - dfData['con
 # Calculate contribution margin as contribution_cumsum / costs_cumsum
 dfData['contribution_margin'] = dfData['contribution_cumsum'] / dfData['costs_cumsum']
 
+print('Getting data on WIP and overdue debtors...')
+
 ### Gather data from .AUX/Igv.xlsx ###
 dfIgv = pd.read_excel(".AUX/Igv.xlsx", sheet_name="WIP")
 # Rename 'adjusted_WIP' to 'adjusted_wip'
@@ -204,6 +210,7 @@ dfData['overdue'] = dfData['overdue'].fillna(0)
 # Divide overdue by 1,000,000
 dfData['overdue'] = dfData['overdue'] / 1000000
 
+print('Running calculation of risk...')
 
 # Calculate risks and other variables
 def calculate_risk(group):
@@ -237,6 +244,11 @@ for col in ['revenue', 'costs', 'contribution']:
 for col in ['revenue', 'costs', 'contribution']:
     for i in range(1, 6):
         dfData[f'{col}_lag{i}'] = dfData.groupby('job_no', observed=True)[col].shift(i)
+
+# For all lags replace NA with 0
+for col in ['revenue', 'costs', 'contribution']:
+    for i in range(1, 6):
+        dfData[f'{col}_lag{i}'] = dfData[f'{col}_lag{i}'].fillna(0)
 
 # Calculate total costs at the end of the job
 dfData['total_costs'] = dfData.groupby('job_no')['costs_cumsum'].transform('last')
@@ -274,6 +286,8 @@ dfData['posting_group_projekt'] = (dfData['job_posting_group'] == 'PROJEKT').ast
 for col in ['responsible', 'address', 'cvr', 'customer', 'job_no']:
     dfData[col] = dfData[col].astype('category')
 
+print('Running text processing...')
+
 ### Text Processing ###
 # Step 1: Filter out the latest description for each job_no
 dfDesc = dfData.sort_values('date').groupby('job_no').last().reset_index()
@@ -295,12 +309,12 @@ def preprocess(text):
 
 dfDesc['description'] = dfDesc['description'].apply(preprocess)
 
-# Step 3 and 4: Convert to Document-Term Matrix and remove sparse terms
+# Step 3: Convert to Document-Term Matrix and remove sparse terms
 vectorizer = CountVectorizer(min_df=0.02, max_df=0.15)
 X = vectorizer.fit_transform(dfDesc['description'])
 df_matrix = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
 
-# Step 5: Append the Document-Term Matrix to the original DataFrame
+# Step 4: Append the Document-Term Matrix to the original DataFrame
 dfDesc.reset_index(drop=True, inplace=True)
 df_matrix.reset_index(drop=True, inplace=True)
 processed_data = pd.concat([dfDesc[['job_no']], df_matrix], axis=1)
@@ -344,6 +358,8 @@ dfData['category'] = dfData['category'].str.replace(' ', '_')
 #
 dfData = pd.concat([dfData, pd.get_dummies(dfData['category'])], axis=1)
 dfData.drop(columns=['category'], inplace=True)
+
+print('Getting data from DST...')
 
 ### Join DST data ###
 kbyg11 = PyDST.get_data(table_id='KBYG11',
@@ -492,6 +508,8 @@ dfData.drop_duplicates(subset=['id'], inplace=True)
 
 # Format all column names to lower case
 dfData.columns = dfData.columns.str.lower()
+
+
 
 ### Split test and train ###
 # Sample 80% of the jobs for training

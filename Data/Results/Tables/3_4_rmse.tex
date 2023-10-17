@@ -2,17 +2,15 @@
 \centering
 \caption{RMSE of Naive Methods}
 \label{naive_rmse}
-\begin{tabular}{ll}
+\begin{tabular}{lll}
 \toprule
- & RMSE \\
+ & RMSE & sMAPE \\
 \midrule
-Final estimate & 4.5683 \\
-Production estimate & 4.7286 \\
-OLS & 4.1296 \\
-OLS with lagged variables & \textbf{3.7185} \\
-OLS with lagged variables and budget & 3.7865 \\
-PLS with lagged variables and budget & 4.3839 \\
-Exponential Smoothing & 4.3373 \\
+OLS & 0.789500 & 85.299700 \\
+OLS with lagged variables & \textbf{0.3726} & \textbf{79.4336} \\
+OLS with lagged variables and budget & 0.372900 & 79.504500 \\
+PLS & 0.777000 & 84.676100 \\
+FC & 0.694900 & 84.517800 \\
 \bottomrule
 \end{tabular}
 \end{table}
