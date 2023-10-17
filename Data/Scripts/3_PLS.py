@@ -52,7 +52,11 @@ model = sm.OLS(dfDataTrain[sDepVar], dfDataTrain[lIndepVar])
 results = model.fit()
 print(results.summary2())
 # Save results to LaTeX
-ols = results.summary2().as_latex()
+ols = results.summary(alpha=0.05, slim=True).as_latex()
+# Center the table
+ols = ols.replace('\\begin{tabular}', '\\begin{tabular} \\centering')
+
+
 with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 

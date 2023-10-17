@@ -1,51 +1,33 @@
-\begin{table}
-\caption{Results: Ordinary least squares}
-\label{}
 \begin{center}
-\begin{tabular}{llll}
-\hline
-Model:                  & OLS              & Adj. R-squared (uncentered): & 0.984       \\
-Dependent Variable:     & contribution     & AIC:                         & -9596.1785  \\
-Date:                   & 2023-10-17 10:37 & BIC:                         & -9533.8727  \\
-No. Observations:       & 3754             & Log-Likelihood:              & 4808.1      \\
-Df Model:               & 10               & F-statistic:                 & 2.277e+04   \\
-Df Residuals:           & 3744             & Prob (F-statistic):          & 0.00        \\
-R-squared (uncentered): & 0.984            & Scale:                       & 0.0045311   \\
-\hline
+\begin{tabular} \centering{lclc}
+\toprule
+\textbf{Dep. Variable:}                   &  contribution & \textbf{  F-statistic:       }  \\
+\textbf{Model:}                           &      OLS      & \textbf{  Prob (F-statistic):}  \\
+\bottomrule
 \end{tabular}
+\begin{tabular} \centering{lcl}
+\textbf{No. Observations:}                &       3754    & \textbf{                     }  \\
+\textbf{Covariance Type:}                 &   nonrobust   & \textbf{                     }  \\
+\bottomrule
+\end{tabular}
+\begin{tabular} \centering{lcccccc}
+                                          & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+\midrule
+\textbf{days\_until\_end}                 &      -0.0626  &        0.009     &    -6.630  &         0.000        &       -0.081    &       -0.044     \\
+\textbf{kbyg44\_employment\_expectations} &       1.0454  &        0.114     &     9.197  &         0.000        &        0.823    &        1.268     \\
+\textbf{kbyg11}                           &       0.0299  &        0.010     &     2.904  &         0.004        &        0.010    &        0.050     \\
+\textbf{kbyg44\_confidence\_indicator}    &      -1.3559  &        0.176     &    -7.690  &         0.000        &       -1.702    &       -1.010     \\
+\textbf{panum}                            &      -0.0345  &        0.011     &    -3.231  &         0.001        &       -0.056    &       -0.014     \\
+\textbf{kbyg33\_no\_limitations}          &       0.0976  &        0.010     &     9.692  &         0.000        &        0.078    &        0.117     \\
+\textbf{total\_days}                      &       0.0776  &        0.007     &    11.305  &         0.000        &        0.064    &        0.091     \\
+\textbf{kbyg22}                           &       0.1173  &        0.011     &    11.059  &         0.000        &        0.096    &        0.138     \\
+\textbf{billable\_rate\_dep}              &       0.2468  &        0.007     &    37.002  &         0.000        &        0.234    &        0.260     \\
+\textbf{kbyg44\_stocks\_of\_orders}       &       0.5377  &        0.062     &     8.635  &         0.000        &        0.416    &        0.660     \\
+\bottomrule
+\end{tabular}
+%\caption{OLS Regression Results}
 \end{center}
 
-\begin{center}
-\begin{tabular}{lrrrrrr}
-\hline
-                                 &   Coef. & Std.Err. &       t & P$> |$t$|$ &  [0.025 &  0.975]  \\
-\hline
-days\_until\_end                 & -0.0626 &   0.0094 & -6.6296 &      0.0000 & -0.0811 & -0.0441  \\
-kbyg44\_employment\_expectations &  1.0454 &   0.1137 &  9.1965 &      0.0000 &  0.8225 &  1.2683  \\
-kbyg11                           &  0.0299 &   0.0103 &  2.9044 &      0.0037 &  0.0097 &  0.0501  \\
-kbyg44\_confidence\_indicator    & -1.3559 &   0.1763 & -7.6903 &      0.0000 & -1.7016 & -1.0103  \\
-panum                            & -0.0345 &   0.0107 & -3.2308 &      0.0012 & -0.0555 & -0.0136  \\
-kbyg33\_no\_limitations          &  0.0976 &   0.0101 &  9.6918 &      0.0000 &  0.0778 &  0.1173  \\
-total\_days                      &  0.0776 &   0.0069 & 11.3049 &      0.0000 &  0.0642 &  0.0911  \\
-kbyg22                           &  0.1173 &   0.0106 & 11.0592 &      0.0000 &  0.0965 &  0.1381  \\
-billable\_rate\_dep              &  0.2468 &   0.0067 & 37.0018 &      0.0000 &  0.2337 &  0.2599  \\
-kbyg44\_stocks\_of\_orders       &  0.5377 &   0.0623 &  8.6353 &      0.0000 &  0.4156 &  0.6597  \\
-\hline
-\end{tabular}
-\end{center}
-
-\begin{center}
-\begin{tabular}{llll}
-\hline
-Omnibus:       & 905.006 & Durbin-Watson:    & 0.575     \\
-Prob(Omnibus): & 0.000   & Jarque-Bera (JB): & 6608.130  \\
-Skew:          & 0.951   & Prob(JB):         & 0.000     \\
-Kurtosis:      & 9.216   & Condition No.:    & 378       \\
-\hline
-\end{tabular}
-\end{center}
-\end{table}
-\bigskip
-Notes: \newline 
-[1] R² is computed without centering (uncentered) since the                 model does not contain a constant. \newline 
-[2] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+Notes: \newline
+ [1] R² is computed without centering (uncentered) since the model does not contain a constant. \newline
+ [2] Standard Errors assume that the covariance matrix of the errors is correctly specified.
