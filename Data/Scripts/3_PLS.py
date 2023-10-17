@@ -54,7 +54,7 @@ print(results.summary2())
 # Save results to LaTeX
 ols = results.summary(alpha=0.05, slim=True).as_latex()
 # Center the table
-ols = ols.replace('\\begin{tabular}', '\\begin{tabular} \\centering')
+ols = ols.replace('\\toprule', '\\centering \\toprule')
 
 
 with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
