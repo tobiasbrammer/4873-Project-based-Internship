@@ -44,8 +44,6 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/1_0_costs.png")
 plt.savefig("./Results/Presentation/1_0_costs.svg")
 plt.show()
-plt.draw()
-
 
 # Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
 plt.figure(figsize=(10, 5))
@@ -71,8 +69,6 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
 plt.show()
-plt.draw()
-
 
 # Plot sum of risk by date for each department
 plt.figure(figsize=(10, 5))
@@ -92,7 +88,6 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/1_2_risk.png")
 plt.savefig("./Results/Presentation/1_2_risk.svg")
 plt.show()
-plt.draw()
 
 # Select random job and plot risk
 job_no = 'S161210'
@@ -109,8 +104,6 @@ plt.annotate('Source: ELCON A/S',
              va="center",
              fontsize=10)
 plt.show()
-plt.draw()
-
 
 # Plot kde of risk
 # Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
@@ -132,7 +125,6 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/1_3_risk.png")
 plt.savefig("./Results/Presentation/1_3_risk.svg")
 plt.show()
-plt.draw()
 
 ### Missing Data Analysis ###
 # Calculate missing values
@@ -165,7 +157,6 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
 plt.show()
-plt.draw()
 
 # Plot kde of labor_cost_share, material_cost_share and other_cost_share
 plt.figure(figsize=(10, 5))
@@ -187,21 +178,18 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/1_5_cost_share.png")
 plt.savefig("./Results/Presentation/1_5_cost_share.svg")
 plt.show()
-plt.draw()
 
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.describe().transpose()
 # Format all numerical values in DataFrame with thousands separator.
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
-# Capitalize first letter of each word in column names
-formatted_df_eda_1.columns = formatted_df_eda_1.columns.str.capitalize()
 # Count number of missing values for each variable
 missing_values = dfData.isnull().sum().to_frame()
 # Rename column
-missing_values = missing_values.rename(columns={0: 'Missing'})
+missing_values = missing_values.rename(columns={0: 'missing'})
 # Percentage of missing values
-missing_values['% missing'] = missing_values['Missing'] / len(dfData) * 100
+missing_values['% missing'] = missing_values['missing'] / len(dfData) * 100
 # Add missing values to formatted_df_eda_1
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
 # Format to show two decimals and use thousands separator

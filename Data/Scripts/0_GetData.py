@@ -231,7 +231,7 @@ for col in ['revenue', 'costs', 'contribution']:
     fig, ax = plt.subplots(1, 2, figsize=(10, 5))
     plot_acf(dfData[col], ax=ax[0], lags=5, zero=False)
     plot_pacf(dfData[col], ax=ax[1], lags=5, zero=False)
-    ax[0].set_ylim(-0.4, 0.4)
+    ax[0].set_ylim(-0.4)
     fig.suptitle(f'PACF and ACF of {col}')
     plt.tight_layout()
     plt.savefig(f"./Results/Figures/1_6_{col}_acf_pacf.png")
@@ -336,6 +336,21 @@ dfData = pd.merge(dfData, processed_data, on="job_no", how="left")
 
 # Remove description from dfData
 dfData.drop(columns=['description'], inplace=True)
+
+## Encode 'category' column ##
+# Create dummy variables for 'category' column
+# If 'category' is NA, then set to 'No_category'
+dfData['category'] = dfData['category'].fillna('No_category')
+# If 'category' is ' ', then set to 'No_category'
+dfData.loc[dfData['category'] == ' ', 'category'] = 'No_category'
+dfData.loc[dfData['category'] == '', 'category'] = 'No_category'
+# Strip leading and trailing whitespace
+dfData['category'] = dfData['category'].str.strip()
+# Replace ' ' with '_'
+dfData['category'] = dfData['category'].str.replace(' ', '_')
+#
+dfData = pd.concat([dfData, pd.get_dummies(dfData['category'])], axis=1)
+dfData.drop(columns=['category'], inplace=True)
 
 ### Join DST data ###
 kbyg11 = PyDST.get_data(table_id='KBYG11',
@@ -477,6 +492,12 @@ plt.show()
 
 del dst_df
 
+# Make column with concatenated date and job_no
+dfData['id'] = dfData['date'].astype(str) + '_' + dfData['job_no'].astype(str)
+
+# Omit duplicate of 'job_no' and 'date'
+dfData.drop_duplicates(subset=['id'], inplace=True)
+
 ### Split test and train ###
 # Sample 80% of the jobs for training
 lJobNoTrain = dfData['job_no'].drop_duplicates().sample(frac=0.8)
@@ -490,3 +511,12 @@ pq.write_table(pa.table(dfData), "dfData.parquet")
 end_time = datetime.datetime.now()
 print(f"Time taken: {end_time - start_time}")
 
+# Close connection to database
+engine.dispose()
+
+### Plot total_contribution by date job = S161210 ###
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(dfData[dfData['job_no'] == 'S161210']['date'], dfData[dfData['job_no'] == 'S161210']['total_contribution'])
+ax.set_title('Total contribution by date')
+plt.tight_layout()
+plt.show()

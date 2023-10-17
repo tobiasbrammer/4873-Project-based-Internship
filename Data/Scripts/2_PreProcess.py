@@ -55,8 +55,6 @@ dfDataFinishedTest = dfDataFinished[~dfDataFinished.index.isin(dfDataFinishedTra
 # Rows in train and test
 print(f"The number of rows in train is {len(dfDataFinishedTrain)}.")
 print(f"The number of rows in test is {len(dfDataFinishedTest)}.")
-# Finished rows
-print(f"The number of finished rows in train is {len(dfDataFinishedTrain[dfDataFinishedTrain['wip'] == 0])}.")
 
 # Omit train column
 dfDataFinishedTrain.drop('train', axis=1, inplace=True)
@@ -82,7 +80,7 @@ y_scaler = MinMaxScaler()
 x_scaler = MinMaxScaler()
 
 # Split into dependent and independent variables
-sDepVar = 'total_contribution'
+sDepVar = 'contribution'
 colIndepVarNum = [col for col in train_data.columns if col != sDepVar]
 colIndepVar = ['date', 'job_no', 'department'] + colIndepVarNum
 
@@ -96,12 +94,6 @@ test_data_y = train_data[[sDepVar]]
 x_scaler = x_scaler.fit(train_data_X)
 y_scaler = y_scaler.fit(train_data_y)
 
-train_data_X_scaled = x_scaler.transform(train_data_X)
-test_data_X_scaled = x_scaler.transform(test_data_X)
-
-train_data_y_scaled = y_scaler.transform(train_data_y)
-test_data_y_scaled = y_scaler.transform(test_data_y)
-
 # Transform dfDataWIP using the same scaler
 dfDataWIP_X = dfDataWIP[colIndepVarNum]
 dfDataWIP_X_scaled = pd.DataFrame(x_scaler.transform(dfDataWIP_X), columns=colIndepVarNum)
@@ -114,7 +106,7 @@ dfDataWIP_y_scaled = pd.concat([dfDataWIP_desc, dfDataWIP_y_scaled], axis=1)
 
 # Join X and y on date and job_no
 dfDataWIP_scaled = pd.merge(dfDataWIP_X_scaled,
-                            dfDataWIP_y_scaled.drop_duplicates(inplace=True),
+                            dfDataWIP_y_scaled,
                             on=['date', 'job_no', 'department'])
 # Fill NaN with 0
 dfDataWIP_scaled.fillna(0, inplace=True)
@@ -128,15 +120,15 @@ dfDataWIP_scaled.to_parquet('./dfDataWIP.parquet')
 dfDataFinishedTrain = dfDataFinishedTrain.reset_index(drop=True)
 dfDataFinishedTest = dfDataFinishedTest.reset_index(drop=True)
 
-train_data_X_scaled = pd.DataFrame(train_data_X_scaled, columns=colIndepVarNum)
+train_data_X_scaled = pd.DataFrame(x_scaler.transform(train_data_X), columns=colIndepVarNum)
 train_data_X_scaled = pd.concat([dfDataFinishedTrain[['date', 'job_no', 'department']], train_data_X_scaled], axis=1)
-test_data_X_scaled = pd.DataFrame(test_data_X_scaled, columns=colIndepVarNum)
+test_data_X_scaled = pd.DataFrame(x_scaler.transform(test_data_X), columns=colIndepVarNum)
 test_data_X_scaled = pd.concat([dfDataFinishedTest[['date', 'job_no', 'department']], test_data_X_scaled], axis=1)
 
 # Join job_no, date and department to the scaled data (dependent variable)
-train_data_y_scaled = pd.DataFrame(train_data_y_scaled, columns=[sDepVar])
+train_data_y_scaled = pd.DataFrame(y_scaler.transform(train_data_y), columns=[sDepVar])
 train_data_y_scaled = pd.concat([dfDataFinishedTrain[['date', 'job_no', 'department']], train_data_y_scaled], axis=1)
-test_data_y_scaled = pd.DataFrame(test_data_y_scaled, columns=[sDepVar])
+test_data_y_scaled = pd.DataFrame(y_scaler.transform(test_data_y), columns=[sDepVar])
 test_data_y_scaled = pd.concat([dfDataFinishedTest[['date', 'job_no', 'department']], test_data_y_scaled], axis=1)
 
 # To reverse the scaling, use the following code:
@@ -194,8 +186,6 @@ train_data_X_scaled.fillna(0, inplace=True)
 # Run PCA
 pca = PCA(n_components=0.99)
 pca.fit(train_data_X_scaled.select_dtypes(include=[np.number]))
-
-
 
 # Plot the explained variance ratio
 plt.figure(figsize=(10, 5))

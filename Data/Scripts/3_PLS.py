@@ -61,6 +61,7 @@ with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
 # Rescale predicted values
 dfDataTrain['predicted_ols'] = results.predict(dfDataTrain[lIndepVar])
 dfDataTest['predicted_ols'] = results.predict(dfDataTest[lIndepVar])
+
 dfDataTrain['predicted_ols'] = y_scaler.inverse_transform(dfDataTrain['predicted_ols'].values.reshape(-1, 1))
 dfDataTest['predicted_ols'] = y_scaler.inverse_transform(dfDataTest['predicted_ols'].values.reshape(-1, 1))
 
@@ -73,20 +74,21 @@ dfDataTest = dfDataTest.sort_values(by='date')
 
 dfDataTrain['sum'] = dfDataTrain.groupby('date')['total_contribution'].transform('sum')
 dfDataTrain['sum_predicted'] = dfDataTrain.groupby('date')['predicted_ols'].transform('sum')
-dfDataTrain['sum_budget'] = dfDataTrain.groupby('date')['final_estimate_contribution'].transform('sum')
+dfDataTrain['final_estimate'] = dfDataTrain.groupby('date')['final_estimate_contribution'].transform('sum')
 
 dfDataTest['sum'] = dfDataTest.groupby('date')['total_contribution'].transform('sum')
 dfDataTest['sum_predicted'] = dfDataTest.groupby('date')['predicted_ols'].transform('sum')
-dfDataTest['sum_budget'] = dfDataTest.groupby('date')['final_estimate_contribution'].transform('sum')
+dfDataTest['final_estimate'] = dfDataTest.groupby('date')['final_estimate_contribution'].transform('sum')
+
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.plot(dfDataTest['date'], dfDataTest['sum'], label='Actual')
 ax.plot(dfDataTest['date'], dfDataTest['sum_predicted'], label='Predicted')
-ax.plot(dfDataTest['date'], dfDataTest['sum_budget'], label='Budget')
+ax.plot(dfDataTest['date'], dfDataTest['final_estimate'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Actual vs. Predicted Contribution')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -104,7 +106,8 @@ plt.show()
 
 # Calculate RMSE of OLS and budget
 rmse_ols = np.sqrt(mean_squared_error(dfDataTest['sum'], dfDataTest['sum_predicted']))
-rmse_budget = np.sqrt(mean_squared_error(dfDataTest['sum'], dfDataTest['sum_budget']))
+rmse_budget = np.sqrt(mean_squared_error(dfDataTest['sum'], dfDataTest['final_estimate_contribution']))
+rmse_production_estimate = np.sqrt(mean_squared_error(dfDataTest['sum'], dfDataTest['production_estimate_contribution']))
 
 
 ### Add lagged variables to lIndepVar ###
@@ -125,6 +128,10 @@ with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
 # Predict sDepVar using OLS
 dfDataTrain['predicted_lag'] = results.predict(dfDataTrain[lIndepVar_lag])
 dfDataTest['predicted_lag'] = results.predict(dfDataTest[lIndepVar_lag])
+# Rescale predicted values
+dfDataTrain['predicted_lag'] = y_scaler.inverse_transform(dfDataTrain['predicted_lag'].values.reshape(-1, 1))
+dfDataTest['predicted_lag'] = y_scaler.inverse_transform(dfDataTest['predicted_lag'].values.reshape(-1, 1))
+
 
 dfDataTrain['sum_predicted_lag'] = dfDataTrain.groupby('date')['predicted_lag'].transform('sum')
 dfDataTest['sum_predicted_lag'] = dfDataTest.groupby('date')['predicted_lag'].transform('sum')
@@ -133,7 +140,7 @@ dfDataTest['sum_predicted_lag'] = dfDataTest.groupby('date')['predicted_lag'].tr
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.plot(dfDataTest['date'], dfDataTest['sum'], label='Actual')
 ax.plot(dfDataTest['date'], dfDataTest['sum_predicted_lag'], label='Predicted')
-ax.plot(dfDataTest['date'], dfDataTest['sum_budget'], label='Budget')
+ax.plot(dfDataTest['date'], dfDataTest['final_estimate'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -182,7 +189,7 @@ dfDataTest['sum_predicted_lag_budget'] = dfDataTest.groupby('date')['predicted_l
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.plot(dfDataTest['date'], dfDataTest['sum'], label='Actual')
 ax.plot(dfDataTest['date'], dfDataTest['sum_predicted_lag_budget'], label='Predicted')
-ax.plot(dfDataTest['date'], dfDataTest['sum_budget'], label='Budget')
+ax.plot(dfDataTest['date'], dfDataTest['final_estimate'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -204,37 +211,21 @@ plt.show()
 # Calculate RMSE of OLS with lagged variables and budget
 rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfDataTest['sum'], dfDataTest['sum_predicted_lag_budget']))
 
-# Compare rmse in a table
-dfRMSE = pd.DataFrame({'RMSE': [rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_budget]},
-                        index=['OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'Final estimate'])
-
-dfRMSE = dfRMSE.round(4).applymap('{:,.4f}'.format)
-print(dfRMSE)
-
-# Output to LaTeX
-dfRMSE = dfRMSE.style.to_latex(
-    caption='RMSE of Naive Methods',
-    position_float='centering',
-    position='h!',
-    hrules=True,
-    label='naive_rmse')
-
-# Output to LaTeX with encoding
-with open('Results/Tables/3_4_rmse.tex', 'w', encoding='utf-8') as f:
-    f.write(dfRMSE)
 
 ### Predict sDepVar using PLS ###
 # Run PLS
-pls = PLSRegression(n_components=15)
-pls.fit(dfDataTrain[lIndepVar_lag], dfDataTrain[sDepVar])
+pls = PLSRegression(n_components=20, scale=False, max_iter=5000)
+pls.fit(dfDataTrain[lIndepVar_lag_budget], dfDataTrain[sDepVar])
 
 # Predict sDepVar using PLS
-dfDataTrain['predicted_pls'] = pls.predict(dfDataTrain[lIndepVar_lag])
-dfDataTest['predicted_pls'] = pls.predict(dfDataTest[lIndepVar_lag])
+dfDataTrain['predicted_pls'] = pls.predict(dfDataTrain[lIndepVar_lag_budget])
+dfDataTest['predicted_pls'] = pls.predict(dfDataTest[lIndepVar_lag_budget])
 # Reshape predicted values
 dfDataTrain['predicted_pls'] = dfDataTrain['predicted_pls'].values.reshape(-1, 1)
 dfDataTest['predicted_pls'] = dfDataTest['predicted_pls'].values.reshape(-1, 1)
-
+# Rescale predicted values
+dfDataTrain['predicted_pls'] = y_scaler.inverse_transform(dfDataTrain['predicted_pls'].values.reshape(-1, 1))
+dfDataTest['predicted_pls'] = y_scaler.inverse_transform(dfDataTest['predicted_pls'].values.reshape(-1, 1))
 
 dfDataTrain['sum_predicted_pls'] = dfDataTrain.groupby('date')['predicted_pls'].transform('sum')
 dfDataTest['sum_predicted_pls'] = dfDataTest.groupby('date')['predicted_pls'].transform('sum')
@@ -243,10 +234,10 @@ dfDataTest['sum_predicted_pls'] = dfDataTest.groupby('date')['predicted_pls'].tr
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.plot(dfDataTest['date'], dfDataTest['sum'], label='Actual')
 ax.plot(dfDataTest['date'], dfDataTest['sum_predicted_pls'], label='Predicted')
-ax.plot(dfDataTest['date'], dfDataTest['sum_budget'], label='Budget')
+ax.plot(dfDataTest['date'], dfDataTest['final_estimate'], label='Budget')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Actual vs. Predicted Contribution')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -262,26 +253,56 @@ plt.savefig("./Results/Figures/3_4_pls.png")
 plt.savefig("./Results/Presentation/3_4_pls.svg")
 plt.show()
 
+# Calculate RMSE of PLS
+rmse_pls = np.sqrt(mean_squared_error(dfDataTest['sum'], dfDataTest['sum_predicted_pls']))
+
+# Compare rmse in a table
+dfRMSE = pd.DataFrame({'RMSE': [rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_pls, rmse_budget, rmse_production_estimate]},
+                        index=['OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget','PLS with lagged variables and budget', 'Final estimate', 'Production estimate'])
+
+dfRMSE = dfRMSE.round(4).applymap('{:,.4f}'.format)
+
+# Bold the lowest RMSE
+dfRMSE.loc[dfRMSE['RMSE'] == dfRMSE['RMSE'].min(), 'RMSE'] = '\\textbf{' + dfRMSE['RMSE'].astype(str) + '}'
+
+
+print(dfRMSE)
+
+# Output to LaTeX
+dfRMSE = dfRMSE.style.to_latex(
+    caption='RMSE of Naive Methods',
+    position_float='centering',
+    position='h!',
+    hrules=True,
+    label='naive_rmse')
+
+# Output to LaTeX with encoding
+with open('Results/Tables/3_4_rmse.tex', 'w', encoding='utf-8') as f:
+    f.write(dfRMSE)
 
 ### Get Prediction of job_no S161210 ###
 # Get the data of job_no S161210
-dfDataJob = dfDataTrain[dfDataTrain['job_no'] == 'S161210']
+sJobNo = 'S333720'
+dfDataJobTr = dfDataTrain[dfDataTrain['job_no'] == sJobNo]
+dfDataJobTe = dfDataTest[dfDataTest['job_no'] == sJobNo]
+
+# Append dfDataJobTr and dfDataJobTe
+dfDataJob = pd.concat([dfDataJobTr, dfDataJobTe], axis=0)
+
 dfDataJob = dfDataJob.sort_values(by='date')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfDataJob['date'], dfDataJob['total_contribution'], label='Actual')
+ax.plot(dfDataJob['date'], dfDataJob['contribution'], label='Actual')
 ax.plot(dfDataJob['date'], dfDataJob['predicted_ols'], label='OLS')
 ax.plot(dfDataJob['date'], dfDataJob['predicted_lag'], label='OLS with lagged variables')
 ax.plot(dfDataJob['date'], dfDataJob['predicted_lag_budget'], label='OLS with lagged variables and budget')
 ax.plot(dfDataJob['date'], dfDataJob['predicted_pls'], label='PLS')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+ax.set_title('Actual vs. Predicted Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.show()
-
-

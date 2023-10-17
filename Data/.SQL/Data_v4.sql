@@ -1,6 +1,6 @@
 set nocount on
         SELECT 
-			[No_], [Status], [Global Dimension 1 Code], [Job Posting Group], [Ending Date], [Description], [Bill-to Customer No_], [Person Responsible],
+			[No_], [Status], [Global Dimension 1 Code], [Job Posting Group], [Ending Date], [Description], [Bill-to Customer No_], [Person Responsible], [Statistics Code 5],
             [Ship-to Address], [Ship-to Post Code], [Ship-to City]
 		INTO #Sager
         FROM [NRGIDW_Extract].[elcon].[Job]
@@ -297,6 +297,7 @@ set nocount on
     ,Sager.[No_] AS 'job_no'
 	,CASE Sager.[Status] WHEN 2 THEN 'wip' ELSE 'finished' END AS 'status'
     ,Sager.[Description] AS 'description'
+	,Sager.[Statistics Code 5] AS 'category'
 	,Kunder.[No_] AS 'customer'
 	,Kunder.[VAT Registration No_] AS 'cvr'
 	,Kunder.[Post Code] AS 'customer_zip'
@@ -360,6 +361,7 @@ set nocount on
 	,(ISNULL(#Faktureringsgrad.[Langtidssygdom],0)/NULLIF((ISNULL(#Faktureringsgrad.[Jobtimer],0)+ISNULL(#Faktureringsgrad.[Skoleophold],0)),0)) 'long_term_illness_rate_dep'
 	,(ISNULL(#Faktureringsgrad.[Intern tid],0)/NULLIF(ISNULL(#Faktureringsgrad.[Jobtimer],0),0)) 'internal_rate_dep'
 	,(ISNULL(#Faktureringsgrad.[Langtidssygdom],0)/NULLIF(ISNULL(#Faktureringsgrad.[Sygdom],0),0)) 'long_term_illness_share_dep'
+	INTO #Final
     FROM #Regnskab as Sagsposter
     Left JOIN #Sagsopgaver Sagsopgaver
     ON  Sagsopgaver.[Job No_] = Sagsposter.[Job No_]
@@ -387,5 +389,9 @@ set nocount on
 	--AND Sagsopgaver.[Job No_] = 'S209726'
 	--AND Budget_final.sales_estimate_cost >= 1000000
 	ORDER BY Sager.[No_] DESC, [month], [year] ASC
-	  
-DROP TABLE #Sager, #Sagsbudget, #AllCombinations, #Arbejdssedler, #Budget, #Budget_final, #budget_v2, #Cal, #MaxArchive, #Regnskab, #Sagsopgaver, #Sagsposter, #RLE, #rle_2, #ArbejderTid, #ArbejderTimer, #Faktureringsgrad
+	 
+	SELECT DISTINCT *
+	FROM #Final
+
+
+DROP TABLE #Sager, #Sagsbudget, #AllCombinations, #Arbejdssedler, #Budget, #Budget_final, #budget_v2, #Cal, #MaxArchive, #Regnskab, #Sagsopgaver, #Sagsposter, #RLE, #rle_2, #ArbejderTid, #ArbejderTimer, #Faktureringsgrad, #Final
