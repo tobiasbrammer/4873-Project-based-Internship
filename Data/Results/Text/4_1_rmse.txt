@@ -1,4 +1,0 @@
-The naive linear model with all variables has a RMSE of 12.51.
-The naive linear model with the most correlated variables has a RMSE of 7.59.
-The budget has a RMSE of 1.87.
-The decrease in RMSE from budget to LM_corr is -306.51%.

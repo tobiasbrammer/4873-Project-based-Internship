@@ -108,12 +108,14 @@ set nocount on
 		SELECT
 			FORMAT(j.[WIP Date],'yyyy-MM-01') AS 'date',
 			j.[Job No_] AS 'job_no',
+			j.[Job Task No_] 'job_task_no',
 			j.[Sales Estimate Cost] AS 'sales_estimate_cost',
 			j.[Sales Estimate Sales] AS 'sales_estimate_sales',
 			j.[Estimate Cost] AS 'estimate_cost',
 			j.[Estimate Sales] AS 'estimate_sales',
 			j.[Final Estimate Cost] AS 'final_estimate_cost',
-			j.[Final Estimate Sales] AS 'final_estimate_sales'
+			j.[Final Estimate Sales] AS 'final_estimate_sales',
+			CASE WHEN j.[Job Task No_] = '10' THEN j.[Estimate Sales] ELSE 0 END AS 'contract'
 		INTO #Budget
 		FROM [NRGIDW_Extract].[elcon].[JobWIP Details] j
 		INNER JOIN #Sager Sager ON Sager.No_ = j.[Job No_]
@@ -128,7 +130,8 @@ set nocount on
 			SUM(estimate_cost) AS 'estimate_cost',
 			SUM(estimate_sales) AS 'estimate_sales',
 			SUM(final_estimate_cost) AS 'final_estimate_cost',
-			SUM(final_estimate_sales) AS 'final_estimate_sales'
+			SUM(final_estimate_sales) AS 'final_estimate_sales',
+			SUM(budget.[contract]) AS 'contract_work'
 		INTO #budget_v2
 		FROM #budget budget
 		GROUP BY date, job_no
@@ -148,7 +151,8 @@ set nocount on
     COALESCE(b.estimate_cost, la.estimate_cost) AS 'estimate_cost',
     COALESCE(b.estimate_sales, la.estimate_sales) AS 'estimate_sales',
     COALESCE(b.final_estimate_cost, la.final_estimate_cost) AS 'final_estimate_cost',
-    COALESCE(b.final_estimate_sales, la.final_estimate_sales) AS 'final_estimate_sales'
+    COALESCE(b.final_estimate_sales, la.final_estimate_sales) AS 'final_estimate_sales',
+	COALESCE(b.contract_work, la.contract_work) AS 'contract_work'
 	INTO #Budget_final
 	FROM #AllCombinations ac
 	LEFT JOIN #budget_v2 b ON ac.date = b.date AND ac.job_no = b.job_no
@@ -159,7 +163,8 @@ set nocount on
 			estimate_cost,
 			estimate_sales,
 			final_estimate_cost,
-			final_estimate_sales
+			final_estimate_sales,
+			contract_work
 		FROM #budget_v2 b3
 		WHERE b3.job_no = ac.job_no AND b3.date = (
 			SELECT MAX(b4.date)
@@ -316,6 +321,8 @@ set nocount on
 	,ISNULL(Budget_final.sales_estimate_sales,0) 'sales_estimate_revenue'
 	,ISNULL(Budget_final.estimate_sales,0) 'production_estimate_revenue'
 	,ISNULL(Budget_final.final_estimate_sales,0) 'final_estimate_revenue'
+	,ISNULL(Budget_final.contract_work,0) AS 'contract_work'
+	,ISNULL((ISNULL(Budget_final.estimate_sales,0)-ISNULL(Budget_final.contract_work,0))/NULLIF(Budget_final.final_estimate_sales,0),0) 'extra_work'
 	,ISNULL(-Budget_final.sales_estimate_cost,0) 'sales_estimate_costs'
 	,ISNULL(-Budget_final.estimate_cost,0) 'production_estimate_costs'
 	,ISNULL(-Budget_final.final_estimate_cost,0) 'final_estimate_costs'

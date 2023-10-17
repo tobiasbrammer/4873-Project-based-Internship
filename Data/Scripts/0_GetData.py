@@ -1,8 +1,3 @@
-# Import required libraries
-for name in dir():
-    if not name.startswith('_'):
-        del globals()[name]
-
 import pandas as pd
 import numpy as np
 import os
@@ -21,18 +16,19 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
-from plot_config import *
 from PyDST import *
 import PyDST
 
-# https://kristianuruplarsen.github.io/pydst/build/html/index.html
-
 # Start timing
-start_time = datetime.datetime.now()
+# start_time = datetime.datetime.now()
 
 # Set the directory
 directory = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 os.chdir(directory)
+
+
+
+from plot_config import *
 
 # If time is 05:00 - 05:15, then wait until 05:15
 if datetime.datetime.now().hour == 5 and datetime.datetime.now().minute < 15:
@@ -236,8 +232,6 @@ for col in ['revenue', 'costs', 'contribution']:
     plt.tight_layout()
     plt.savefig(f"./Results/Figures/1_6_{col}_acf_pacf.png")
     plt.savefig(f"./Results/Presentation/1_6_{col}_acf_pacf.svg")
-    plt.show()
-    plt.draw()
 
 # Get 5 lagged values for revenue, costs and contribution for each job_no
 for col in ['revenue', 'costs', 'contribution']:
@@ -328,8 +322,7 @@ plt.annotate('Source: ELCON A/S',
              fontsize=10)
 plt.savefig("./Results/Figures/1_3_description.png")
 plt.savefig("./Results/Presentation/1_3_description.svg")
-plt.show()
-plt.draw()
+
 
 # Left join with the original DataFrame
 dfData = pd.merge(dfData, processed_data, on="job_no", how="left")
@@ -488,7 +481,6 @@ fig.suptitle('DST data')
 plt.tight_layout()
 plt.savefig("./Results/Figures/1_4_dst_data.png")
 plt.savefig("./Results/Presentation/1_4_dst_data.svg")
-plt.show()
 
 del dst_df
 
@@ -498,25 +490,21 @@ dfData['id'] = dfData['date'].astype(str) + '_' + dfData['job_no'].astype(str)
 # Omit duplicate of 'job_no' and 'date'
 dfData.drop_duplicates(subset=['id'], inplace=True)
 
+# Format all column names to lower case
+dfData.columns = dfData.columns.str.lower()
+
 ### Split test and train ###
 # Sample 80% of the jobs for training
 lJobNoTrain = dfData['job_no'].drop_duplicates().sample(frac=0.8)
 dfData['train'] = dfData['job_no'].isin(lJobNoTrain).astype(int)
 
+# End timing and print duration
+# end_time = datetime.datetime.now()
+# print(f"Time taken: {end_time - start_time}")
+
 # Save DataFrame to file
 dfData.to_csv("dfData.csv", index=False)
 pq.write_table(pa.table(dfData), "dfData.parquet")
 
-# End timing and print duration
-end_time = datetime.datetime.now()
-print(f"Time taken: {end_time - start_time}")
-
 # Close connection to database
 engine.dispose()
-
-### Plot total_contribution by date job = S161210 ###
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfData[dfData['job_no'] == 'S161210']['date'], dfData[dfData['job_no'] == 'S161210']['total_contribution'])
-ax.set_title('Total contribution by date')
-plt.tight_layout()
-plt.show()

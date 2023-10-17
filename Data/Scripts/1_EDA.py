@@ -43,7 +43,7 @@ plt.annotate('Source: ELCON A/S',
              fontsize=10)
 plt.savefig("./Results/Figures/1_0_costs.png")
 plt.savefig("./Results/Presentation/1_0_costs.svg")
-plt.show()
+
 
 # Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
 plt.figure(figsize=(10, 5))
@@ -68,7 +68,7 @@ plt.annotate('Source: ELCON A/S',
              fontsize=10)
 plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
-plt.show()
+
 
 # Plot sum of risk by date for each department
 plt.figure(figsize=(10, 5))
@@ -87,7 +87,7 @@ plt.annotate('Source: ELCON A/S',
              fontsize=10)
 plt.savefig("./Results/Figures/1_2_risk.png")
 plt.savefig("./Results/Presentation/1_2_risk.svg")
-plt.show()
+
 
 # Select random job and plot risk
 job_no = 'S161210'
@@ -103,7 +103,7 @@ plt.annotate('Source: ELCON A/S',
              ha='right',
              va="center",
              fontsize=10)
-plt.show()
+
 
 # Plot kde of risk
 # Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
@@ -124,7 +124,7 @@ plt.annotate('Source: ELCON A/S',
              fontsize=10)
 plt.savefig("./Results/Figures/1_3_risk.png")
 plt.savefig("./Results/Presentation/1_3_risk.svg")
-plt.show()
+
 
 ### Missing Data Analysis ###
 # Calculate missing values
@@ -156,7 +156,7 @@ plt.annotate('Source: ELCON A/S',
              fontsize=10)
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
-plt.show()
+
 
 # Plot kde of labor_cost_share, material_cost_share and other_cost_share
 plt.figure(figsize=(10, 5))
@@ -177,7 +177,7 @@ plt.annotate('Source: ELCON A/S',
                 fontsize=10)
 plt.savefig("./Results/Figures/1_5_cost_share.png")
 plt.savefig("./Results/Presentation/1_5_cost_share.svg")
-plt.show()
+
 
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.describe().transpose()
