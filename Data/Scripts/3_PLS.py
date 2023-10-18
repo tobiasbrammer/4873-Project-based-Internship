@@ -277,7 +277,7 @@ plt.annotate('Source: ELCON A/S',
                 fontsize=10)
 plt.savefig("./Results/Figures/3_4_pls.png")
 plt.savefig("./Results/Presentation/3_4_pls.svg")
-plt.show()
+
 
 # Calculate RMSE of PLS
 rmse_pls = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_pls']))
@@ -313,7 +313,7 @@ plt.annotate('Source: ELCON A/S',
                 fontsize=10)
 plt.savefig("./Results/Figures/3_4_fc.png")
 plt.savefig("./Results/Presentation/3_4_fc.svg")
-plt.show()
+
 
 # Calculate RMSE of Forecast Combination
 rmse_fc = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_fc']))
@@ -332,16 +332,21 @@ dfRMSE = pd.DataFrame({'RMSE': [rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rms
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
 
-# Bold the lowest RMSE
-dfRMSE.loc[dfRMSE['RMSE'] == dfRMSE['RMSE'].min(), 'RMSE'] = '\\textbf{' + dfRMSE['RMSE'].astype(str) + '}'
-
-# Bold the lowest sMAPE
-dfRMSE.loc[dfRMSE['sMAPE'] == dfRMSE['sMAPE'].min(), 'sMAPE'] = '\\textbf{' + dfRMSE['sMAPE'].astype(str) + '}'
+dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 
 print(dfRMSE)
 
+# dfRMSE to latex
+dfRMSE_latex = dfRMSE.copy()
+# Bold the lowest RMSE
+dfRMSE_latex.loc[dfRMSE['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'] = '\\textbf{' + dfRMSE_latex['RMSE'].astype(str) + '}'
+# Bold the lowest sMAPE
+dfRMSE_latex.loc[dfRMSE['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] = '\\textbf{' + dfRMSE_latex['sMAPE'].astype(str) + '}'
+
+
+
 # Output to LaTeX
-dfRMSE = dfRMSE.style.to_latex(
+dfRMSE_latex = dfRMSE_latex.style.to_latex(
     caption='RMSE of Naive Methods',
     position_float='centering',
     position='h!',
@@ -350,7 +355,7 @@ dfRMSE = dfRMSE.style.to_latex(
 
 # Output to LaTeX with encoding
 with open('Results/Tables/3_4_rmse.tex', 'w', encoding='utf-8') as f:
-    f.write(dfRMSE)
+    f.write(dfRMSE_latex)
 
 ### Get Prediction of job_no S161210 ###
 # Get the data of job_no S161210
@@ -377,10 +382,7 @@ plt.annotate('Source: ELCON A/S',
                 ha='right',
                 va="center",
                 fontsize=10)
-plt.show()
 
 # Save dfData
 dfData.to_parquet("./dfData_reg.parquet")
 
-# Save dfRMSE to Results/Tables/3_4_rmse.csv
-dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")

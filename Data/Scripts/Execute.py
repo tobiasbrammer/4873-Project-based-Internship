@@ -34,26 +34,26 @@ print('Preparing to run sequence of scripts...')
 # Run 0_GetData.py
 print("Running 0_GetData.py...")
 subprocess.run(["python", "./Scripts/0_GetData.py"])
-print(f"0_GetData.py finished in {datetime.datetime.now() - start_time}.")
+
 # Run 1_EDA.py
 print("Running 1_EDA.py...")
 subprocess.run(["python", "./Scripts/1_EDA.py"])
-print(f"1_EDA.py finished in {datetime.datetime.now() - start_time}.")
+
 # Run 2_PreProcess.py
 print("Running 2_PreProcess.py...")
 subprocess.run(["python", "./Scripts/2_PreProcess.py"])
-print(f"2_PreProcess.py finished in {datetime.datetime.now() - start_time}.")
+
 # Run 3_PLS.py
 print("Running 3_PLS.py...")
 subprocess.run(["python", "./Scripts/3_PLS.py"])
-print(f"3_PLS.py finished in {datetime.datetime.now() - start_time}.")
+
 # Run 4_ML.py
 print("Running 4_ML.py...")
-subprocess.run(["python", "./Scripts/4_ML.py"])
-print(f"4_ML.py finished in {datetime.datetime.now() - start_time}.")
+# subprocess.run(["python", "./Scripts/4_ML.py"])
+
 
 # Total runtime
-print(f'Total runtime: {datetime.datetime.now() - start_time}.')
+print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
 # Play sound when finished
 winsound.MessageBeep()

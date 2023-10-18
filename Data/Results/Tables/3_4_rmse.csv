@@ -1,0 +1,6 @@
+,RMSE,sMAPE
+OLS,0.6622,84.7346
+OLS with lagged variables,0.1647,76.1668
+OLS with lagged variables and budget,0.1649,76.5372
+PLS,1.12,84.863
+FC,0.5906,84.0404
