@@ -49,7 +49,7 @@ subprocess.run(["python", "./Scripts/3_PLS.py"])
 
 # Run 4_ML.py
 print("Running 4_ML.py...")
-# subprocess.run(["python", "./Scripts/4_ML.py"])
+subprocess.run(["python", "./Scripts/4_ML.py"])
 
 
 # Total runtime
