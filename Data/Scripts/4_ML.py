@@ -20,13 +20,11 @@ from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
 
-
-
 warnings.filterwarnings('ignore')
 
 # Load ./dfData.parquet
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
 # Load data
@@ -129,7 +127,7 @@ dfData['sum_predicted_en_full'] = dfData.groupby('date')['predicted_en_full'].tr
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.plot(dfData['date'], dfData['sum'], label='Actual')
 ax.plot(dfData['date'], dfData['sum_predicted_en_sparse'], label='Predicted (Elastic Net, Sparse Variables)')
-#ax.plot(dfData['date'], dfData['sum_predicted_en_full'], label='Predicted (Elastic Net, All Variables)')
+ax.plot(dfData['date'], dfData['sum_predicted_en_full'], label='Predicted (Elastic Net, All Variables)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -149,16 +147,25 @@ plt.savefig("./Results/Presentation/4_0_en.svg")
 plt.show()
 
 # Calculate RMSE of EN
-rmse_en = np.sqrt(
-    mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_en']))
+rmse_en_sparse = np.sqrt(
+    mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_en_sparse']))
+rmse_en_full = np.sqrt(
+    mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_en_full']))
 # Calculate sMAPE
-smape_en = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_en']) /
+smape_en_sparse = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_en_sparse']) /
                    (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
-                       dfData[dfData['train'] == 0]['predicted_en']))) * 100
+                       dfData[dfData['train'] == 0]['predicted_en_sparse']))) * 100
+smape_en_full = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_en_full']) /
+                      (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
+                            dfData[dfData['train'] == 0]['predicted_en_full']))) * 100
+
 
 # Add to dfRMSE
-dfRMSE.loc['Elastic Net', 'RMSE'] = rmse_en
-dfRMSE.loc['Elastic Net', 'sMAPE'] = smape_en
+dfRMSE.loc['Elastic Net (Sparse)', 'RMSE'] = rmse_en_sparse
+dfRMSE.loc['Elastic Net (Sparse)', 'sMAPE'] = smape_en_sparse
+dfRMSE.loc['Elastic Net (Full)', 'RMSE'] = rmse_en_full
+dfRMSE.loc['Elastic Net (Full)', 'sMAPE'] = smape_en_full
+
 
 ### Random Forest Regression ###
 # Define Random Forest model
@@ -166,11 +173,12 @@ rf = RandomForestRegressor(random_state=0)
 
 ## Define hyperparameter grid ##
 # Number of trees in random forest
-n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
+n_estimators = [int(x) for x in np.linspace(start=1, stop=100, num=21)]
 # Number of features to consider at every split
-max_features = ['auto', 'sqrt']
+# max_features = ['auto', 'sqrt']
+max_features = ['auto']
 # Maximum number of levels in tree
-max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
+max_depth = [int(x) for x in np.linspace(1, 100, num=50)]
 max_depth.append(None)
 # Minimum number of samples required to split a node
 min_samples_split = [2, 5, 10]
@@ -224,3 +232,99 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/4_1_rf.png")
 plt.savefig("./Results/Presentation/4_1_rf.svg")
 plt.show()
+
+# Calculate RMSE of RF
+rmse_rf = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_rf']))
+# Calculate sMAPE
+smape_rf = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_rf']) /
+                     (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
+                            dfData[dfData['train'] == 0]['predicted_rf']))) * 100
+
+# Add to dfRMSE
+dfRMSE.loc['Random Forest', 'RMSE'] = rmse_rf
+dfRMSE.loc['Random Forest', 'sMAPE'] = smape_rf
+
+### LSTM ###
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Dropout
+from keras.callbacks import EarlyStopping
+
+# Create model
+model = Sequential()
+model.add(LSTM(units=50, return_sequences=True, input_shape=(dfDataScaledTrain.shape[1] - 1, 1)))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=50))
+
+model.add(Dense(units=1))
+
+# Compile model
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+# Define early stopping
+early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
+
+# Fit model
+start_time_lstm = datetime.datetime.now()
+model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].values.reshape(
+    dfDataScaledTrain.shape[0], dfDataScaledTrain.shape[1] - 1, 1),
+            dfDataScaledTrain[sDepVar].values.reshape(dfDataScaledTrain.shape[0], 1),
+            epochs=100,
+            batch_size=32,
+            validation_split=0.1,
+            callbacks=[early_stop])
+end_time_lstm = datetime.datetime.now()
+print(f'LSTM fit finished in {end_time_lstm - start_time_lstm}.')
+
+# Predict and rescale using LSTM
+dfData['predicted_lstm'] = model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].values.reshape(
+    dfDataScaled.shape[0], dfDataScaled.shape[1] - 1, 1))
+dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
+
+# Group by date and sum over all jobs
+dfData['sum_predicted_lstm'] = dfData.groupby('date')['predicted_lstm'].transform('sum')
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(dfData['date'], dfData['sum'], label='Actual')
+ax.plot(dfData['date'], dfData['sum_predicted_lstm'], label='Predicted (LSTM)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Total Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.annotate('Source: ELCON A/S',
+                xy=(1.0, -0.15),
+                color='grey',
+                xycoords='axes fraction',
+                ha='right',
+                va="center",
+                fontsize=10)
+plt.savefig("./Results/Figures/4_2_lstm.png")
+plt.savefig("./Results/Presentation/4_2_lstm.svg")
+plt.show()
+
+# Calculate RMSE of LSTM
+rmse_lstm = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_lstm']))
+# Calculate sMAPE
+smape_lstm = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_lstm']) /
+                        (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
+                            dfData[dfData['train'] == 0]['predicted_lstm']))) * 100
+
+print(dfRMSE)
+
+# dfRMSE to latex
+dfRMSE_latex = dfRMSE.copy()
+# Bold the lowest RMSE
+dfRMSE_latex.loc[dfRMSE['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'] = '\\textbf{' + dfRMSE_latex['RMSE'].astype(str) + '}'
+# Bold the lowest sMAPE
+dfRMSE_latex.loc[dfRMSE['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] = '\\textbf{' + dfRMSE_latex['sMAPE'].astype(str) + '}'
+
+print(dfRMSE_latex)

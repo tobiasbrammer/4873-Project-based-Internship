@@ -336,12 +336,6 @@ dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 
 print(dfRMSE)
 
-# dfRMSE to latex
-dfRMSE_latex = dfRMSE.copy()
-# Bold the lowest RMSE
-dfRMSE_latex.loc[dfRMSE['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'] = '\\textbf{' + dfRMSE_latex['RMSE'].astype(str) + '}'
-# Bold the lowest sMAPE
-dfRMSE_latex.loc[dfRMSE['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] = '\\textbf{' + dfRMSE_latex['sMAPE'].astype(str) + '}'
 
 
 
