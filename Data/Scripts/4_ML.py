@@ -347,6 +347,7 @@ dfRMSE.loc['Gradient Boosting (FC)', 'sMAPE'] = smape_gb_fc
 
 # Save dfDataPred to ./dfDataPred.parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
+dfData.to_parquet("./dfData_reg.parquet")
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)

@@ -4,9 +4,9 @@ import warnings
 import runpy
 import numpy as np
 import pandas as pd
-import mlforecast
-import neuralforecast
-import keras
+#import mlforecast
+#import neuralforecast
+#import keras
 import datetime
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
@@ -22,7 +22,6 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
-
 
 warnings.filterwarnings('ignore')
 
@@ -88,6 +87,7 @@ lIndepVar_lag_budget = lIndepVar_lag_budget.split('\n')
 dfRMSE = pd.read_csv("./Results/Tables/3_4_rmse.csv", index_col=0)
 
 ### LSTM ###
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
@@ -96,7 +96,7 @@ from keras.callbacks import EarlyStopping
 
 # Create model
 model = Sequential()
-model.add(LSTM(units=50, return_sequences=True, input_shape=(dfDataScaledTrain.shape[1] - 1, 1)))
+model.add(LSTM(units=50, return_sequences=True, input_shape=(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
 model.add(Dropout(0.2))
 model.add(LSTM(units=50, return_sequences=True))
 model.add(Dropout(0.2))
@@ -113,28 +113,30 @@ early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=1
 
 # Fit model
 start_time_lstm = datetime.datetime.now()
-model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].values.reshape(
-    dfDataScaledTrain.shape[0], dfDataScaledTrain.shape[1] - 1, 1),
-            dfDataScaledTrain[sDepVar].values.reshape(dfDataScaledTrain.shape[0], 1),
-            epochs=100,
-            batch_size=32,
-            validation_split=0.1,
-            callbacks=[early_stop])
+# Fit model to training data dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])]
+model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+          dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+          epochs=10,
+          batch_size=16,
+          validation_split=0.1,
+          callbacks=[early_stop],
+          verbose=0,
+          n_jobs=-1)
+
 end_time_lstm = datetime.datetime.now()
 print(f'LSTM fit finished in {end_time_lstm - start_time_lstm}.')
 
 # Predict and rescale using LSTM
-dfData['predicted_lstm'] = model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].values.reshape(
-    dfDataScaled.shape[0], dfDataScaled.shape[1] - 1, 1))
+dfData['predicted_lstm'] = model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])]
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
 
-# Group by date and sum over all jobs
-dfData['sum_predicted_lstm'] = dfData.groupby('date')['predicted_lstm'].transform('sum')
-
 # Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfData['date'], dfData['sum'], label='Actual')
-ax.plot(dfData['date'], dfData['sum_predicted_lstm'], label='Predicted (LSTM)')
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm'].transform('sum'),
+        label='Predicted (LSTM)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -142,15 +144,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().se
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
-plt.savefig("./Results/Figures/4_2_lstm.png")
-plt.savefig("./Results/Presentation/4_2_lstm.svg")
+plt.savefig("./Results/Figures/5_1_lstm.png")
+plt.savefig("./Results/Presentation/5_1_lstm.svg")
 
 # Calculate RMSE of LSTM
 rmse_lstm = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_lstm']))
