@@ -1,34 +1,46 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                   &  contribution & \textbf{  R-squared:         } &     0.016   \\
-\textbf{Model:}                           &      OLS      & \textbf{  Adj. R-squared:    } &     0.012   \\
-\textbf{No. Observations:}                &       3715    & \textbf{  F-statistic:       } &     3.734   \\
-\textbf{Covariance Type:}                 &   nonrobust   & \textbf{  Prob (F-statistic):} &  6.67e-07   \\
+\textbf{Dep. Variable:}                   &   contribution   & \textbf{  R-squared:         } &     0.020   \\
+\textbf{Model:}                           &       OLS        & \textbf{  Adj. R-squared:    } &     0.016   \\
+\textbf{Method:}                          &  Least Squares   & \textbf{  F-statistic:       } &     5.300   \\
+\textbf{Date:}                            & Mon, 23 Oct 2023 & \textbf{  Prob (F-statistic):} &  4.29e-10   \\
+\textbf{Time:}                            &     20:03:33     & \textbf{  Log-Likelihood:    } &    7546.4   \\
+\textbf{No. Observations:}                &        3745      & \textbf{  AIC:               } & -1.506e+04  \\
+\textbf{Df Residuals:}                    &        3730      & \textbf{  BIC:               } & -1.497e+04  \\
+\textbf{Df Model:}                        &          14      & \textbf{                     } &             \\
+\textbf{Covariance Type:}                 &    nonrobust     & \textbf{                     } &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
                                           & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{days\_until\_end}                 &       0.0105  &        0.005     &     2.092  &         0.036        &        0.001    &        0.020     \\
-\textbf{billable\_rate\_dep}              &       0.0055  &        0.004     &     1.341  &         0.180        &       -0.003    &        0.014     \\
-\textbf{kbyg44\_employment\_expectations} &       0.0011  &        0.011     &     0.097  &         0.923        &       -0.020    &        0.023     \\
-\textbf{kbyg11}                           &       0.0012  &        0.005     &     0.258  &         0.796        &       -0.008    &        0.010     \\
-\textbf{panum}                            &       0.0075  &        0.006     &     1.341  &         0.180        &       -0.003    &        0.018     \\
-\textbf{kbyg44\_confidence\_indicator}    &       0.0065  &        0.010     &     0.623  &         0.533        &       -0.014    &        0.027     \\
-\textbf{total\_days}                      &      -0.0034  &        0.004     &    -0.814  &         0.415        &       -0.011    &        0.005     \\
-\textbf{tilbuds\_og\_entreprisekontrakt}  &       0.0014  &        0.002     &     0.786  &         0.432        &       -0.002    &        0.005     \\
-\textbf{ombygning}                        &       0.0017  &        0.002     &     0.723  &         0.470        &       -0.003    &        0.006     \\
-\textbf{kbyg33\_no\_limitations}          &      -0.0029  &        0.005     &    -0.548  &         0.583        &       -0.013    &        0.007     \\
-\textbf{contribution\_lag1}               &      -0.5281  &        0.025     &   -21.262  &         0.000        &       -0.577    &       -0.479     \\
-\textbf{revenue\_lag1}                    &       0.4219  &        0.016     &    26.772  &         0.000        &        0.391    &        0.453     \\
-\textbf{costs\_lag1}                      &       0.2917  &        0.015     &    19.340  &         0.000        &        0.262    &        0.321     \\
-\textbf{contribution\_lag2}               &      -0.4815  &        0.025     &   -19.310  &         0.000        &       -0.530    &       -0.433     \\
-\textbf{revenue\_lag2}                    &       0.3655  &        0.016     &    22.914  &         0.000        &        0.334    &        0.397     \\
-\textbf{costs\_lag2}                      &       0.4196  &        0.016     &    25.822  &         0.000        &        0.388    &        0.451     \\
-\textbf{contribution\_lag3}               &      -0.4942  &        0.025     &   -20.023  &         0.000        &       -0.543    &       -0.446     \\
-\textbf{revenue\_lag3}                    &       0.3984  &        0.015     &    27.257  &         0.000        &        0.370    &        0.427     \\
-\textbf{costs\_lag3}                      &       0.3650  &        0.016     &    22.839  &         0.000        &        0.334    &        0.396     \\
+\textbf{costs\_scurve\_diff}              &       0.0304  &        0.009     &     3.446  &         0.001        &        0.013    &        0.048     \\
+\textbf{revenue\_lag2}                    &       0.1834  &        0.011     &    17.378  &         0.000        &        0.163    &        0.204     \\
+\textbf{days\_until\_end}                 &       0.0115  &        0.005     &     2.427  &         0.015        &        0.002    &        0.021     \\
+\textbf{revenue\_lag1}                    &       0.1531  &        0.010     &    15.089  &         0.000        &        0.133    &        0.173     \\
+\textbf{kbyg11}                           &       0.0043  &        0.004     &     0.994  &         0.320        &       -0.004    &        0.013     \\
+\textbf{kbyg44\_employment\_expectations} &       0.0051  &        0.005     &     1.034  &         0.301        &       -0.005    &        0.015     \\
+\textbf{billable\_rate\_dep}              &       0.0058  &        0.004     &     1.584  &         0.113        &       -0.001    &        0.013     \\
+\textbf{total\_days}                      &      -0.0052  &        0.004     &    -1.402  &         0.161        &       -0.012    &        0.002     \\
+\textbf{revenue\_lag4}                    &       0.0150  &        0.014     &     1.041  &         0.298        &       -0.013    &        0.043     \\
+\textbf{revenue\_lag5}                    &       0.0051  &        0.013     &     0.381  &         0.703        &       -0.021    &        0.031     \\
+\textbf{contribution\_lag1}               &      -0.3389  &        0.029     &   -11.832  &         0.000        &       -0.395    &       -0.283     \\
+\textbf{revenue\_lag1}                    &       0.1531  &        0.010     &    15.089  &         0.000        &        0.133    &        0.173     \\
+\textbf{costs\_lag1}                      &       0.3243  &        0.017     &    18.820  &         0.000        &        0.291    &        0.358     \\
+\textbf{contribution\_lag2}               &      -0.3742  &        0.030     &   -12.603  &         0.000        &       -0.432    &       -0.316     \\
+\textbf{revenue\_lag2}                    &       0.1834  &        0.011     &    17.378  &         0.000        &        0.163    &        0.204     \\
+\textbf{costs\_lag2}                      &       0.2574  &        0.017     &    15.416  &         0.000        &        0.225    &        0.290     \\
+\textbf{contribution\_lag3}               &      -0.3112  &        0.026     &   -11.764  &         0.000        &       -0.363    &       -0.259     \\
+\textbf{revenue\_lag3}                    &       0.2611  &        0.019     &    13.531  &         0.000        &        0.223    &        0.299     \\
+\textbf{costs\_lag3}                      &       0.2670  &        0.016     &    17.191  &         0.000        &        0.237    &        0.297     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 1505.348 & \textbf{  Durbin-Watson:     } &     2.107   \\
+\textbf{Prob(Omnibus):} &   0.000  & \textbf{  Jarque-Bera (JB):  } & 573272.862  \\
+\textbf{Skew:}          &   0.571  & \textbf{  Prob(JB):          } &      0.00   \\
+\textbf{Kurtosis:}      &  63.601  & \textbf{  Cond. No.          } &  9.23e+17   \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
@@ -36,5 +48,5 @@
 
 Notes: \newline
  [1] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
- [2] The smallest eigenvalue is 9.32e-30. This might indicate that there are \newline
+ [2] The smallest eigenvalue is 2.64e-32. This might indicate that there are \newline
  strong multicollinearity problems or that the design matrix is singular.

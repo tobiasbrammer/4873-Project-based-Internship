@@ -27,6 +27,14 @@ dfData = pd.read_parquet("dfData.parquet")
 dfDataFinished = dfData[dfData['wip'] == 0]
 dfDataWIP = dfData[dfData['wip'] == 1]
 
+### Training Method ###
+trainMethod = 'train_TS'
+
+# Save trainMethod to .AUX/
+with open('./.AUX/trainMethod.txt', 'w') as f:
+    f.write(trainMethod)
+
+
 ## Only look at finished jobs in the beginning. Set to dfData when code is ready.
 dfData = dfDataFinished.copy()
 
@@ -52,16 +60,29 @@ print(f"The min number of observations per finished job is {obs.min()}.")
 
 # Replace infinite values with NaN
 dfData.replace([np.inf, -np.inf], np.nan, inplace=True)
+dfDataWIP.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-# Split the finished jobs into train and test (Assuming 'train' column exists and is binary)
-dfDataTrain = dfData[dfData['train'] == 1]
+# Split into dependent and independent variables
+# Read sDepVar from ./.AUX/sDepVar.txt
+with open('./.AUX/sDepVar.txt', 'r') as f:
+    sDepVar = f.read()
+
+# Scale all numeric columns
+numeric_cols = dfData.select_dtypes(include=[np.number]).columns.tolist()
+non_numeric_cols = dfData.select_dtypes(exclude=[np.number]).columns.tolist()
+
+# Remove sDepVar from independent variables
+colIndepVarNum = [col for col in dfData[numeric_cols].columns if col != sDepVar]
+
+# Shift all independent variables three periods back, so that the independent variables are lagged.
+# This is done to avoid leakage, and to ensure that the model can be used for forecasting.
+dfData[colIndepVarNum] = dfData[colIndepVarNum].shift(1)
+
+# Split the finished jobs into train and test
+dfDataTrain = dfData[dfData[trainMethod] == 1]
 
 # Rows in train and test
 print(f"The number of rows in train is {len(dfDataTrain)}.")
-
-# Scale all numeric columns
-numeric_cols = dfDataTrain.select_dtypes(include=[np.number]).columns.tolist()
-non_numeric_cols = dfDataTrain.select_dtypes(exclude=[np.number]).columns.tolist()
 
 # Split into numeric and descriptive columns
 train_data = dfDataTrain[numeric_cols]
@@ -71,17 +92,16 @@ train_data_desc = dfDataTrain[non_numeric_cols]
 y_scaler = MinMaxScaler()
 x_scaler = MinMaxScaler()
 
-# Split into dependent and independent variables
-# Read sDepVar from ./.AUX/sDepVar.txt
-with open('./.AUX/sDepVar.txt', 'r') as f:
-    sDepVar = f.read()
-
-# Remove sDepVar from independent variables
-colIndepVarNum = [col for col in train_data.columns if col != sDepVar]
-
+# omit 'train', 'train_TS', 'cluster_2', 'cluster_4', 'cluster_6', 'cluster_8', 'cluster_10', 'cluster_12', 'cluster_14'
+# from colIndepVarNum
+colIndepVarNum = [col for col in colIndepVarNum if
+                    col not in ['train', 'train_TS', 'cluster_2', 'cluster_4', 'cluster_6', 'cluster_8', 'cluster_10',
+                                'cluster_12', 'cluster_14']]
 # colIndepVarNum value to file
 with open('./.AUX/colIndepVarNum.txt', 'w') as f:
     f.write('\n'.join(colIndepVarNum))
+
+
 
 train_data_X = train_data[colIndepVarNum]
 
@@ -96,9 +116,12 @@ dfData.to_parquet('./dfData_reg.parquet')
 # For col in colIndepVarNum scale dfData using x_scaler
 dfData[colIndepVarNum] = x_scaler.transform(dfData[colIndepVarNum])
 dfData[sDepVar] = y_scaler.transform(dfData[[sDepVar]])
+dfDataWIP[colIndepVarNum] = x_scaler.transform(dfDataWIP[colIndepVarNum])
+dfDataWIP[sDepVar] = y_scaler.transform(dfDataWIP[[sDepVar]])
 
 # Save dfData to parquet as dfData_scaled
 dfData.to_parquet('./dfData_reg_scaled.parquet')
+dfDataWIP.to_parquet('./dfData_reg_scaled_wip.parquet')
 
 # Rescale dfData
 # dfData[colIndepVarNum] = x_scaler.inverse_transform(dfData[colIndepVarNum])
@@ -107,3 +130,5 @@ dfData.to_parquet('./dfData_reg_scaled.parquet')
 # Save the scales to .AUX/
 joblib.dump(x_scaler, "./.AUX/x_scaler.save")
 joblib.dump(y_scaler, "./.AUX/y_scaler.save")
+
+plt.close()

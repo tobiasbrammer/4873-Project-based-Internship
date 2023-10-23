@@ -1,28 +1,37 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                   &  contribution & \textbf{  F-statistic:       }  \\
-\textbf{Model:}                           &      OLS      & \textbf{  Prob (F-statistic):}  \\
-\bottomrule
-\end{tabular}
-\begin{tabular}{lcl}
-\textbf{No. Observations:}                &       3715    & \textbf{                     }  \\
-\textbf{Covariance Type:}                 &   nonrobust   & \textbf{                     }  \\
+\textbf{Dep. Variable:}                   &   contribution   & \textbf{  R-squared (uncentered):}      &     0.988   \\
+\textbf{Model:}                           &       OLS        & \textbf{  Adj. R-squared (uncentered):} &     0.988   \\
+\textbf{Method:}                          &  Least Squares   & \textbf{  F-statistic:       }          & 3.190e+04   \\
+\textbf{Date:}                            & Mon, 23 Oct 2023 & \textbf{  Prob (F-statistic):}          &     0.00    \\
+\textbf{Time:}                            &     20:03:30     & \textbf{  Log-Likelihood:    }          &    5423.2   \\
+\textbf{No. Observations:}                &        3745      & \textbf{  AIC:               }          & -1.083e+04  \\
+\textbf{Df Residuals:}                    &        3735      & \textbf{  BIC:               }          & -1.076e+04  \\
+\textbf{Df Model:}                        &          10      & \textbf{                     }          &             \\
+\textbf{Covariance Type:}                 &    nonrobust     & \textbf{                     }          &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
                                           & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{days\_until\_end}                 &      -0.0717  &        0.010     &    -7.194  &         0.000        &       -0.091    &       -0.052     \\
-\textbf{billable\_rate\_dep}              &       0.2563  &        0.007     &    37.398  &         0.000        &        0.243    &        0.270     \\
-\textbf{kbyg44\_employment\_expectations} &       0.0637  &        0.022     &     2.863  &         0.004        &        0.020    &        0.107     \\
-\textbf{kbyg11}                           &       0.0642  &        0.009     &     6.901  &         0.000        &        0.046    &        0.082     \\
-\textbf{panum}                            &      -0.0445  &        0.011     &    -3.974  &         0.000        &       -0.067    &       -0.023     \\
-\textbf{kbyg44\_confidence\_indicator}    &       0.2283  &        0.021     &    10.962  &         0.000        &        0.187    &        0.269     \\
-\textbf{total\_days}                      &       0.0924  &        0.008     &    11.556  &         0.000        &        0.077    &        0.108     \\
-\textbf{tilbuds\_og\_entreprisekontrakt}  &      -0.0207  &        0.004     &    -5.733  &         0.000        &       -0.028    &       -0.014     \\
-\textbf{ombygning}                        &      -0.0003  &        0.005     &    -0.066  &         0.948        &       -0.009    &        0.009     \\
-\textbf{kbyg33\_no\_limitations}          &       0.1021  &        0.010     &     9.795  &         0.000        &        0.082    &        0.123     \\
+\textbf{costs\_scurve\_diff}              &      -0.0489  &        0.015     &    -3.244  &         0.001        &       -0.078    &       -0.019     \\
+\textbf{revenue\_lag2}                    &       0.1719  &        0.023     &     7.479  &         0.000        &        0.127    &        0.217     \\
+\textbf{days\_until\_end}                 &      -0.0185  &        0.008     &    -2.231  &         0.026        &       -0.035    &       -0.002     \\
+\textbf{revenue\_lag1}                    &       0.1824  &        0.022     &     8.408  &         0.000        &        0.140    &        0.225     \\
+\textbf{kbyg11}                           &       0.0506  &        0.007     &     6.773  &         0.000        &        0.036    &        0.065     \\
+\textbf{kbyg44\_employment\_expectations} &       0.1705  &        0.008     &    21.135  &         0.000        &        0.155    &        0.186     \\
+\textbf{billable\_rate\_dep}              &       0.1527  &        0.006     &    26.576  &         0.000        &        0.141    &        0.164     \\
+\textbf{total\_days}                      &       0.0130  &        0.007     &     1.996  &         0.046        &        0.000    &        0.026     \\
+\textbf{revenue\_lag4}                    &       0.1627  &        0.023     &     7.118  &         0.000        &        0.118    &        0.208     \\
+\textbf{revenue\_lag5}                    &       0.2273  &        0.022     &    10.267  &         0.000        &        0.184    &        0.271     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 681.561 & \textbf{  Durbin-Watson:     } &     1.263  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 10984.649  \\
+\textbf{Skew:}          &  -0.383 & \textbf{  Prob(JB):          } &      0.00  \\
+\textbf{Kurtosis:}      &  11.355 & \textbf{  Cond. No.          } &      47.8  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}

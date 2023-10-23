@@ -23,7 +23,7 @@ dfData['date'] = pd.to_datetime(dfData['date'], format='%d-%m-%Y')
 dfData['end_date'] = pd.to_datetime(dfData['end_date'], format='%d-%m-%Y')
 
 # Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(20, 10))
 sns.kdeplot(data=dfData, x='budget_costs', label='budget costs')
 sns.kdeplot(data=dfData, x='sales_estimate_costs', label='sales estimate costs')
 sns.kdeplot(data=dfData, x='production_estimate_costs', label='production estimate costs')
@@ -46,7 +46,7 @@ plt.savefig("./Results/Presentation/1_0_costs.svg")
 
 
 # Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(20, 10))
 sns.kdeplot(data=dfData, x='budget_revenue', label='budget revenue')
 sns.kdeplot(data=dfData, x='sales_estimate_revenue', label='sales estimate revenue')
 sns.kdeplot(data=dfData, x='production_estimate_revenue', label='production estimate revenue')
@@ -71,7 +71,7 @@ plt.savefig("./Results/Presentation/1_1_revenue.svg")
 
 
 # Plot sum of risk by date for each department
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(20, 10))
 sns.lineplot(x='date', y='risk', hue='department', data=dfData)
 plt.xlabel("Date")
 plt.ylabel("Risk")
@@ -91,7 +91,7 @@ plt.savefig("./Results/Presentation/1_2_risk.svg")
 
 # Select random job and plot risk
 job_no = 'S161210'
-dfData[dfData['job_no'] == job_no].plot(x='date', y='risk', figsize=(10, 5))
+dfData[dfData['job_no'] == job_no].plot(x='date', y='risk', figsize=(20, 10))
 plt.xlabel("Date")
 plt.ylabel("Risk")
 plt.tight_layout()
@@ -107,7 +107,7 @@ plt.annotate('Source: ELCON A/S',
 
 # Plot kde of risk
 # Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(20, 10))
 sns.kdeplot(data=dfData, x='risk', label='risk')
 plt.xlabel("Risk (mDKK)")
 plt.ylabel("Density")
@@ -138,7 +138,7 @@ dfMissing['missing_pct'] = dfMissing['missing'] / dfData.shape[0]
 dfMissing.sort_values('missing_pct', ascending=False, inplace=True)
 
 # Plot missing percentage above 0%
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(20, 10))
 sns.barplot(x=dfMissing[dfMissing['missing_pct'] > 0]['column'],
             y=dfMissing[dfMissing['missing_pct'] > 0]['missing_pct'])
 plt.xticks(rotation=90)
@@ -159,7 +159,7 @@ plt.savefig("./Results/Presentation/1_4_missing.svg")
 
 
 # Plot kde of labor_cost_share, material_cost_share and other_cost_share
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(20, 10))
 sns.kdeplot(data=dfData, x='labor_cost_share', label='labor cost share')
 sns.kdeplot(data=dfData, x='material_cost_share', label='material cost share')
 plt.xlabel("Share")
@@ -209,3 +209,5 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 # Output to LaTeX with encoding
 with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
+
+plt.close()

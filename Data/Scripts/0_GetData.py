@@ -139,6 +139,10 @@ colNum = [col for col in dfData.select_dtypes(include=[np.number]).columns if
           not any(sub in col for sub in ["_share", "_rate", "_ratio", "_margin", "_cumsum", "_estimate_"])]
 colCumSum = [col for col in colNum if "budget_" not in col]
 
+# Save colCumSum to ./.AUX/colCumSum.txt
+with open('./.AUX/colCumSum.txt', 'w') as f:
+    f.write('\n'.join(colCumSum))
+
 # Calculate cumulative sum for each variable in colCumSum grouped by 'job_no'
 for col in colCumSum:
     dfData[f'{col}_cumsum'] = dfData.groupby('job_no')[col].cumsum()
@@ -220,8 +224,8 @@ def calculate_risk(group):
         X = group[
             ['revenue_scurve_diff', 'costs_scurve_diff', 'billable_rate_dep']]
         y = group['contribution_scurve_diff']
-        model = LinearRegression().fit(X, y)
-        residuals = y - model.predict(X)
+        model = LinearRegression().fit(X.replace(np.nan, 0), y.replace(np.nan, 0))
+        residuals = y - model.predict(X.replace(np.nan, 0))
         group['risk'] = residuals * group['production_estimate_costs']
     return group
 
@@ -231,7 +235,7 @@ dfData = dfData.groupby('job_no', group_keys=False).apply(calculate_risk)
 
 # Determine the PACF and ACF of revenue, costs and contribution
 for col in ['revenue', 'costs', 'contribution']:
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    fig, ax = plt.subplots(1, 2, figsize=(20, 10))
     plot_acf(dfData[col], ax=ax[0], lags=5, zero=False)
     plot_pacf(dfData[col], ax=ax[1], lags=5, zero=False)
     ax[0].set_ylim(-0.4)
@@ -320,7 +324,7 @@ df_matrix.reset_index(drop=True, inplace=True)
 processed_data = pd.concat([dfDesc[['job_no']], df_matrix], axis=1)
 
 term_frequencies = df_matrix.sum(axis=0).sort_values(ascending=False)
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(20, 10))
 sns.barplot(x=term_frequencies.index, y=term_frequencies.values)
 plt.xticks(rotation=90)
 plt.xlabel("Terms")
@@ -484,7 +488,7 @@ dfData = pd.merge(dfData, dst_df, on='date', how='left')
 
 
 # Plot kbyg11, kbyg22, kbyg33_no_limitation and kbyg44_confidence_indicator_total by date
-fig, ax = plt.subplots(2, 2, figsize=(10, 5))
+fig, ax = plt.subplots(2, 2, figsize=(20, 10))
 ax[0, 0].plot(dst_df['date'], dst_df['kbyg11'])
 ax[0, 0].set_title('Change in Industry Revenue')
 ax[0, 1].plot(dst_df['date'], dst_df['kbyg22'])
@@ -509,53 +513,29 @@ dfData.drop_duplicates(subset=['id'], inplace=True)
 # Format all column names to lower case
 dfData.columns = dfData.columns.str.lower()
 
-
-
 ### Split test and train ###
-# Sample 80% of the jobs for training
+# Sample 80% of the jobs for training. This allows us to effectively simulate training on finished jobs, and
+# predicting on ongoing jobs.
 lJobNoTrain = dfData['job_no'].drop_duplicates().sample(frac=0.8)
 dfData['train'] = dfData['job_no'].isin(lJobNoTrain).astype(int)
 
-# End timing and print duration
-# end_time = datetime.datetime.now()
-# print(f"Time taken: {end_time - start_time}")
+# We can also use another method of split, where each job is split into a training and test set. This allows us to
+# also simulate training ongoing jobs as they progress.
+# We group by job_no and split the data into a training and test set for each job_no
+dfData['train_TS'] = dfData.groupby('job_no')['job_no'].transform(lambda x: np.random.choice([0, 1], size=len(x), p=[.1, .8]))
 
-
-def reduce_mem_usage(df, verbose=True):
-    numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-    start_mem = df.memory_usage().sum() / 1024**2
-    for col in df.columns:
-        col_type = df[col].dtypes
-        if col_type in numerics:
-            c_min = df[col].min()
-            c_max = df[col].max()
-            if str(col_type)[:3] == 'int':
-                if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
-                    df[col] = df[col].astype(np.int8)
-                elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
-                    df[col] = df[col].astype(np.int16)
-                elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
-                    df[col] = df[col].astype(np.int32)
-                elif c_min > np.iinfo(np.int64).min and c_max < np.iinfo(np.int64).max:
-                    df[col] = df[col].astype(np.int64)
-            else:
-                if c_min > np.finfo(np.float16).min and c_max < np.finfo(np.float16).max:
-                    df[col] = df[col].astype(np.float16)
-                elif c_min > np.finfo(np.float32).min and c_max < np.finfo(np.float32).max:
-                    df[col] = df[col].astype(np.float32)
-                else:
-                    df[col] = df[col].astype(np.float64)
-
-    end_mem = df.memory_usage().sum() / 1024**2
-    if verbose:
-        print('Memory usage of dataframe is {:.2f} MB'.format(end_mem))
-        print('Decreased by {:.1f}%'.format(100 * (start_mem - end_mem) / start_mem))
-
-    return df
-
-
-dfData = reduce_mem_usage(dfData)
-
+# Import libraries
+from sklearn.cluster import KMeans
+# Run the process for five different numbers of clusters.
+lCluster = [2, 4, 6, 8, 10, 12, 14]
+# Assign cluster to each job
+for nCluster in lCluster:
+    # Create KMeans object
+    kmeans = KMeans(n_clusters=nCluster, random_state=0, n_init='auto')
+    # Fit the model
+    kmeans.fit(dfData[dfData.select_dtypes(include=[np.number]).columns].replace([np.inf, -np.inf], np.nan).replace(np.nan, 0))
+    # Predict the cluster for each observation
+    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[dfData.select_dtypes(include=[np.number]).columns].replace([np.inf, -np.inf], np.nan).replace(np.nan, 0))
 
 # Save DataFrame to file
 dfData.to_csv("dfData.csv", index=False)

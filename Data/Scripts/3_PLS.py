@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 import seaborn as sns
 import scipy.stats as stats
 import statsmodels.api as sm
@@ -26,6 +27,7 @@ os.chdir(sDir)
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
+dfDataWIP = pd.read_parquet("./dfData_reg_scaled_wip.parquet")
 
 # Import scales
 x_scaler = joblib.load("./.AUX/x_scaler.save")
@@ -37,39 +39,101 @@ with open('./.AUX/sDepVar.txt', 'r') as f:
 
 # Import colIndepVarNum from ./.AUX/colIndepVarNum.txt
 with open('./.AUX/colIndepVarNum.txt', 'r') as f:
-    colIndepVarNum = f.read()
+   colIndepVarNum = f.read()
+
 colIndepVarNum = colIndepVarNum.split('\n')
+
+# Load trainMethod from ./.AUX/trainMethod.txt
+with open('./.AUX/trainMethod.txt', 'r') as f:
+        trainMethod = f.read()
 
 # Rescale dfDataScaled to dfData
 dfDataRescaled = dfDataScaled.copy()
 dfDataRescaled[colIndepVarNum] = x_scaler.inverse_transform(dfDataScaled[colIndepVarNum].values)
 dfDataRescaled[sDepVar] = y_scaler.inverse_transform(dfDataScaled[sDepVar].values.reshape(-1, 1))
+dfDataWIP[sDepVar] = y_scaler.inverse_transform(dfDataWIP[sDepVar].values.reshape(-1, 1))
 
-### Predict sDepVar using OLS ###
 # Get the 5 most correlated variables (of numeric variables)
 lNumericCols = dfDataScaled.select_dtypes(include=[np.number]).columns.tolist()
 
 ### Split dfDataScaled into train and test ###
-# Get index of train from dfData['train']
-train_index = dfData[dfData['train'] == 1].index
+# Get index of train from dfData[trainMethod]
+train_index = dfData[dfData[trainMethod] == 1].index
 
 # Split dfDataScaled into train and test
 dfDataScaledTrain = dfDataScaled.loc[train_index]
 dfDataScaledTest = dfDataScaled.drop(train_index)
 
-corr = dfData[dfData['train'] == 1][lNumericCols].corr()
+### Predict sDepVar using OLS ###
+# Predict using data from DST (only external variables)
+
+lDST = ['kbyg11', 'kbyg22', 'kbyg33_no_limitations', 'kbyg44_confidence_indicator']
+
+# Write lDST to .AUX/
+with open('./.AUX/lDST.txt', 'w') as lVars:
+    lVars.write('\n'.join(lDST))
+
+model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lDST])
+results = model.fit()
+# Save results to LaTeX
+ols = results.summary(alpha=0.05).as_latex()
+
+with open('Results/Tables/3_0_dst.tex', 'w', encoding='utf-8') as f:
+    f.write(ols)
+
+dfData['predicted_ols'] = y_scaler.inverse_transform(results.predict(dfDataScaled[lDST]).values.reshape(-1, 1))
+
+# Predict and rescale sDepVar using OLS
+dfData['predicted_dst'] = y_scaler.inverse_transform(results.predict(dfDataScaled[lDST]).values.reshape(-1, 1))
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_dst'].transform('sum'), label='Predicted')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_0_dst.png")
+plt.savefig("./Results/Presentation/3_0_dst.svg")
+
+# Calculate out-of-sample RMSE of DST
+rmse_dst = np.sqrt(
+        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                           dfData[dfData[trainMethod] == 0]['predicted_dst']))
+# symmetric Mean Absolute Error (sMAPE)
+smape_dst = np.mean(
+        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_dst']) /
+        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar].shift(1)) + np.abs(
+            dfData[dfData[trainMethod] == 0]['predicted_dst']))) * 100
+
+# Predict dfDataWIP[sDepVar]
+dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lDST]).values.reshape(-1, 1))
+
+### Using correlation to select variables ###
+corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
 corr = corr.sort_values(by=sDepVar, ascending=False)
 corr = corr[sDepVar]
 # Filter out variables with "contribution" or "revenue" in the name
-corr = corr[~corr.index.str.contains('contribution|revenue|costs')]
+corr = corr[~corr.index.str.contains('contribution')]
 corr = corr[0:10]
 # Save the 5 most correlated variables in a list
 lIndepVar = corr.index.tolist()
 
 # Plot correlation between sDepVar and lIndepVar
-fig, ax = plt.subplots(figsize=(10, 5))
-sns.heatmap(dfData[dfData['train'] == 1][[sDepVar] + lIndepVar].corr(), annot=True, fmt='.2f',
-            cmap=sns.light_palette(vColors[0], as_cmap=True))
+fig, ax = plt.subplots(figsize=(20, 10))
+sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar].corr(), annot=True, vmin=-1, vmax=1, fmt='.2f',
+                cmap=LinearSegmentedColormap.from_list('custom_cmap', [
+                    (0, vColors[1]),
+                    (0.5, '#FFFFFF'),
+                    (1, vColors[0]
+                     )])
+                )
 plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_0_corr.png")
 plt.savefig("./Results/Presentation/3_0_corr.svg")
@@ -78,25 +142,250 @@ plt.savefig("./Results/Presentation/3_0_corr.svg")
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar])
 results = model.fit()
 # Save results to LaTeX
-ols = results.summary(alpha=0.05, slim=True).as_latex()
+ols = results.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
-    f.write(ols)
+        f.write(ols)
 
 # Predict and rescale sDepVar using OLS
 dfData['predicted_ols'] = results.predict(dfDataScaled[lIndepVar])
 
 dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].values.reshape(-1, 1))
 
-# Group by date and sum predicted_ols
-dfData['sum_predicted_ols'] = dfData.groupby('date')['predicted_ols'].transform('sum')
-# Group by date and sum sDepVar
-dfData['sum'] = dfData.groupby('date')[sDepVar].transform('sum')
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_ols'].transform('sum'), label='Predicted')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_1_ols.png")
+plt.savefig("./Results/Presentation/3_1_ols.svg")
+
+# Calculate out-of-sample RMSE of OLS
+rmse_ols = np.sqrt(
+        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                           dfData[dfData[trainMethod] == 0]['predicted_ols']))
+# symmetric Mean Absolute Error (sMAPE)
+smape_ols = np.mean(
+        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_ols']) /
+        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar].shift(1)) + np.abs(
+            dfData[dfData[trainMethod] == 0]['predicted_ols']))) * 100
+
+# Predict dfDataWIP[sDepVar]
+dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar]).values.reshape(-1, 1))
+
+### Add lagged variables to lIndepVar ###
+# Add lagged variables to lIndepVar
+lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
+                                 'contribution_lag2', 'revenue_lag2', 'costs_lag2',
+                                 'contribution_lag3', 'revenue_lag3', 'costs_lag3']
+
+# Correlation between sDepVar and lIndepVar_lag
+fig, ax = plt.subplots(figsize=(20, 10))
+sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag].corr(), annot=True, vmin=-1, vmax=1,
+                fmt='.2f',
+                cmap=LinearSegmentedColormap.from_list('custom_cmap', [
+                    (0, vColors[1]),
+                    (0.5, '#FFFFFF'),
+                    (1, vColors[0]
+                     )])
+                )
+plt.title(f'Correlation between {sDepVar} and selected variables')
+plt.savefig("./Results/Figures/3_2_corr_incl_lag.png")
+plt.savefig("./Results/Presentation/3_2_corr_incl_lag.svg")
+
+# Run OLS with lagged variables
+model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag], missing='drop')
+results = model.fit()
+# Save results to LaTeX
+ols = results.summary(alpha=0.05).as_latex()
+
+with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
+        f.write(ols)
+
+# Predict and rescale sDepVar using OLS with lagged variables
+dfData['predicted_lag'] = results.predict(dfDataScaled[lIndepVar_lag])
+
+dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].values.reshape(-1, 1))
 
 # Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfData['date'], dfData['sum'], label='Actual')
-ax.plot(dfData['date'], dfData['sum_predicted_ols'], label='Predicted')
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag'].transform('sum'),
+            label='Predicted (incl. lag)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Total Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_3_ols_lag.png")
+plt.savefig("./Results/Presentation/3_3_ols_lag.svg")
+
+# Calculate RMSE of OLS with lagged variables
+rmse_ols_lag = np.sqrt(
+        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                           dfData[dfData[trainMethod] == 0]['predicted_lag']))
+# symmetric Mean Absolute Error (sMAPE)
+smape_ols_lag = np.mean(
+        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_lag']) /
+        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+            dfData[dfData[trainMethod] == 0]['predicted_lag']))) * 100
+
+# Predict dfDataWIP[sDepVar]
+dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar_lag]).values.reshape(-1, 1))
+
+# Include production_estimate_contribution and sales_estimate_contribution
+lIndepVar_lag_budget = lIndepVar_lag + ['production_estimate_contribution', 'sales_estimate_contribution']
+
+# Save lIndepVar_lag_budget to .AUX/
+with open('./.AUX/lIndepVar_lag_budget.txt', 'w') as lVars:
+        lVars.write('\n'.join(lIndepVar_lag_budget))
+
+# Correlation between sDepVar and lIndepVar_lag_budget
+fig, ax = plt.subplots(figsize=(20, 10))
+sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget].corr(), annot=True, vmin=-1, vmax=1,
+                fmt='.2f',
+                cmap=LinearSegmentedColormap.from_list('custom_cmap', [
+                    (0, vColors[1]),
+                    (0.5, '#FFFFFF'),
+                    (1, vColors[0]
+                     )])
+                )
+plt.title(f'Correlation between {sDepVar} and selected variables')
+plt.savefig("./Results/Figures/3_4_corr_incl_lag_budget.png")
+plt.savefig("./Results/Presentation/3_4_corr_incl_lag_budget.svg")
+
+# Run OLS with lagged variables and budget
+model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget])
+results = model.fit()
+# Save results to LaTeX
+ols = results.summary(alpha=0.05).as_latex()
+
+with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
+        f.write(ols)
+
+# Predict and rescale sDepVar using OLS with lagged variables and budget
+dfData['predicted_lag_budget'] = results.predict(dfDataScaled[lIndepVar_lag_budget])
+
+dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_lag_budget'].values.reshape(-1, 1))
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag_budget'].transform('sum'),
+            label='Predicted (incl. lag and budget)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Total Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_5_ols_lag_budget.png")
+plt.savefig("./Results/Presentation/3_5_ols_lag_budget.svg")
+
+# Calculate RMSE of OLS with lagged variables and budget
+rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                                                     dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))
+# symmetric Mean Absolute Error (sMAPE)
+smape_ols_lag_budget = np.mean(
+        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_lag_budget']) /
+        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+            dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))) * 100
+
+# Predict dfDataWIP[sDepVar]
+dfDataWIP['predicted_lag_budget'] = results.predict(dfDataWIP[lIndepVar_lag_budget])
+
+dfDataWIP['predicted_lag_budget'] = y_scaler.inverse_transform(
+        dfDataWIP['predicted_lag_budget'].values.reshape(-1, 1))
+
+### Forecast Combination ###
+# Produce a combined forecast of ols_lag_budget and pls
+dfData['predicted_fc'] = (dfData['predicted_dst'] + dfData['predicted_lag_budget']) / 2
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc'].transform('sum'),
+            label='Predicted (Forecast Combination)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Total Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_6_fc.png")
+plt.savefig("./Results/Presentation/3_6_fc.svg")
+
+# Calculate RMSE of Forecast Combination
+rmse_fc = np.sqrt(
+        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc']))
+# symmetric Mean Absolute Error (sMAPE)
+smape_fc = np.mean(
+        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_fc']) /
+        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+            dfData[dfData[trainMethod] == 0]['predicted_fc']))) * 100
+
+# Compare RMSE and sMAPE of the different models in a table
+dfRMSE = pd.DataFrame({'RMSE': [rmse_dst, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
+                           'sMAPE': [smape_dst, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
+                          index=['DST', 'OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'FC'])
+
+# Round to 4 decimals
+dfRMSE = dfRMSE.round(4)
+
+### Use clustering to find similar jobs and predict sDepVar for each cluster ###
+lCluster = [2, 4, 6, 8, 10, 12, 14]
+# For each cluster in cluster_{lCluster} do
+for iCluster in lCluster:
+    # Get the cluster labels to list using value_counts()
+    lClusterLabels = dfData['cluster_' + str(iCluster)].value_counts().index.tolist()
+
+    # For each cluster label in lClusterLabels do
+    for iClusterLabel in lClusterLabels:
+        # Run OLS
+        model = sm.OLS(dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][sDepVar],
+                          dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget])
+        results = model.fit()
+        # Predict and rescale sDepVar using OLS with lagged variables and budget and add to cluster_{iCluster}
+        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(iCluster)] = results.predict(
+            dfDataScaled[dfDataScaled['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget])
+        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(iCluster)] = y_scaler.inverse_transform(
+            dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(iCluster)].values.reshape(-1, 1))
+
+# Plot the sum of all predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_2'].transform('sum'),
+        label='Predicted (2 clusters)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_4'].transform('sum'),
+        label='Predicted (4 clusters)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_6'].transform('sum'),
+        label='Predicted (6 clusters)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_8'].transform('sum'),
+        label='Predicted (8 clusters)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_10'].transform('sum'),
+        label='Predicted (10 clusters)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_12'].transform('sum'),
+        label='Predicted (12 clusters)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_14'].transform('sum'),
+        label='Predicted (14 clusters)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
@@ -104,230 +393,76 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().se
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-             xy=(1.0, -0.15),
-             color='grey',
-             xycoords='axes fraction',
-             ha='right',
-             va="center",
-             fontsize=10)
-plt.savefig("./Results/Figures/3_1_ols.png")
-plt.savefig("./Results/Presentation/3_1_ols.svg")
+plt.savefig("./Results/Figures/3_7_cluster.png")
+plt.savefig("./Results/Presentation/3_7_cluster.svg")
 
-# Calculate out-of-sample RMSE of OLS
-rmse_ols = np.sqrt(
-    mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_ols']))
-# symmetric Mean Absolute Error (sMAPE)
-smape_ols = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_ols']) /
-                    (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
-                        dfData[dfData['train'] == 0]['predicted_ols']))) * 100
-
-### Add lagged variables to lIndepVar ###
-# Add lagged variables to lIndepVar
-lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
-                             'contribution_lag2', 'revenue_lag2', 'costs_lag2',
-                             'contribution_lag3', 'revenue_lag3', 'costs_lag3']
-
-# Correlation between sDepVar and lIndepVar_lag
-fig, ax = plt.subplots(figsize=(10, 5))
-sns.heatmap(dfData[dfData['train'] == 1][[sDepVar] + lIndepVar_lag].corr(), annot=True, fmt='.2f',
-            cmap=sns.light_palette(vColors[0], as_cmap=True))
-plt.title(f'Correlation between {sDepVar} and selected variables and lags')
-plt.savefig("./Results/Figures/3_1_corr_incl_lag.png")
-plt.savefig("./Results/Presentation/3_1_corr_incl_lag.svg")
-
-# Run OLS with lagged variables
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag], missing='drop')
-results = model.fit()
-# Save results to LaTeX
-ols = results.summary(alpha=0.05, slim=True).as_latex()
-
-with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
-    f.write(ols)
-
-# Predict and rescale sDepVar using OLS with lagged variables
-dfData['predicted_lag'] = results.predict(dfDataScaled[lIndepVar_lag])
-
-dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].values.reshape(-1, 1))
-
-# Group by date and sum predicted_lag
-dfData['sum_predicted_lag'] = dfData.groupby('date')['predicted_lag'].transform('sum')
+# Use Forecast Combination to combine the predictions of each cluster
+# For each cluster in cluster_{lCluster} do
+dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])]
+                                    + dfData['predicted_cluster_' + str(lCluster[1])]
+                                    + dfData['predicted_cluster_' + str(lCluster[2])]
+                                    + dfData['predicted_cluster_' + str(lCluster[3])]
+                                    + dfData['predicted_cluster_' + str(lCluster[4])]
+                                    + dfData['predicted_cluster_' + str(lCluster[5])]
+                                    + dfData['predicted_cluster_' + str(lCluster[6])]) / 7
 
 # Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfData['date'], dfData['sum'], label='Actual')
-ax.plot(dfData['date'], dfData['sum_predicted_lag'], label='Predicted (incl. lag)')
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_fc'].transform('sum'),
+        label='Predicted (Forecast Combination)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Total Contribution')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
-plt.savefig("./Results/Figures/3_2_ols_lag.png")
-plt.savefig("./Results/Presentation/3_2_ols_lag.svg")
-
-# Calculate RMSE of OLS with lagged variables
-rmse_ols_lag = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_lag']))
-# symmetric Mean Absolute Error (sMAPE)
-smape_ols_lag = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_lag']) /
-                    (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
-                        dfData[dfData['train'] == 0]['predicted_lag']))) * 100
-
-
-# Include production_estimate_contribution and sales_estimate_contribution
-lIndepVar_lag_budget = lIndepVar_lag + ['production_estimate_contribution', 'sales_estimate_contribution']
-
-# Save lIndepVar_lag_budget to .AUX/
-with open('./.AUX/lIndepVar_lag_budget.txt', 'w') as lVars:
-    lVars.write('\n'.join(lIndepVar_lag_budget))
-
-
-# Correlation between sDepVar and lIndepVar_lag_budget
-fig, ax = plt.subplots(figsize=(10, 5))
-sns.heatmap(dfData[dfData['train'] == 1][[sDepVar] + lIndepVar_lag_budget].corr(), annot=True, fmt='.2f',
-            cmap=sns.light_palette(vColors[0], as_cmap=True))
-plt.title(f'Correlation between {sDepVar} and selected variables, lags and budget')
-plt.savefig("./Results/Figures/3_2_corr_incl_lag_budget.png")
-plt.savefig("./Results/Presentation/3_2_corr_incl_lag_budget.svg")
-
-# Run OLS with lagged variables and budget
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget])
-results = model.fit()
-# Save results to LaTeX
-ols = results.summary(alpha=0.05, slim=True).as_latex()
-
-with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
-    f.write(ols)
-
-# Predict and rescale sDepVar using OLS with lagged variables and budget
-dfData['predicted_lag_budget'] = results.predict(dfDataScaled[lIndepVar_lag_budget])
-
-dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_lag_budget'].values.reshape(-1, 1))
-
-# Group by date and sum predicted_lag_budget
-dfData['sum_predicted_lag_budget'] = dfData.groupby('date')['predicted_lag_budget'].transform('sum')
-
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfData['date'], dfData['sum'], label='Actual')
-ax.plot(dfData['date'], dfData['sum_predicted_lag_budget'], label='Predicted (incl. lag and budget)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
-plt.savefig("./Results/Figures/3_3_ols_lag_budget.png")
-plt.savefig("./Results/Presentation/3_3_ols_lag_budget.svg")
-
-# Calculate RMSE of OLS with lagged variables and budget
-rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_lag_budget']))
-# symmetric Mean Absolute Error (sMAPE)
-smape_ols_lag_budget = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_lag_budget']) /
-                    (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
-                        dfData[dfData['train'] == 0]['predicted_lag_budget']))) * 100
-
-
-### Predict sDepVar using PLS ###
-# Run PLS
-pls = PLSRegression(n_components=20, scale=False, max_iter=5000)
-pls.fit(dfDataScaledTrain[lIndepVar_lag_budget], dfDataScaledTrain[sDepVar])
-
-# Predict and rescale sDepVar using PLS
-dfData['predicted_pls'] = pls.predict(dfDataScaled[lIndepVar_lag_budget])
-
-dfData['predicted_pls'] = y_scaler.inverse_transform(dfData['predicted_pls'].values.reshape(-1, 1))
-
-# Group by date and sum predicted_pls
-dfData['sum_predicted_pls'] = dfData.groupby('date')['predicted_pls'].transform('sum')
-
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfData['date'], dfData['sum'], label='Actual')
-ax.plot(dfData['date'], dfData['sum_predicted_pls'], label='Predicted (PLS)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
-plt.savefig("./Results/Figures/3_4_pls.png")
-plt.savefig("./Results/Presentation/3_4_pls.svg")
-
-
-# Calculate RMSE of PLS
-rmse_pls = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_pls']))
-# symmetric Mean Absolute Error (sMAPE)
-smape_pls = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_pls']) /
-                    (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
-                        dfData[dfData['train'] == 0]['predicted_pls']))) * 100
-
-### Forecast Combination ###
-# Produce a combined forecast of ols_lag_budget and pls
-dfData['predicted_fc'] = (dfData['predicted_ols'] + dfData['predicted_pls']) / 2
-
-# Group by date and sum predicted_fc
-dfData['sum_predicted_fc'] = dfData.groupby('date')['predicted_fc'].transform('sum')
-
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfData['date'], dfData['sum'], label='Actual')
-ax.plot(dfData['date'], dfData['sum_predicted_fc'], label='Predicted (Forecast Combination)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
-plt.savefig("./Results/Figures/3_4_fc.png")
-plt.savefig("./Results/Presentation/3_4_fc.svg")
-
+plt.savefig("./Results/Figures/3_7_fc_cluster.png")
+plt.savefig("./Results/Presentation/3_7_fc_cluster.svg")
 
 # Calculate RMSE of Forecast Combination
-rmse_fc = np.sqrt(mean_squared_error(dfData[dfData['train'] == 0][sDepVar], dfData[dfData['train'] == 0]['predicted_fc']))
+rmse_fc_cluster = np.sqrt(
+        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))
 # symmetric Mean Absolute Error (sMAPE)
-smape_fc = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfData['train'] == 0]['predicted_fc']) /
-                    (np.abs(dfData[dfData['train'] == 0][sDepVar]) + np.abs(
-                        dfData[dfData['train'] == 0]['predicted_fc']))) * 100
+smape_fc_cluster = np.mean(
+        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']) /
+        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+            dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))) * 100
 
+# Add RMSE and sMAPE of Forecast Combination to dfRMSE
+dfRMSE.loc['FC_cluster'] = [rmse_fc_cluster, smape_fc_cluster]
 
+### Combine Cluster Forecast Combination and DST ###
 
-# Compare RMSE and sMAPE of the different models in a table
-dfRMSE = pd.DataFrame({'RMSE': [rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_pls, rmse_fc],
-                          'sMAPE': [smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_pls, smape_fc]},
-                            index=['OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'PLS', 'FC'])
+dfData['predicted_fc_cluster_dst'] = (dfData['predicted_cluster_fc'] + dfData['predicted_dst']) / 2
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc_cluster_dst'].transform('sum'),
+        label='Predicted (Forecast Combination)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Actual vs. Predicted Total Contribution')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_8_fc_cluster_dst.png")
+plt.savefig("./Results/Presentation/3_8_fc_cluster_dst.svg")
+
+# Calculate RMSE of Forecast Combination
+rmse_fc_cluster_dst = np.sqrt(
+        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))
+# symmetric Mean Absolute Error (sMAPE)
+smape_fc_cluster_dst = np.mean(
+        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']) /
+        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+            dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))) * 100
+
+# Add RMSE and sMAPE of Forecast Combination to dfRMSE
+dfRMSE.loc['FC_cluster_DST'] = [rmse_fc_cluster_dst, smape_fc_cluster_dst]
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
@@ -336,47 +471,47 @@ dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 
 print(dfRMSE)
 
+### Create new dataframe with date, job_no, sDepVar, and predicted values ###
+dfDataPred = dfData[['date', 'job_no', sDepVar, 'predicted_ols', 'predicted_lag', 'predicted_lag_budget', 'predicted_fc', 'predicted_cluster_fc']]
+
+# Save to .parquet
+dfDataPred.to_parquet("./dfDataPred.parquet")
+dfData.to_parquet("./dfData.parquet")
 
 
-
-# Output to LaTeX
-dfRMSE_latex = dfRMSE_latex.style.to_latex(
-    caption='RMSE of Naive Methods',
-    position_float='centering',
-    position='h!',
-    hrules=True,
-    label='naive_rmse')
-
-# Output to LaTeX with encoding
-with open('Results/Tables/3_4_rmse.tex', 'w', encoding='utf-8') as f:
-    f.write(dfRMSE_latex)
+########################################################################################################################
 
 ### Get Prediction of job_no S161210 ###
 # Get the data of job_no S161210
 sJobNo = 'S161210'
 dfDataJob = dfData[dfData['job_no'] == sJobNo]
 
-# Plot the actual and predicted contribution of job_no S161210
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(dfDataJob['date'], dfDataJob['contribution'], label='Actual')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_fc'], label='Predicted (Forecast Combination)')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_pls'], label='Predicted (PLS)')
+# Plot the actual and predicted contribution of sJobNo
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfDataJob['date'], dfDataJob[sDepVar], label='Actual')
 ax.plot(dfDataJob['date'], dfDataJob['predicted_ols'], label='Predicted (OLS)')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_fc'], label='Predicted (OLS Forecast Combination)')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_cluster_fc'], label='Predicted (Cluster Forecast Combination)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Contribution')
 ax.set_title(f'Actual vs. Predicted Contribution of {sJobNo}')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.annotate('Source: ELCON A/S',
-                xy=(1.0, -0.15),
-                color='grey',
-                xycoords='axes fraction',
-                ha='right',
-                va="center",
-                fontsize=10)
 
-# Save dfData
-dfData.to_parquet("./dfData_reg.parquet")
+# Plot the cumsum of actual and predicted contribution of sJobNo
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfDataJob['date'], dfDataJob[sDepVar].cumsum(), label='Actual')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_fc'].cumsum(), label='Predicted (Forecast Combination)')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_ols'].cumsum(), label='Predicted (OLS)')
+ax.plot(dfDataJob['date'], dfDataJob['predicted_cluster_fc'].cumsum(), label='Predicted (Cluster Forecast Combination)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Cumulative Contribution')
+ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {sJobNo}')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
 
+plt.close()

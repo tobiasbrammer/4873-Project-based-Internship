@@ -51,7 +51,6 @@ subprocess.run(["python", "./Scripts/3_PLS.py"])
 print("Running 4_ML.py...")
 subprocess.run(["python", "./Scripts/4_ML.py"])
 
-
 # Total runtime
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
