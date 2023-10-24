@@ -23,8 +23,8 @@ from sklearn.model_selection import RandomizedSearchCV
 warnings.filterwarnings('ignore')
 
 # Load ./dfData.parquet
-sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
 # Load data
@@ -276,8 +276,8 @@ random_grid = {'learning_rate': [0.001, 0.01, 0.1, 0.2, 0.3],
                 "max_depth": [None, 1, 3, 5, 10, 15],
                 'min_samples_leaf': [1, 2, 4, 6, 8],
                 'max_features': [1/3, 0.5, 1, "sqrt", "log2"],
-                'n_estimators': [100]
-                #'n_estimators': [100, 150, 250, 500, 1000]
+                #'n_estimators': [100]
+                'n_estimators': [100, 150, 250, 500, 1000]
                }
 
 # Define randomized search

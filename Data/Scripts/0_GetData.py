@@ -522,7 +522,7 @@ dfData['train'] = dfData['job_no'].isin(lJobNoTrain).astype(int)
 # We can also use another method of split, where each job is split into a training and test set. This allows us to
 # also simulate training ongoing jobs as they progress.
 # We group by job_no and split the data into a training and test set for each job_no
-dfData['train_TS'] = dfData.groupby('job_no')['job_no'].transform(lambda x: np.random.choice([0, 1], size=len(x), p=[.1, .8]))
+dfData['train_TS'] = dfData.groupby('job_no')['job_no'].transform(lambda x: np.random.choice([0, 1], size=len(x), p=[.1, .9]))
 
 # Import libraries
 from sklearn.cluster import KMeans

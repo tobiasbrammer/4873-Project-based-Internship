@@ -26,8 +26,8 @@ from sklearn.model_selection import RandomizedSearchCV
 warnings.filterwarnings('ignore')
 
 # Load ./dfData.parquet
-sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
 # Load data
@@ -155,6 +155,8 @@ smape_lstm = np.mean(np.abs(dfData[dfData['train'] == 0][sDepVar] - dfData[dfDat
                             dfData[dfData['train'] == 0]['predicted_lstm']))) * 2
 
 # Add  to dfRMSE
+dfRMSE = dfRMSE.append({'Model': 'LSTM', 'RMSE': rmse_lstm, 'sMAPE': smape_lstm}, ignore_index=True)
+
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
