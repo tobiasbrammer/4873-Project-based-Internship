@@ -129,19 +129,16 @@ start_time_lstm = datetime.datetime.now()
 # Fit model to training data dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])]
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=1,
+          epochs=10,
           batch_size=512,
           validation_split=0.1,
           callbacks=[early_stop],
           verbose=0)
 model.save('./.AUX/LSTM.h5')
 
-# Pred
-pred_test = pd.DataFrame(model.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1, 0])
-
 # Predict and rescale using LSTM
-dfData['predicted_lstm'] = pred_test
+dfData['predicted_lstm'] = pd.DataFrame(model.predict(
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1, 0]).values.reshape(-1, 1)
 
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
 
