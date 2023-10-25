@@ -20,8 +20,8 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error, r2_score
 
 # Load ./dfData.parquet
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
 # Load data
@@ -39,13 +39,13 @@ with open('./.AUX/sDepVar.txt', 'r') as f:
 
 # Import colIndepVarNum from ./.AUX/colIndepVarNum.txt
 with open('./.AUX/colIndepVarNum.txt', 'r') as f:
-   colIndepVarNum = f.read()
+    colIndepVarNum = f.read()
 
 colIndepVarNum = colIndepVarNum.split('\n')
 
 # Load trainMethod from ./.AUX/trainMethod.txt
 with open('./.AUX/trainMethod.txt', 'r') as f:
-        trainMethod = f.read()
+    trainMethod = f.read()
 
 # Rescale dfDataScaled to dfData
 dfDataRescaled = dfDataScaled.copy()
@@ -89,9 +89,9 @@ dfData['predicted_dst'] = y_scaler.inverse_transform(results.predict(dfDataScale
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_dst'].transform('sum'), label='Predicted')
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_dst'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Contribution')
@@ -102,15 +102,31 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_0_dst.png")
 plt.savefig("./Results/Presentation/3_0_dst.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_dst'].transform('sum'), label='Predicted')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_0_1_dst.png")
+plt.savefig("./Results/Presentation/3_0_1_dst.svg")
+
 # Calculate out-of-sample RMSE of DST
 rmse_dst = np.sqrt(
-        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                           dfData[dfData[trainMethod] == 0]['predicted_dst']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                       dfData[dfData[trainMethod] == 0]['predicted_dst']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_dst = np.mean(
-        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_dst']) /
-        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar].shift(1)) + np.abs(
-            dfData[dfData[trainMethod] == 0]['predicted_dst']))) * 100
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_dst'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
+    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+        dfData[dfData[trainMethod] == 0]['predicted_dst']))) * 100
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lDST]).values.reshape(-1, 1))
@@ -128,24 +144,24 @@ lIndepVar = corr.index.tolist()
 # Plot correlation between sDepVar and lIndepVar
 fig, ax = plt.subplots(figsize=(20, 10))
 sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar].corr(), annot=True, vmin=-1, vmax=1, fmt='.2f',
-                cmap=LinearSegmentedColormap.from_list('custom_cmap', [
-                    (0, vColors[1]),
-                    (0.5, '#FFFFFF'),
-                    (1, vColors[0]
-                     )])
-                )
+            cmap=LinearSegmentedColormap.from_list('custom_cmap', [
+                (0, vColors[1]),
+                (0.5, '#FFFFFF'),
+                (1, vColors[0]
+                 )])
+            )
 plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_0_corr.png")
 plt.savefig("./Results/Presentation/3_0_corr.svg")
 
 # Run OLS
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar])
+model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar], missing='drop')
 results = model.fit()
 # Save results to LaTeX
 ols = results.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
-        f.write(ols)
+    f.write(ols)
 
 # Predict and rescale sDepVar using OLS
 dfData['predicted_ols'] = results.predict(dfDataScaled[lIndepVar])
@@ -155,9 +171,9 @@ dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].val
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_ols'].transform('sum'), label='Predicted')
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_ols'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Actual vs. Predicted Contribution')
@@ -168,15 +184,31 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_1_ols.png")
 plt.savefig("./Results/Presentation/3_1_ols.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_ols'].transform('sum'), label='Predicted')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_1_1_ols.png")
+plt.savefig("./Results/Presentation/3_1_1_ols.svg")
+
 # Calculate out-of-sample RMSE of OLS
 rmse_ols = np.sqrt(
-        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                           dfData[dfData[trainMethod] == 0]['predicted_ols']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                       dfData[dfData[trainMethod] == 0]['predicted_ols']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_ols = np.mean(
-        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_ols']) /
-        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar].shift(1)) + np.abs(
-            dfData[dfData[trainMethod] == 0]['predicted_ols']))) * 100
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_ols'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
+    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+        dfData[dfData[trainMethod] == 0]['predicted_ols']))) * 100
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar]).values.reshape(-1, 1))
@@ -184,19 +216,19 @@ dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results.predict(dfDataWI
 ### Add lagged variables to lIndepVar ###
 # Add lagged variables to lIndepVar
 lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
-                                 'contribution_lag2', 'revenue_lag2', 'costs_lag2',
-                                 'contribution_lag3', 'revenue_lag3', 'costs_lag3']
+                             'contribution_lag2', 'revenue_lag2', 'costs_lag2',
+                             'contribution_lag3', 'revenue_lag3', 'costs_lag3']
 
 # Correlation between sDepVar and lIndepVar_lag
 fig, ax = plt.subplots(figsize=(20, 10))
 sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag].corr(), annot=True, vmin=-1, vmax=1,
-                fmt='.2f',
-                cmap=LinearSegmentedColormap.from_list('custom_cmap', [
-                    (0, vColors[1]),
-                    (0.5, '#FFFFFF'),
-                    (1, vColors[0]
-                     )])
-                )
+            fmt='.2f',
+            cmap=LinearSegmentedColormap.from_list('custom_cmap', [
+                (0, vColors[1]),
+                (0.5, '#FFFFFF'),
+                (1, vColors[0]
+                 )])
+            )
 plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_2_corr_incl_lag.png")
 plt.savefig("./Results/Presentation/3_2_corr_incl_lag.svg")
@@ -208,7 +240,7 @@ results = model.fit()
 ols = results.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
-        f.write(ols)
+    f.write(ols)
 
 # Predict and rescale sDepVar using OLS with lagged variables
 dfData['predicted_lag'] = results.predict(dfDataScaled[lIndepVar_lag])
@@ -218,13 +250,13 @@ dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].val
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag'].transform('sum'),
-            label='Predicted (incl. lag)')
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag'].transform('sum'),
+        label='Predicted (incl. lag)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -232,15 +264,32 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_3_ols_lag.png")
 plt.savefig("./Results/Presentation/3_3_ols_lag.svg")
 
+#
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lag'].transform('sum'),
+        label='Predicted (incl. lag)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_3_1_ols_lag.png")
+plt.savefig("./Results/Presentation/3_3_1_ols_lag.svg")
+
 # Calculate RMSE of OLS with lagged variables
 rmse_ols_lag = np.sqrt(
-        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                           dfData[dfData[trainMethod] == 0]['predicted_lag']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                       dfData[dfData[trainMethod] == 0]['predicted_lag']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_ols_lag = np.mean(
-        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_lag']) /
-        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-            dfData[dfData[trainMethod] == 0]['predicted_lag']))) * 100
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_lag'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
+    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+        dfData[dfData[trainMethod] == 0]['predicted_lag']))) * 100
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar_lag]).values.reshape(-1, 1))
@@ -250,30 +299,30 @@ lIndepVar_lag_budget = lIndepVar_lag + ['production_estimate_contribution', 'sal
 
 # Save lIndepVar_lag_budget to .AUX/
 with open('./.AUX/lIndepVar_lag_budget.txt', 'w') as lVars:
-        lVars.write('\n'.join(lIndepVar_lag_budget))
+    lVars.write('\n'.join(lIndepVar_lag_budget))
 
 # Correlation between sDepVar and lIndepVar_lag_budget
 fig, ax = plt.subplots(figsize=(20, 10))
 sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget].corr(), annot=True, vmin=-1, vmax=1,
-                fmt='.2f',
-                cmap=LinearSegmentedColormap.from_list('custom_cmap', [
-                    (0, vColors[1]),
-                    (0.5, '#FFFFFF'),
-                    (1, vColors[0]
-                     )])
-                )
+            fmt='.2f',
+            cmap=LinearSegmentedColormap.from_list('custom_cmap', [
+                (0, vColors[1]),
+                (0.5, '#FFFFFF'),
+                (1, vColors[0]
+                 )])
+            )
 plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_4_corr_incl_lag_budget.png")
 plt.savefig("./Results/Presentation/3_4_corr_incl_lag_budget.svg")
 
 # Run OLS with lagged variables and budget
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget])
+model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget], missing='drop')
 results = model.fit()
 # Save results to LaTeX
 ols = results.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
-        f.write(ols)
+    f.write(ols)
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
 dfData['predicted_lag_budget'] = results.predict(dfDataScaled[lIndepVar_lag_budget])
@@ -283,13 +332,13 @@ dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_la
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag_budget'].transform('sum'),
-            label='Predicted (incl. lag and budget)')
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag_budget'].transform('sum'),
+        label='Predicted (incl. lag and budget)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -297,20 +346,37 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_5_ols_lag_budget.png")
 plt.savefig("./Results/Presentation/3_5_ols_lag_budget.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lag_budget'].transform('sum'),
+        label='Predicted (incl. lag and budget)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_5_1_ols_lag_budget.png")
+plt.savefig("./Results/Presentation/3_5_1_ols_lag_budget.svg")
+
 # Calculate RMSE of OLS with lagged variables and budget
 rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                                                     dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))
+                                                 dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_ols_lag_budget = np.mean(
-        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_lag_budget']) /
-        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-            dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))) * 100
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_lag_budget'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
+    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+        dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))) * 100
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_lag_budget'] = results.predict(dfDataWIP[lIndepVar_lag_budget])
 
 dfDataWIP['predicted_lag_budget'] = y_scaler.inverse_transform(
-        dfDataWIP['predicted_lag_budget'].values.reshape(-1, 1))
+    dfDataWIP['predicted_lag_budget'].values.reshape(-1, 1))
 
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
@@ -319,13 +385,13 @@ dfData['predicted_fc'] = (dfData['predicted_dst'] + dfData['predicted_lag_budget
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc'].transform('sum'),
-            label='Predicted (Forecast Combination)')
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc'].transform('sum'),
+        label='Predicted (Forecast Combination)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -333,19 +399,36 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_6_fc.png")
 plt.savefig("./Results/Presentation/3_6_fc.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_fc'].transform('sum'),
+        label='Predicted (Forecast Combination)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_6_1_fc.png")
+plt.savefig("./Results/Presentation/3_6_1_fc.svg")
+
 # Calculate RMSE of Forecast Combination
 rmse_fc = np.sqrt(
-        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_fc = np.mean(
-        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_fc']) /
-        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-            dfData[dfData[trainMethod] == 0]['predicted_fc']))) * 100
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_fc'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
+    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+        dfData[dfData[trainMethod] == 0]['predicted_fc']))) * 100
 
 # Compare RMSE and sMAPE of the different models in a table
 dfRMSE = pd.DataFrame({'RMSE': [rmse_dst, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
-                           'sMAPE': [smape_dst, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
-                          index=['DST', 'OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'FC'])
+                       'sMAPE': [smape_dst, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
+                      index=['DST', 'OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'FC'])
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
@@ -361,34 +444,47 @@ for iCluster in lCluster:
     for iClusterLabel in lClusterLabels:
         # Run OLS
         model = sm.OLS(dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][sDepVar],
-                          dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget])
+                       dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][
+                           lIndepVar_lag_budget]
+                       , missing='drop')
         results = model.fit()
         # Predict and rescale sDepVar using OLS with lagged variables and budget and add to cluster_{iCluster}
-        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(iCluster)] = results.predict(
+        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
+            iCluster)] = results.predict(
             dfDataScaled[dfDataScaled['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget])
-        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(iCluster)] = y_scaler.inverse_transform(
-            dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(iCluster)].values.reshape(-1, 1))
+        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
+            iCluster)] = y_scaler.inverse_transform(
+            dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
+                iCluster)].values.reshape(-1, 1))
 
 # Plot the sum of all predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_2'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_2'].transform('sum'),
         label='Predicted (2 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_4'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_4'].transform('sum'),
         label='Predicted (4 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_6'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_6'].transform('sum'),
         label='Predicted (6 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_8'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_8'].transform('sum'),
         label='Predicted (8 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_10'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_10'].transform('sum'),
         label='Predicted (10 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_12'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_12'].transform('sum'),
         label='Predicted (12 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_14'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_14'].transform('sum'),
         label='Predicted (14 clusters)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -399,21 +495,23 @@ plt.savefig("./Results/Presentation/3_7_cluster.svg")
 # Use Forecast Combination to combine the predictions of each cluster
 # For each cluster in cluster_{lCluster} do
 dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])]
-                                    + dfData['predicted_cluster_' + str(lCluster[1])]
-                                    + dfData['predicted_cluster_' + str(lCluster[2])]
-                                    + dfData['predicted_cluster_' + str(lCluster[3])]
-                                    + dfData['predicted_cluster_' + str(lCluster[4])]
-                                    + dfData['predicted_cluster_' + str(lCluster[5])]
-                                    + dfData['predicted_cluster_' + str(lCluster[6])]) / 7
+                                  + dfData['predicted_cluster_' + str(lCluster[1])]
+                                  + dfData['predicted_cluster_' + str(lCluster[2])]
+                                  + dfData['predicted_cluster_' + str(lCluster[3])]
+                                  + dfData['predicted_cluster_' + str(lCluster[4])]
+                                  + dfData['predicted_cluster_' + str(lCluster[5])]
+                                  + dfData['predicted_cluster_' + str(lCluster[6])]) / 7
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_fc'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_fc'].transform('sum'),
         label='Predicted (Forecast Combination)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -421,14 +519,29 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_7_fc_cluster.png")
 plt.savefig("./Results/Presentation/3_7_fc_cluster.svg")
 
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'], dfData.groupby('date')['predicted_cluster_fc'].transform('sum'),
+        label='Predicted (Forecast Combination)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_7_1_fc_cluster.png")
+plt.savefig("./Results/Presentation/3_7_1_fc_cluster.svg")
+
 # Calculate RMSE of Forecast Combination
 rmse_fc_cluster = np.sqrt(
-        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                       dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_fc_cluster = np.mean(
-        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']) /
-        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-            dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))) * 100
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_cluster_fc'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
+    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+        dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))) * 100
 
 # Add RMSE and sMAPE of Forecast Combination to dfRMSE
 dfRMSE.loc['FC_cluster'] = [rmse_fc_cluster, smape_fc_cluster]
@@ -439,12 +552,14 @@ dfData['predicted_fc_cluster_dst'] = (dfData['predicted_cluster_fc'] + dfData['p
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'], dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc_cluster_dst'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc_cluster_dst'].transform('sum'),
         label='Predicted (Forecast Combination)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -452,14 +567,29 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_8_fc_cluster_dst.png")
 plt.savefig("./Results/Presentation/3_8_fc_cluster_dst.svg")
 
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'], dfData.groupby('date')['predicted_fc_cluster_dst'].transform('sum'),
+        label='Predicted (Forecast Combination)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_8_1_fc_cluster_dst.png")
+plt.savefig("./Results/Presentation/3_8_1_fc_cluster_dst.svg")
+
 # Calculate RMSE of Forecast Combination
 rmse_fc_cluster_dst = np.sqrt(
-        mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                       dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_fc_cluster_dst = np.mean(
-        np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']) /
-        (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-            dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))) * 100
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
+    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
+        dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))) * 100
 
 # Add RMSE and sMAPE of Forecast Combination to dfRMSE
 dfRMSE.loc['FC_cluster_DST'] = [rmse_fc_cluster_dst, smape_fc_cluster_dst]
@@ -472,12 +602,13 @@ dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 print(dfRMSE)
 
 ### Create new dataframe with date, job_no, sDepVar, and predicted values ###
-dfDataPred = dfData[['date', 'job_no', sDepVar, 'predicted_ols', 'predicted_lag', 'predicted_lag_budget', 'predicted_fc', 'predicted_cluster_fc']]
+dfDataPred = dfData[
+    ['date', 'job_no', sDepVar, 'predicted_ols', 'predicted_lag', 'predicted_lag_budget', 'predicted_fc',
+     'predicted_cluster_fc']]
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
-
 
 ########################################################################################################################
 

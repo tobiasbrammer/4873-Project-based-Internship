@@ -23,9 +23,9 @@ from sklearn.model_selection import RandomizedSearchCV
 warnings.filterwarnings('ignore')
 
 # Load ./dfData.parquet
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
-os.chdir(sDir)
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# os.chdir(sDir)
 
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
@@ -119,6 +119,9 @@ elastic_net_cv_sparse = RandomizedSearchCV(elastic_net, param_grid, n_iter=1000,
 lIndepVar = list(set(lIndepVar_lag_budget)) + list(set(lDST))
 # Drop duplicates from lIndepVar
 lIndepVar = list(dict.fromkeys(lIndepVar))
+# If lIndepVar contains like 'cluster_' then remove it
+lIndepVar = [col for col in lIndepVar if not col.startswith('cluster_')]
+
 
 # Sparse model with OLS variables
 start_time_en_sparse = datetime.datetime.now()
@@ -137,7 +140,7 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         label='Predicted (Elastic Net)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -145,13 +148,31 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_0_en.png")
 plt.savefig("./Results/Presentation/4_0_en.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_en_sparse'].transform('sum'),
+        label='Predicted (Elastic Net)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/4_0_1_en.png")
+plt.savefig("./Results/Presentation/4_0_1_en.svg")
+
+
 # Calculate RMSE of EN
 rmse_en_sparse = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
                        dfData[dfData[trainMethod] == 0]['predicted_en_sparse']))
 # Calculate sMAPE
 smape_en_sparse = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_en_sparse']) /
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_en_sparse'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
     (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
         dfData[dfData[trainMethod] == 0]['predicted_en_sparse']))) * 100
 
@@ -196,7 +217,7 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         label='Predicted (Full Random Forest)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -204,12 +225,29 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_rf_full.png")
 plt.savefig("./Results/Presentation/4_1_rf_full.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_rf_full'].transform('sum'),
+        label='Predicted (Full Random Forest)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/4_1_1_rf_full.png")
+plt.savefig("./Results/Presentation/4_1_1_rf_full.svg")
+
 # Calculate RMSE of RF
 rmse_rf_full = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_rf_full']))
 # Calculate sMAPE
 smape_rf_full = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_rf_full']) /
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_rf_full'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
     (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
         dfData[dfData[trainMethod] == 0]['predicted_rf_full']))) * 100
 
@@ -242,7 +280,7 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         label='Predicted (Sparse Random Forest)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -250,12 +288,30 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_rf_sparse.png")
 plt.savefig("./Results/Presentation/4_1_rf_sparse.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_rf_sparse'].transform('sum'),
+        label='Predicted (Sparse Random Forest)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/4_1_1_rf_sparse.png")
+plt.savefig("./Results/Presentation/4_1_1_rf_sparse.svg")
+
+
 # Calculate RMSE of RF
 rmse_rf_sparse = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_rf_sparse']))
 # Calculate sMAPE
 smape_rf_sparse = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_rf_sparse']) /
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_rf_sparse'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
     (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
         dfData[dfData[trainMethod] == 0]['predicted_rf_sparse']))) * 100
 
@@ -304,7 +360,7 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         label='Predicted (Gradient Boosting)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -312,12 +368,30 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_2_gb.png")
 plt.savefig("./Results/Presentation/4_2_gb.svg")
 
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_gb'].transform('sum'),
+        label='Predicted (Gradient Boosting)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/4_2_1_gb.png")
+plt.savefig("./Results/Presentation/4_2_1_gb.svg")
+
+
 # Calculate RMSE of GB
 rmse_gb = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb']))
 # Calculate sMAPE
 smape_gb = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfData[dfData[trainMethod] == 0]['predicted_gb']) /
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_gb'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
     (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
         dfData[dfData[trainMethod] == 0]['predicted_gb']))) * 100
 
@@ -329,6 +403,7 @@ dfRMSE.loc['Gradient Boosting', 'sMAPE'] = smape_gb
 dfDataPred['predicted_gb'] = dfData['predicted_gb']
 
 dfDataPred['predicted_gb_fc'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_fc'])/2
+dfData['predicted_gb_fc'] = (dfData['predicted_gb'] + dfData['predicted_fc'])/2
 
 
 # Calculate RMSE of GB_FC
@@ -336,7 +411,7 @@ rmse_gb_fc = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfDataPred[dfData[trainMethod] == 0]['predicted_gb_fc']))
 # Calculate sMAPE
 smape_gb_fc = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0][sDepVar] - dfDataPred[dfData[trainMethod] == 0]['predicted_gb_fc']) /
+    np.abs(dfData[dfData[trainMethod] == 0]['predicted_gb_fc'] - dfDataPred[dfData[trainMethod] == 0][sDepVar]) /
     (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
         dfDataPred[dfData[trainMethod] == 0]['predicted_gb_fc']))) * 100
 
@@ -394,7 +469,7 @@ ax.plot(dfDataPredSum['date'],
         label='Forecast Combination')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Total Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)

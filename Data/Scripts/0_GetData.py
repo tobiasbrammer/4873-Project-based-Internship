@@ -23,10 +23,8 @@ import PyDST
 # start_time = datetime.datetime.now()
 
 # Set the directory
-directory = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-os.chdir(directory)
-
-
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+os.chdir(sDir)
 
 from plot_config import *
 
@@ -152,8 +150,8 @@ dfData['days_until_end'] = (dfData['end_date'] - dfData['date']).dt.days
 dfData.loc[dfData['days_until_end'] < 0, 'days_until_end'] = 0
 
 # Calculate share of budget costs and budget revenue
-dfData['budget_costs_share'] = dfData['revenue'] / dfData['budget_revenue']
-dfData['budget_revenue_share'] = dfData['costs'] / dfData['budget_costs']
+dfData['budget_costs_share'] = (dfData['revenue'].replace(np.nan, 0) / dfData['budget_revenue']).replace([np.inf, -np.inf], 0)
+dfData['budget_revenue_share'] = (dfData['costs'].replace(np.nan, 0) / dfData['budget_costs']).replace([np.inf, -np.inf], 0)
 
 ##### Feature engineering #####
 # Calculate change in various estimates
@@ -167,11 +165,12 @@ dfData['total_days'] = (
         dfData.groupby('job_no')['end_date'].transform('max') - dfData.groupby('job_no')['date'].transform(
     'min')).dt.days
 dfData['progress'] = dfData['days_since_start'] / dfData['total_days']
-dfData['completion_rate'] = dfData['costs_cumsum'] / dfData['production_estimate_costs']
+dfData['completion_rate'] = (dfData['costs_cumsum'] / dfData['production_estimate_costs']).replace([np.inf, -np.inf], 0)
 
-k = 6  # Coefficient for S-curve
-a = 2  # Exponent for S-curve
-dfData['scurve'] = (1 / (1 + np.exp(-k * (dfData['progress'] - 0.5)))) ** a
+# Calculate scurve basad on \Phi(x;\mu,\nu)=\left[1+\left(\frac{x\cdot(1-\mu)}{\mu\cdot(1-x)}\right)^{-\nu}\right]^{-1}
+# where \mu is 0.5 and \nu is 1.5
+dfData['scurve'] = 1 / (1 + (dfData['progress'] * (1 - 0.5) / (0.5 * (1 - dfData['progress']))) ** (-1.5))
+
 dfData['revenue_scurve'] = dfData['scurve'] * dfData['budget_revenue']
 dfData['costs_scurve'] = dfData['scurve'] * dfData['budget_costs']
 dfData['revenue_scurve_diff'] = dfData['revenue_scurve'] - dfData['revenue_cumsum']
@@ -196,11 +195,12 @@ dfData = pd.merge(dfData, dfIgv, on=['job_no', 'date'], how='left')
 # Calculate WIP as progress * budget_revenue - revenue_cumsum
 dfData['wip'] = dfData['completion_rate'] * dfData['production_estimate_revenue'] - dfData['revenue_cumsum']
 # If adjusted_wip is NA, then set to wip
-dfData['adjusted_wip'] = dfData['adjusted_wip'].fillna(dfData['wip'])
+dfData['adjusted_wip'] = (dfData['adjusted_wip']).replace([np.inf, -np.inf], np.nan).fillna(dfData['wip'])
+
 # If adjusted_estimated_revenue is NA, then set to estimated_revenue
 dfData['adjusted_estimated_revenue'] = dfData['adjusted_estimated_revenue'].fillna(dfData['estimated_revenue'])
 # If adjusted_margin is NA, then set to contribution_margin
-dfData['adjusted_margin'] = dfData['adjusted_margin'].fillna(dfData['contribution_margin'])
+dfData['adjusted_margin'] = dfData['adjusted_margin'].replace([np.inf, -np.inf], np.nan).fillna(dfData['contribution_margin'])
 
 # Read data from .AUX/Debitor.xlsx
 dfDebitorer = pd.read_excel(".AUX/Debitorer.xlsx", sheet_name="overdue")
@@ -260,9 +260,10 @@ dfData['total_contribution'] = dfData.groupby('job_no')['contribution_cumsum'].t
 dfData['total_margin'] = dfData['total_contribution'] / dfData['total_costs']
 
 # Calculate share of labor cost, material cost and other cost cumsum
-dfData['labor_cost_share'] = dfData['costs_of_labor_cumsum'] / dfData['costs_cumsum']
-dfData['material_cost_share'] = (dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']) / dfData[
-    'costs_cumsum']
+
+dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].replace(np.nan, 0) / dfData['costs_cumsum']).replace([np.inf, -np.inf], 0)
+dfData['material_cost_share'] = ((dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']).replace(np.nan, 0) / dfData[
+    'costs_cumsum']).replace([np.inf, -np.inf], 0)
 
 # Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
 dfData.drop(columns=['costs_of_labor_cumsum', 'costs_of_materials_cumsum', 'other_costs_cumsum'], inplace=True)

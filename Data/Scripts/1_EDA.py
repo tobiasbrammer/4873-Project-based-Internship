@@ -13,8 +13,8 @@ from plot_config import *
 
 # Read data
 # sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
-os.chdir(sDir)
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# os.chdir(sDir)
 
 # Read dfData parquet file
 dfData = pd.read_parquet("dfData.parquet")
