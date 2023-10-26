@@ -1,14 +1,5 @@
 # Import required libraries
-import runpy
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import scipy.stats as stats
-from pandas import DataFrame
-from scipy.spatial import distance
-import os
-from matplotlib import rc
 from plot_config import *
 
 # Read data

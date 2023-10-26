@@ -1,28 +1,17 @@
 # Import required libraries
 import os
-import runpy
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-import seaborn as sns
-import scipy.stats as stats
 import statsmodels.api as sm
 import joblib
-from pandas import DataFrame
-from scipy.spatial import distance
-from matplotlib import rc
 from plot_config import *
-from scipy.signal import savgol_filter
-from sklearn.cross_decomposition import PLSRegression
-from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error
 
 # Load ./dfData.parquet
-sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 # sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
-os.chdir(sDir)
+# os.chdir(sDir)
 
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
@@ -156,8 +145,8 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar].corr(), anno
                  )])
             )
 plt.title(f'Correlation between {sDepVar} and selected variables')
-plt.savefig("./Results/Figures/3_0_corr.png")
-plt.savefig("./Results/Presentation/3_0_corr.svg")
+plt.savefig("./Results/Figures/3_0_2_corr.png")
+plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 
 # Run OLS
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar], missing='drop')
@@ -233,8 +222,8 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag].corr(), 
                  )])
             )
 plt.title(f'Correlation between {sDepVar} and selected variables')
-plt.savefig("./Results/Figures/3_2_corr_incl_lag.png")
-plt.savefig("./Results/Presentation/3_2_corr_incl_lag.svg")
+plt.savefig("./Results/Figures/3_2_2_corr_incl_lag.png")
+plt.savefig("./Results/Presentation/3_2_2_corr_incl_lag.svg")
 
 # Run OLS with lagged variables
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag], missing='drop')
@@ -313,8 +302,8 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget].c
                  )])
             )
 plt.title(f'Correlation between {sDepVar} and selected variables')
-plt.savefig("./Results/Figures/3_4_corr_incl_lag_budget.png")
-plt.savefig("./Results/Presentation/3_4_corr_incl_lag_budget.svg")
+plt.savefig("./Results/Figures/3_4_2_corr_incl_lag_budget.png")
+plt.savefig("./Results/Presentation/3_4_2_corr_incl_lag_budget.svg")
 
 # Run OLS with lagged variables and budget
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget], missing='drop')
@@ -344,8 +333,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().se
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/3_5_ols_lag_budget.png")
-plt.savefig("./Results/Presentation/3_5_ols_lag_budget.svg")
+plt.savefig("./Results/Figures/3_4_ols_lag_budget.png")
+plt.savefig("./Results/Presentation/3_4_ols_lag_budget.svg")
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -361,8 +350,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().se
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/3_5_1_ols_lag_budget.png")
-plt.savefig("./Results/Presentation/3_5_1_ols_lag_budget.svg")
+plt.savefig("./Results/Figures/3_4_1_ols_lag_budget.png")
+plt.savefig("./Results/Presentation/3_4_1_ols_lag_budget.svg")
 
 # Calculate RMSE of OLS with lagged variables and budget
 rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
@@ -395,8 +384,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().se
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/3_6_fc.png")
-plt.savefig("./Results/Presentation/3_6_fc.svg")
+plt.savefig("./Results/Figures/3_5_fc.png")
+plt.savefig("./Results/Presentation/3_5_fc.svg")
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -412,8 +401,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().se
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/3_6_1_fc.png")
-plt.savefig("./Results/Presentation/3_6_1_fc.svg")
+plt.savefig("./Results/Figures/3_5_1_fc.png")
+plt.savefig("./Results/Presentation/3_5_1_fc.svg")
 
 # Calculate RMSE of Forecast Combination
 rmse_fc = np.sqrt(
@@ -485,8 +474,8 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().se
 plt.tight_layout()
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/3_7_cluster.png")
-plt.savefig("./Results/Presentation/3_7_cluster.svg")
+plt.savefig("./Results/Figures/3_6_cluster.png")
+plt.savefig("./Results/Presentation/3_6_cluster.svg")
 
 # Use Forecast Combination to combine the predictions of each cluster
 # For each cluster in cluster_{lCluster} do

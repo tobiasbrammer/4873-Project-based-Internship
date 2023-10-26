@@ -1,33 +1,21 @@
 # Import required libraries
 import os
 import warnings
-import runpy
 import numpy as np
 import pandas as pd
 # import mlforecast
 # import neuralforecast
 # import keras
 import datetime
-from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
-import seaborn as sns
-import scipy.stats as stats
-import statsmodels.api as sm
 import joblib
-from pandas import DataFrame
-from scipy.spatial import distance
-from matplotlib import rc
 from plot_config import *
 from sklearn.metrics import mean_squared_error
-from sklearn.linear_model import ElasticNet
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV
 
 warnings.filterwarnings('ignore')
 
 # Load ./dfData.parquet
-sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
 # Load data

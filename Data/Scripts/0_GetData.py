@@ -1,13 +1,9 @@
 import pandas as pd
 import numpy as np
 import os
-import sys
 import datetime
 import sqlalchemy as sa
-import matplotlib.pyplot as plt
 import urllib
-from sqlalchemy import create_engine, event
-from sqlalchemy.engine.url import URL
 import pyarrow as pa
 import pyarrow.parquet as pq
 from sklearn.linear_model import LinearRegression
@@ -16,14 +12,14 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
-from PyDST import *
 import PyDST
 
 # Start timing
 # start_time = datetime.datetime.now()
 
 # Set the directory
-sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
 from plot_config import *
@@ -339,8 +335,8 @@ plt.annotate('Source: ELCON A/S',
              ha='right',
              va="center",
              fontsize=10)
-plt.savefig("./Results/Figures/1_3_description.png")
-plt.savefig("./Results/Presentation/1_3_description.svg")
+plt.savefig("./Results/Figures/1_7_description.png")
+plt.savefig("./Results/Presentation/1_7_description.svg")
 
 
 # Left join with the original DataFrame
@@ -500,8 +496,8 @@ ax[1, 1].plot(dst_df['date'], dst_df['kbyg44_confidence_indicator'])
 ax[1, 1].set_title('Confidence indicator')
 fig.suptitle('DST data')
 plt.tight_layout()
-plt.savefig("./Results/Figures/1_4_dst_data.png")
-plt.savefig("./Results/Presentation/1_4_dst_data.svg")
+plt.savefig("./Results/Figures/1_8_dst_data.png")
+plt.savefig("./Results/Presentation/1_8_dst_data.svg")
 
 del dst_df
 
