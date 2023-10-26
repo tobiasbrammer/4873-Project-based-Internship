@@ -33,6 +33,12 @@ dfDataWIP = pd.read_parquet("./dfData_reg_scaled_wip.parquet")
 x_scaler = joblib.load("./.AUX/x_scaler.save")
 y_scaler = joblib.load("./.AUX/y_scaler.save")
 
+
+# Define sMAPE
+def smape(actual, predicted):
+    return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
+
+
 # Import sDepVar from ./.AUX/sDepVar.txt
 with open('./.AUX/sDepVar.txt', 'r') as f:
     sDepVar = f.read()
@@ -94,7 +100,7 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_dst'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -121,12 +127,11 @@ plt.savefig("./Results/Presentation/3_0_1_dst.svg")
 # Calculate out-of-sample RMSE of DST
 rmse_dst = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_dst']))
+                       dfData[dfData[trainMethod] == 0]['predicted_dst'].replace(np.nan, 0)
+                       ))
 # symmetric Mean Absolute Error (sMAPE)
-smape_dst = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_dst'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_dst']))) * 100
+smape_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                  dfData[dfData[trainMethod] == 0]['predicted_dst'])
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lDST]).values.reshape(-1, 1))
@@ -176,7 +181,7 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_ols'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Actual vs. Predicted Contribution')
+ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.tight_layout()
 plt.grid(alpha=0.5)
@@ -203,12 +208,10 @@ plt.savefig("./Results/Presentation/3_1_1_ols.svg")
 # Calculate out-of-sample RMSE of OLS
 rmse_ols = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_ols']))
+                       dfData[dfData[trainMethod] == 0]['predicted_ols'].replace(np.nan, 0)))
 # symmetric Mean Absolute Error (sMAPE)
-smape_ols = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_ols'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_ols']))) * 100
+smape_ols = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                  dfData[dfData[trainMethod] == 0]['predicted_ols'])
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar]).values.reshape(-1, 1))
@@ -284,12 +287,10 @@ plt.savefig("./Results/Presentation/3_3_1_ols_lag.svg")
 # Calculate RMSE of OLS with lagged variables
 rmse_ols_lag = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_lag']))
+                       dfData[dfData[trainMethod] == 0]['predicted_lag'].replace(np.nan, 0)))
 # symmetric Mean Absolute Error (sMAPE)
-smape_ols_lag = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_lag'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_lag']))) * 100
+smape_ols_lag = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                      dfData[dfData[trainMethod] == 0]['predicted_lag'])
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar_lag]).values.reshape(-1, 1))
@@ -365,12 +366,10 @@ plt.savefig("./Results/Presentation/3_5_1_ols_lag_budget.svg")
 
 # Calculate RMSE of OLS with lagged variables and budget
 rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                                                 dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))
+                                                 dfData[dfData[trainMethod] == 0]['predicted_lag_budget'].replace(np.nan, 0)))
 # symmetric Mean Absolute Error (sMAPE)
-smape_ols_lag_budget = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_lag_budget'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_lag_budget']))) * 100
+smape_ols_lag_budget = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                             dfData[dfData[trainMethod] == 0]['predicted_lag_budget'])
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_lag_budget'] = results.predict(dfDataWIP[lIndepVar_lag_budget])
@@ -418,12 +417,9 @@ plt.savefig("./Results/Presentation/3_6_1_fc.svg")
 
 # Calculate RMSE of Forecast Combination
 rmse_fc = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc'].replace(np.nan, 0)))
 # symmetric Mean Absolute Error (sMAPE)
-smape_fc = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_fc'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_fc']))) * 100
+smape_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc'])
 
 # Compare RMSE and sMAPE of the different models in a table
 dfRMSE = pd.DataFrame({'RMSE': [rmse_dst, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
@@ -536,12 +532,10 @@ plt.savefig("./Results/Presentation/3_7_1_fc_cluster.svg")
 # Calculate RMSE of Forecast Combination
 rmse_fc_cluster = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))
+                       dfData[dfData[trainMethod] == 0]['predicted_cluster_fc'].replace(np.nan, 0)))
 # symmetric Mean Absolute Error (sMAPE)
-smape_fc_cluster = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_cluster_fc'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_cluster_fc']))) * 100
+smape_fc_cluster = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                         dfData[dfData[trainMethod] == 0]['predicted_cluster_fc'])
 
 # Add RMSE and sMAPE of Forecast Combination to dfRMSE
 dfRMSE.loc['FC_cluster'] = [rmse_fc_cluster, smape_fc_cluster]
@@ -584,12 +578,10 @@ plt.savefig("./Results/Presentation/3_8_1_fc_cluster_dst.svg")
 # Calculate RMSE of Forecast Combination
 rmse_fc_cluster_dst = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))
+                       dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst'].replace(np.nan, 0)))
 # symmetric Mean Absolute Error (sMAPE)
-smape_fc_cluster_dst = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst']))) * 100
+smape_fc_cluster_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                             dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst'])
 
 # Add RMSE and sMAPE of Forecast Combination to dfRMSE
 dfRMSE.loc['FC_cluster_DST'] = [rmse_fc_cluster_dst, smape_fc_cluster_dst]
@@ -611,38 +603,5 @@ dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
 
 ########################################################################################################################
-
-### Get Prediction of job_no S161210 ###
-# Get the data of job_no S161210
-sJobNo = 'S161210'
-dfDataJob = dfData[dfData['job_no'] == sJobNo]
-
-# Plot the actual and predicted contribution of sJobNo
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfDataJob['date'], dfDataJob[sDepVar], label='Actual')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_ols'], label='Predicted (OLS)')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_fc'], label='Predicted (OLS Forecast Combination)')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_cluster_fc'], label='Predicted (Cluster Forecast Combination)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Contribution')
-ax.set_title(f'Actual vs. Predicted Contribution of {sJobNo}')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-
-# Plot the cumsum of actual and predicted contribution of sJobNo
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfDataJob['date'], dfDataJob[sDepVar].cumsum(), label='Actual')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_fc'].cumsum(), label='Predicted (Forecast Combination)')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_ols'].cumsum(), label='Predicted (OLS)')
-ax.plot(dfDataJob['date'], dfDataJob['predicted_cluster_fc'].cumsum(), label='Predicted (Cluster Forecast Combination)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Cumulative Contribution')
-ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {sJobNo}')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
 
 plt.close()

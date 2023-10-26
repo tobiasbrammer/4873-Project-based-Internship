@@ -508,6 +508,9 @@ del dst_df
 # Make column with concatenated date and job_no
 dfData['id'] = dfData['date'].astype(str) + '_' + dfData['job_no'].astype(str)
 
+# Omit observations before 2015-01-01
+dfData = dfData[dfData['date'] >= '2015-01-01']
+
 # Omit duplicate of 'job_no' and 'date'
 dfData.drop_duplicates(subset=['id'], inplace=True)
 

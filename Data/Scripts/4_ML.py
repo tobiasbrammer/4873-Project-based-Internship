@@ -34,6 +34,11 @@ dfData = pd.read_parquet("./dfData_reg.parquet")
 # Load dfDataPred from ./dfDataPred.parquet
 dfDataPred = pd.read_parquet("./dfDataPred.parquet")
 
+# Define sMAPE
+def smape(actual, predicted):
+    return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
+
+
 # Load trainMethod from ./.AUX/trainMethod.txt
 with open('./.AUX/trainMethod.txt', 'r') as f:
     trainMethod = f.read()
@@ -171,10 +176,8 @@ rmse_en_sparse = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
                        dfData[dfData[trainMethod] == 0]['predicted_en_sparse']))
 # Calculate sMAPE
-smape_en_sparse = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_en_sparse'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_en_sparse']))) * 100
+smape_en_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                        dfData[dfData[trainMethod] == 0]['predicted_en_sparse'])
 
 # Add to dfRMSE
 dfRMSE.loc['Elastic Net', 'RMSE'] = rmse_en_sparse
@@ -188,12 +191,14 @@ dfDataPred['predicted_en_sparse'] = dfData['predicted_en_sparse']
 rf = RandomForestRegressor(n_jobs=-1, random_state=0, verbose=False)
 
 ## Define hyperparameter grid ##
-rf_grid = {"n_estimators": np.arange(10, 100, 20), # n_estimators means number of trees
-           "max_depth": [None, 1, 3, 5, 10, 15], # max_depth means depth of each tree
-           "min_samples_split": np.arange(2, 40, 2), # min_samples_split means minimum number of samples required to split an internal node
-           "min_samples_leaf": np.arange(1, 40, 2), # min_samples_leaf means minimum number of samples required to be at a leaf node
-           "max_features": [1/3, 0.5, 1, "sqrt", "log2"], # max_features means number of features to consider for split
-           "max_samples": [100, 150, 250, 500, 1000, 1500]} # max_samples means number of samples to train each tree
+rf_grid = {
+    "n_estimators": np.arange(10, 300, 20),  # Number of trees
+    "max_depth": [None, 1, 3, 5, 10, 15, 20, 25],  # Depth of each tree
+    "min_samples_split": np.arange(2, 60, 2),  # Minimum samples required to split an internal node
+    "min_samples_leaf": np.arange(1, 60, 2),  # Minimum samples required to be at a leaf node
+    "max_features": [1/3, 0.5, 1, "sqrt", "log2", None],  # Number of features to consider for split
+    "max_samples": [100, 150, 250, 500, 1000, 1500, None]  # Number of samples to train each tree
+}
 
 # Define randomized search
 rf_cv = RandomizedSearchCV(rf, rf_grid, n_iter=100, n_jobs=-1, scoring="neg_mean_squared_error", cv=3, verbose=False, refit=True)
@@ -246,10 +251,7 @@ plt.savefig("./Results/Presentation/4_1_1_rf_full.svg")
 rmse_rf_full = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_rf_full']))
 # Calculate sMAPE
-smape_rf_full = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_rf_full'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_rf_full']))) * 100
+smape_rf_full = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_rf_full'])
 
 # Add to dfRMSE
 dfRMSE.loc['Random Forest (Full)', 'RMSE'] = rmse_rf_full
@@ -310,10 +312,7 @@ plt.savefig("./Results/Presentation/4_1_1_rf_sparse.svg")
 rmse_rf_sparse = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_rf_sparse']))
 # Calculate sMAPE
-smape_rf_sparse = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_rf_sparse'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_rf_sparse']))) * 100
+smape_rf_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_rf_sparse'])
 
 # Add to dfRMSE
 dfRMSE.loc['Random Forest (Sparse)', 'RMSE'] = rmse_rf_sparse
@@ -327,17 +326,17 @@ dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
 # Define Boosted Regression Trees model
 from sklearn.ensemble import GradientBoostingRegressor
 
-# Set random grid
-random_grid = {'learning_rate': [0.001, 0.01, 0.1, 0.2, 0.3],
-                "max_depth": [None, 1, 3, 5, 10, 15],
-                'min_samples_leaf': [1, 2, 4, 6, 8],
-                'max_features': [1/3, 0.5, 1, "sqrt", "log2"],
-                #'n_estimators': [100]
-                'n_estimators': [100, 150, 250, 500, 1000]
-               }
+# Set random grid for Gradient Boosting
+gb_grid = {
+    'learning_rate': [0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9],
+    'max_depth': [None, 1, 3, 5, 10, 15, 20, 25],
+    'min_samples_leaf': [1, 2, 4, 6, 8, 10, 12, 14],
+    'max_features': [1/3, 0.5, 1, "sqrt", "log2", None],
+    'n_estimators': [100, 150, 250, 500, 1000, 1500, 2000]
+}
 
 # Define randomized search
-gb_cv = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), random_grid, n_iter=100, scoring=None, cv=3,
+gb_cv = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid, n_iter=100, scoring=None, cv=3,
                            verbose=0, refit=True, n_jobs=-1)
 
 # Fit to the training data
@@ -390,10 +389,7 @@ plt.savefig("./Results/Presentation/4_2_1_gb.svg")
 rmse_gb = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb']))
 # Calculate sMAPE
-smape_gb = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_gb'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfData[dfData[trainMethod] == 0]['predicted_gb']))) * 100
+smape_gb = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb'])
 
 # Add to dfRMSE
 dfRMSE.loc['Gradient Boosting', 'RMSE'] = rmse_gb
@@ -402,22 +398,88 @@ dfRMSE.loc['Gradient Boosting', 'sMAPE'] = smape_gb
 # Add to dfDataPred
 dfDataPred['predicted_gb'] = dfData['predicted_gb']
 
-dfDataPred['predicted_gb_fc'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_fc'])/2
-dfData['predicted_gb_fc'] = (dfData['predicted_gb'] + dfData['predicted_fc'])/2
+
+### XGBoost Regression ###
+# Define XGBoost model
+from xgboost import XGBRegressor
+
+# Use the same grid as for GB
+xgb_cv = RandomizedSearchCV(XGBRegressor(random_state=0), gb_grid, n_iter=100, scoring=None, cv=3,
+                            verbose=0, refit=True, n_jobs=-1)
+
+# Fit to the training data
+start_time_xgb = datetime.datetime.now()
+xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+              dfDataScaledTrain[sDepVar])
+# Predict and rescale using XGB
+dfData['predicted_xgb'] = xgb_cv.predict(
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])
+dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].values.reshape(-1, 1))
+end_time_xgb = datetime.datetime.now()
+
+print(f'XGB fit finished in {end_time_xgb - start_time_xgb}.')
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_xgb'].transform('sum'),
+        label='Predicted (XGBoost)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Out of Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/4_3_xgb.png")
+plt.savefig("./Results/Presentation/4_3_xgb.svg")
+
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_xgb'].transform('sum'),
+        label='Predicted (XGBoost)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.tight_layout()
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/4_3_1_xgb.png")
+plt.savefig("./Results/Presentation/4_3_1_xgb.svg")
+
+# Calculate RMSE of XGB
+rmse_xgb = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_xgb']))
+# Calculate sMAPE
+smape_xgb = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_xgb'])
+
+# Add to dfRMSE
+dfRMSE.loc['XGBoost', 'RMSE'] = rmse_xgb
+dfRMSE.loc['XGBoost', 'sMAPE'] = smape_xgb
+
+# Add to dfDataPred
+dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
+
+### Forecast Combination with Boosting
+dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb'])/2
+dfData['predicted_boost'] = (dfData['predicted_gb'] + dfDataPred['predicted_xgb'])/2
 
 
 # Calculate RMSE of GB_FC
 rmse_gb_fc = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfDataPred[dfData[trainMethod] == 0]['predicted_gb_fc']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfDataPred[dfData[trainMethod] == 0]['predicted_boost']))
 # Calculate sMAPE
-smape_gb_fc = np.mean(
-    np.abs(dfData[dfData[trainMethod] == 0]['predicted_gb_fc'] - dfDataPred[dfData[trainMethod] == 0][sDepVar]) /
-    (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-        dfDataPred[dfData[trainMethod] == 0]['predicted_gb_fc']))) * 100
+smape_gb_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfDataPred[dfData[trainMethod] == 0]['predicted_boost'])
 
 # Add to dfRMSE
-dfRMSE.loc['Gradient Boosting (FC)', 'RMSE'] = rmse_gb_fc
-dfRMSE.loc['Gradient Boosting (FC)', 'sMAPE'] = smape_gb_fc
+dfRMSE.loc['Boosting (FC)', 'RMSE'] = rmse_gb_fc
+dfRMSE.loc['Boosting (FC)', 'sMAPE'] = smape_gb_fc
 
 
 # Save dfDataPred to ./dfDataPred.parquet
@@ -465,7 +527,7 @@ ax.plot(dfDataPredSum['date'],
         dfDataPredSum.groupby('date')['predicted_gb'].transform('sum'),
         label='Gradient Boosting')
 ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')['predicted_gb_fc'].transform('sum'),
+        dfDataPredSum.groupby('date')['predicted_boost'].transform('sum'),
         label='Forecast Combination')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
@@ -476,3 +538,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_9_sum.png")
 plt.savefig("./Results/Presentation/4_9_sum.svg")
+
+# Save to .parquet
+dfDataPred.to_parquet("./dfDataPred.parquet")
+dfData.to_parquet("./dfData_reg.parquet")

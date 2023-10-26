@@ -18,7 +18,7 @@ from pandas import DataFrame
 from scipy.spatial import distance
 from matplotlib import rc
 from plot_config import *
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
@@ -33,6 +33,12 @@ os.chdir(sDir)
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
+dfDataPred = pd.read_parquet("./dfDataPred.parquet")
+
+# Define sMAPE
+def smape(actual, predicted):
+    return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
+
 
 # Import lNumericCols from ./.AUX/lNumericCols.txt
 with open('./.AUX/lNumericCols.txt', 'r') as f:
@@ -99,7 +105,7 @@ from keras.layers import Dropout
 from keras.callbacks import EarlyStopping
 
 # Create model
-iUnit = 256*4
+iUnit = 256 * 4
 model = Sequential()
 model.add(LSTM(units=iUnit, return_sequences=True, input_shape=(
     dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
@@ -107,16 +113,16 @@ model.add(Dropout(0.2))
 model.add(LSTM(units=int(iUnit / 2), return_sequences=True))
 model.add(Dropout(0.2))
 model.add(LSTM(units=int(iUnit / 4), return_sequences=True))
-model.add(Dropout(0.2))
+model.add(Dropout(0.1))
 model.add(LSTM(units=int(iUnit / 8), return_sequences=True))
-model.add(Dropout(0.2))
+model.add(Dropout(0.1))
 model.add(LSTM(units=int(iUnit / 16), return_sequences=True))
-model.add(Dropout(0.2))
+model.add(Dropout(0.1))
 model.add(LSTM(units=int(iUnit / 32), return_sequences=True))
-model.add(Dropout(0.2))
+model.add(Dropout(0.05))
 model.add(LSTM(units=int(iUnit / 64), return_sequences=True))
 model.add(Dropout(0.2))
-model.add(Dense(units=1, activation='linear'))
+model.add(Dense(units=1, activation='tanh'))
 
 # Compile model
 model.compile(optimizer='adam', loss='mean_squared_error')
@@ -129,8 +135,8 @@ start_time_lstm = datetime.datetime.now()
 # Fit model to training data dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])]
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=10,
-          batch_size=512,
+          epochs=100,
+          batch_size=16,
           validation_split=0.1,
           callbacks=[early_stop],
           verbose=0)
@@ -138,7 +144,8 @@ model.save('./.AUX/LSTM.h5')
 
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(model.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1, 0]).values.reshape(-1, 1)
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1, 0]).values.reshape(-1,
+                                                                                                                    1)
 
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
 
@@ -179,14 +186,11 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_1_1_lstm.png")
 plt.savefig("./Results/Presentation/5_1_1_lstm.svg")
 
-
 # Calculate RMSE of LSTM
 rmse_lstm = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_lstm']))
 # Calculate sMAPE
-smape_lstm = np.mean(np.abs(dfData[dfData[trainMethod] == 0]['predicted_lstm'] - dfData[dfData[trainMethod] == 0][sDepVar]) /
-                     (np.abs(dfData[dfData[trainMethod] == 0][sDepVar]) + np.abs(
-                         dfData[dfData[trainMethod] == 0]['predicted_lstm']))) * 100
+smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_lstm'])
 
 # Add to dfRMSE
 dfRMSE.loc['LSTM', 'RMSE'] = rmse_lstm
@@ -194,6 +198,11 @@ dfRMSE.loc['LSTM', 'sMAPE'] = smape_lstm
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
+
+########################################################################################################################
+
+# Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
+dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar])].mean(axis=1)
 
 ########################################################################################################################
 
@@ -207,3 +216,53 @@ dfRMSE_latex.loc[dfRMSE['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] = '\\t
     str) + '}'
 
 print(dfRMSE_latex)
+
+# Save dfRMSE to .tex
+with open('./Results/Tables/5_1_rmse.tex', 'w') as f:
+    f.write(dfRMSE_latex.to_latex())
+
+# Save to .parquet
+dfDataPred.to_parquet("./dfDataPred.parquet")
+dfData.to_parquet("./dfData_reg.parquet")
+
+########################################################################################################################
+# if ./Results/Figures/Jobs does not exist, create it
+if not os.path.exists('./Results/Figures/Jobs'):
+    os.makedirs('./Results/Figures/Jobs')
+
+## For each job_no plot the actual and predicted sDepVar
+for job_no in dfDataPred['job_no'].unique():
+    # Get the data of job_no
+    dfDataJob = dfDataPred[dfDataPred['job_no'] == job_no]
+    # Plot the actual and predicted contribution of sJobNo
+    fig, ax = plt.subplots(figsize=(20, 10))
+    for col in dfDataJob.columns:
+        if col not in ['date', 'job_no']:
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Contribution')
+    ax.set_title(f'Actual vs. Predicted Contribution of {job_no}')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.tight_layout()
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
+
+    # Plot the cumsum of actual and predicted contribution of sJobNo
+    fig, ax = plt.subplots(figsize=(20, 10))
+    for col in dfDataJob.columns:
+        if col not in ['date', 'job_no']:
+            ax.plot(dfDataJob['date'], dfDataJob[col].cumsum(), label=col)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Cumulative Contribution')
+    ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {job_no}')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.tight_layout()
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/Jobs/{job_no}_sum.png")
+
+########################################################################################################################
+
+
+
