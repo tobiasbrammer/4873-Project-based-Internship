@@ -116,6 +116,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_0_1_dst.png")
 plt.savefig("./Results/Presentation/3_0_1_dst.svg")
+plt.close('all')
 
 # Calculate out-of-sample RMSE of DST
 rmse_dst = np.sqrt(
@@ -197,6 +198,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_1_1_ols.png")
 plt.savefig("./Results/Presentation/3_1_1_ols.svg")
+plt.close('all')
 
 # Calculate out-of-sample RMSE of OLS
 rmse_ols = np.sqrt(
@@ -276,6 +278,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_3_1_ols_lag.png")
 plt.savefig("./Results/Presentation/3_3_1_ols_lag.svg")
+plt.close('all')
 
 # Calculate RMSE of OLS with lagged variables
 rmse_ols_lag = np.sqrt(
@@ -356,6 +359,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_4_1_ols_lag_budget.png")
 plt.savefig("./Results/Presentation/3_4_1_ols_lag_budget.svg")
+plt.close('all')
 
 # Calculate RMSE of OLS with lagged variables and budget
 rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
@@ -407,6 +411,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_5_1_fc.png")
 plt.savefig("./Results/Presentation/3_5_1_fc.svg")
+plt.close('all')
 
 # Calculate RMSE of Forecast Combination
 rmse_fc = np.sqrt(
@@ -480,6 +485,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_6_cluster.png")
 plt.savefig("./Results/Presentation/3_6_cluster.svg")
+plt.close('all')
 
 # Use Forecast Combination to combine the predictions of each cluster
 # For each cluster in cluster_{lCluster} do
@@ -521,6 +527,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_7_1_fc_cluster.png")
 plt.savefig("./Results/Presentation/3_7_1_fc_cluster.svg")
+plt.close('all')
 
 # Calculate RMSE of Forecast Combination
 rmse_fc_cluster = np.sqrt(
@@ -567,6 +574,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_8_1_fc_cluster_dst.png")
 plt.savefig("./Results/Presentation/3_8_1_fc_cluster_dst.svg")
+plt.close('all')
 
 # Calculate RMSE of Forecast Combination
 rmse_fc_cluster_dst = np.sqrt(
@@ -597,4 +605,4 @@ dfData.to_parquet("./dfData_reg.parquet")
 
 ########################################################################################################################
 
-plt.close()
+plt.close('all')

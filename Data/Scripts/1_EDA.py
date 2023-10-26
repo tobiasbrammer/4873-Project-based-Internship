@@ -1,4 +1,5 @@
 # Import required libraries
+import os
 import pandas as pd
 from plot_config import *
 
@@ -111,6 +112,8 @@ plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
 
+# Replace NA with 0
+dfData = dfData.replace(np.nan, 0)
 
 # Plot kde of labor_cost_share, material_cost_share and other_cost_share
 plt.figure(figsize=(20, 10))
@@ -157,4 +160,7 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
 
-plt.close()
+plt.close('all')
+
+# Save dfData to parquet file
+dfData.to_parquet('./dfData.parquet')

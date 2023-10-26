@@ -1,5 +1,6 @@
 # Import required libraries
 import warnings
+import os
 import numpy as np
 import pandas as pd
 import datetime
@@ -53,13 +54,10 @@ if trainMethod == 'train':
 else:
     oTrain = 'train'
 
-# Keep only numeric columns
-dfDataScaled = dfDataScaled[lNumericCols + [trainMethod, oTrain]]
-# dfData = dfData[lNumericCols + [trainMethod]]
 
 # Replace NaN with 0
-dfDataScaled.fillna(0, inplace=True)
-dfData[lNumericCols].fillna(0, inplace=True)
+dfDataScaled.select_dtypes(include=['float64', 'int64']).fillna(0, inplace=True)
+dfData.select_dtypes(include=['float64', 'int64']).fillna(0, inplace=True)
 
 # Import scales
 x_scaler = joblib.load("./.AUX/x_scaler.save")
@@ -163,6 +161,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_0_1_en.png")
 plt.savefig("./Results/Presentation/4_0_1_en.svg")
+plt.close('all')
 
 # Calculate RMSE of EN
 rmse_en_sparse = np.sqrt(
@@ -410,7 +409,6 @@ xgb_grid = {
     'reg_lambda': [0, 0.001, 0.01, 0.1],
 }
 
-# Use the same grid as for GB
 xgb_cv = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid, n_iter=100, scoring=None, cv=3,
                             verbose=0, refit=True, n_jobs=-1)
 
@@ -586,7 +584,7 @@ print(dfRMSE)
 
 dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 
-plt.close()
+pl.close('all')
 
 ########################################################################################################################
 
@@ -636,3 +634,5 @@ plt.savefig("./Results/Presentation/4_9_sum.svg")
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
+
+plt.close('all')

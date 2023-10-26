@@ -1,0 +1,52 @@
+\begin{center}
+\begin{tabular}{lclc}
+\toprule
+\textbf{Dep. Variable:}      &   contribution   & \textbf{  R-squared:         } &     0.008   \\
+\textbf{Model:}              &       OLS        & \textbf{  Adj. R-squared:    } &     0.004   \\
+\textbf{Method:}             &  Least Squares   & \textbf{  F-statistic:       } &     2.102   \\
+\textbf{Date:}               & Thu, 26 Oct 2023 & \textbf{  Prob (F-statistic):} &  0.00625    \\
+\textbf{Time:}               &     12:32:35     & \textbf{  Log-Likelihood:    } &    8090.1   \\
+\textbf{No. Observations:}   &        4011      & \textbf{  AIC:               } & -1.615e+04  \\
+\textbf{Df Residuals:}       &        3994      & \textbf{  BIC:               } & -1.604e+04  \\
+\textbf{Df Model:}           &          16      & \textbf{                     } &             \\
+\textbf{Covariance Type:}    &    nonrobust     & \textbf{                     } &             \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lcccccc}
+                             & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+\midrule
+\textbf{days\_until\_end}    &       0.0048  &        0.003     &     1.478  &         0.139        &       -0.002    &        0.011     \\
+\textbf{billable\_rate\_dep} &       0.0058  &        0.004     &     1.599  &         0.110        &       -0.001    &        0.013     \\
+\textbf{cluster\_6}          &       0.0010  &        0.000     &     2.256  &         0.024        &        0.000    &        0.002     \\
+\textbf{risk}                &       0.0315  &        0.023     &     1.388  &         0.165        &       -0.013    &        0.076     \\
+\textbf{labor\_cost\_share}  &       0.0044  &        0.003     &     1.646  &         0.100        &       -0.001    &        0.010     \\
+\textbf{revenue}             &       0.0309  &        0.012     &     2.551  &         0.011        &        0.007    &        0.055     \\
+\textbf{projektkategori\_3}  &       0.0102  &        0.007     &     1.473  &         0.141        &       -0.003    &        0.024     \\
+\textbf{ombygning}           &       0.0030  &        0.002     &     1.519  &         0.129        &       -0.001    &        0.007     \\
+\textbf{costs\_cumsum}       &       0.0006  &        0.004     &     0.136  &         0.892        &       -0.008    &        0.009     \\
+\textbf{kbyg11}              &       0.0034  &        0.003     &     1.064  &         0.287        &       -0.003    &        0.010     \\
+\textbf{contribution\_lag1}  &      -0.5291  &        0.027     &   -19.586  &         0.000        &       -0.582    &       -0.476     \\
+\textbf{revenue\_lag1}       &       0.4033  &        0.019     &    20.724  &         0.000        &        0.365    &        0.441     \\
+\textbf{costs\_lag1}         &       0.3996  &        0.017     &    24.075  &         0.000        &        0.367    &        0.432     \\
+\textbf{contribution\_lag2}  &      -0.5273  &        0.027     &   -19.341  &         0.000        &       -0.581    &       -0.474     \\
+\textbf{revenue\_lag2}       &       0.4332  &        0.019     &    22.737  &         0.000        &        0.396    &        0.471     \\
+\textbf{costs\_lag2}         &       0.3899  &        0.017     &    22.577  &         0.000        &        0.356    &        0.424     \\
+\textbf{contribution\_lag3}  &      -0.4404  &        0.022     &   -20.100  &         0.000        &       -0.483    &       -0.397     \\
+\textbf{revenue\_lag3}       &       0.3801  &        0.015     &    24.581  &         0.000        &        0.350    &        0.410     \\
+\textbf{costs\_lag3}         &       0.2406  &        0.014     &    17.634  &         0.000        &        0.214    &        0.267     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 1527.013 & \textbf{  Durbin-Watson:     } &     1.967   \\
+\textbf{Prob(Omnibus):} &   0.000  & \textbf{  Jarque-Bera (JB):  } & 762557.606  \\
+\textbf{Skew:}          &  -0.328  & \textbf{  Prob(JB):          } &      0.00   \\
+\textbf{Kurtosis:}      &  70.545  & \textbf{  Cond. No.          } &  3.34e+16   \\
+\bottomrule
+\end{tabular}
+%\caption{OLS Regression Results}
+\end{center}
+
+Notes: \newline
+ [1] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
+ [2] The smallest eigenvalue is 4.06e-29. This might indicate that there are \newline
+ strong multicollinearity problems or that the design matrix is singular.
