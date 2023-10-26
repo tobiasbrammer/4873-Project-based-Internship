@@ -1,0 +1,20 @@
+\begin{tabular}{lll}
+\toprule
+{} &             RMSE &          sMAPE \\
+\midrule
+DST                                  &           0.8749 &        85.6094 \\
+OLS                                  &           0.4209 &        79.3107 \\
+OLS with lagged variables            &           0.3373 &        80.4293 \\
+OLS with lagged variables and budget &           0.3373 &        79.9591 \\
+FC                                   &           0.5306 &         82.806 \\
+FC\_cluster                           &            0.344 &        79.2816 \\
+FC\_cluster\_DST                       &           0.5316 &        82.6177 \\
+Elastic Net                          &           0.3361 &  \textbackslash textbf\{78.8\} \\
+Random Forest (Full)                 &  \textbackslash textbf\{0.3355\} &        79.3633 \\
+Random Forest (Sparse)               &           0.3361 &        79.3601 \\
+Gradient Boosting                    &           0.3364 &        79.3625 \\
+XGBoost                              &           0.3361 &        78.8643 \\
+Boosting (FC)                        &           0.3362 &        79.0814 \\
+LSTM                                 &           0.3373 &         82.077 \\
+\bottomrule
+\end{tabular}
