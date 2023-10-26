@@ -62,14 +62,41 @@ set nocount on
 		INNER JOIN #Sager Sager
 		ON Sager.[No_]=Sagsposter.[Job No_]
 		WHERE 1=1
-		AND Year(Sagsposter.[Posting Date]) >= 2010
+		AND Year(Sagsposter.[Posting Date]) >= 2013
 		GROUP BY 
 		Sagsposter.[Global Dimension 1 Code],
 		Sagsposter.[Job No_],
 		Sagsposter.[Posting Date],
 		Sagsposter.[Entry Type]
 	
-		SELECT 
+		SELECT
+			[date],
+			[month],
+			[year],
+			[month-year],
+			CASE
+			WHEN [department]  = '421' THEN '505'
+			WHEN [department]  = '510' THEN '505'
+			ELSE [department]
+			END AS 'department',
+			[Job No_],
+			SUM(revenue) 'revenue',
+			SUM(costs) 'costs',
+			SUM(costs_of_labor) 'costs_of_labor',
+			SUM(costs_of_materials) 'costs_of_materials',
+			SUM(other_costs) 'other_costs'
+		INTO #Regnskab2
+		FROM #Sagsposter Sagsposter
+		GROUP BY
+		[date],
+		[month],
+		[year],
+		[month-year],
+		[department],
+		[Job No_]
+
+		 
+		SELECT
 			[date],
 			[month],
 			[year],
@@ -82,7 +109,8 @@ set nocount on
 			SUM(costs_of_materials) 'costs_of_materials',
 			SUM(other_costs) 'other_costs'
 		INTO #Regnskab
-		FROM #Sagsposter Sagsposter
+		FROM #Regnskab2 Sagsposter
+		--WHERE [Job No_] = 'S346176'
 		GROUP BY
 		[date],
 		[month],
@@ -289,8 +317,6 @@ set nocount on
 	GROUP BY Afdeling, Dato
 
 
-
-
  SELECT DISTINCT
 	 Sagsposter.[date]
 	,Sagsposter.[month]
@@ -312,14 +338,10 @@ set nocount on
 	,Sager.[Ship-to Post Code] AS 'zip'
     ,Medarbejdere.[No_] AS 'responsible'
 	,CASE 
-		WHEN Sager.[Status] = 3 THEN
-			CASE 
-				WHEN Sagsbudget.Slutdato < CAST(Arbejdssedler.Dato AS date) THEN FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy')
-				WHEN ISNULL(Sagsbudget.Slutdato, 0)=0 THEN  FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy')
-				WHEN Sagsbudget.Slutdato = '01-01-1753' THEN  FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy') 
-				WHEN ISNULL(Sagsbudget.Slutdato, 0)=0 AND ISNULL(Arbejdssedler.Dato, 0)=0 THEN FORMAT(DATEADD(year,3,FORMAT(CAST(Arbejdssedler.Start AS date), '01-MM-yyyy')), '01-MM-yyyy')
-				ELSE FORMAT(CAST(Sagsbudget.Slutdato AS date), '01-MM-yyyy')
-			END
+		WHEN Sagsbudget.Slutdato < CAST(Arbejdssedler.Dato AS date) THEN FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy')
+		WHEN ISNULL(Sagsbudget.Slutdato, 0)=0 THEN  FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy')
+		WHEN Sagsbudget.Slutdato = '01-01-1753' THEN  FORMAT(CAST(Arbejdssedler.Dato AS date), '01-MM-yyyy') 
+		WHEN ISNULL(Sagsbudget.Slutdato, 0)=0 AND ISNULL(Arbejdssedler.Dato, 0)=0 THEN FORMAT(DATEADD(year,3,FORMAT(CAST(Arbejdssedler.Start AS date), '01-MM-yyyy')), '01-MM-yyyy')
 		ELSE FORMAT(CAST(Sagsbudget.Slutdato AS date), '01-MM-yyyy')
 	END AS 'end_date'
 	,ISNULL(Budget_final.sales_estimate_sales,0) 'sales_estimate_revenue'
@@ -398,8 +420,6 @@ set nocount on
     WHERE 1=1
 	AND Kunder.[No_] <> '10000'
 	AND Sagsposter.[department] IN ('421','510','515','505')
-	--AND Sagsopgaver.[Job No_] = 'S209726'
-	--AND Budget_final.sales_estimate_cost >= 1000000
 	ORDER BY Sager.[No_] DESC, [month], [year] ASC
 	 
 	SELECT DISTINCT *
@@ -407,4 +427,4 @@ set nocount on
 	WHERE #Final.end_date IS NOT NULL
 
 
-DROP TABLE #Sager, #Sagsbudget, #AllCombinations, #Arbejdssedler, #Budget, #Budget_final, #budget_v2, #Cal, #MaxArchive, #Regnskab, #Sagsopgaver, #Sagsposter, #RLE, #rle_2, #ArbejderTid, #ArbejderTimer, #Faktureringsgrad, #Final
+DROP TABLE #Sager, #Sagsbudget, #AllCombinations, #Arbejdssedler, #Budget, #Budget_final, #budget_v2, #Cal, #MaxArchive,#Regnskab2, #Regnskab, #Sagsopgaver, #Sagsposter, #RLE, #rle_2, #ArbejderTid, #ArbejderTimer, #Faktureringsgrad, #Final
