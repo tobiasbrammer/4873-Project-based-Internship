@@ -545,6 +545,9 @@ for nCluster in lCluster:
 # Save DataFrame to file
 dfData.to_csv("dfData.csv", index=False)
 pq.write_table(pa.table(dfData), "dfData.parquet")
+pq.write_table(pa.table(dfData), "dfData_org.parquet")
 
 # Close connection to database
 engine.dispose()
+
+plt.close('all')
