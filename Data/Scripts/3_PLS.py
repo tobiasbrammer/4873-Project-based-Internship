@@ -9,9 +9,13 @@ from plot_config import *
 from sklearn.metrics import mean_squared_error
 
 # Load ./dfData.parquet
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
-# os.chdir(sDir)
+if os.name == 'posix':
+    sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# If operating system is Windows then
+elif os.name == 'nt':
+    sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+
+os.chdir(sDir)
 
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")

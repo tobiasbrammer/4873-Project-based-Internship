@@ -4,9 +4,13 @@ for name in dir():
         del globals()[name]
 
 # Set the directory
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 import os
+if os.name == 'posix':
+    sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# If operating system is Windows then
+elif os.name == 'nt':
+    sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+
 os.chdir(sDir)
 
 import subprocess

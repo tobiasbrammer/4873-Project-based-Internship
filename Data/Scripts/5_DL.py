@@ -14,8 +14,12 @@ from sklearn.metrics import mean_squared_error
 warnings.filterwarnings('ignore')
 
 # Load ./dfData.parquet
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+if os.name == 'posix':
+    sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+# If operating system is Windows then
+elif os.name == 'nt':
+    sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+
 os.chdir(sDir)
 
 # Load data
