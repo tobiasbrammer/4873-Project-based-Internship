@@ -1,8 +1,0 @@
-,RMSE,sMAPE
-DST,0.8632,84.7354
-OLS,0.5027,81.6388
-OLS with lagged variables,0.3874,79.6237
-OLS with lagged variables and budget,0.3874,79.6465
-FC,0.5384,82.045
-FC_cluster,0.3865,78.8542
-FC_cluster_DST,0.5375,81.966

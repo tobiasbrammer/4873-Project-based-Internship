@@ -24,11 +24,6 @@ os.environ['PYTHONPATH'] = os.getcwd()
 # Start timing
 start_time = datetime.datetime.now()
 
-
-
-# Clear console
-os.system('cls')
-
 #### INPUT DEPENDENT VARIABLE ####
 sDepVar = 'contribution'
 
@@ -66,7 +61,5 @@ subprocess.run(["python", "./Scripts/5_DL.py"])
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
 # Play sound when finished
-# If operating system is macOS then
-
 # winsound.Beep(frequency=600, duration=800)
 
