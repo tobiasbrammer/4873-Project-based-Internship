@@ -18,8 +18,8 @@ import PyDST
 # start_time = datetime.datetime.now()
 
 # Set the directory
-# sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
-sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
+sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+# sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 os.chdir(sDir)
 
 from plot_config import *
@@ -72,7 +72,7 @@ params = urllib.parse.quote_plus("DRIVER={SQL Server};"
 engine = sa.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 
 # Read SQL query from file
-with open(".SQL/Data_v4.sql", "r") as file:
+with open(".SQL/Data_v5.sql", "r") as file:
     sQuery = file.read()
 
 print('Getting data from database...')
