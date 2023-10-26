@@ -19,6 +19,9 @@ os.chdir(sDir)
 # Read dfData parquet file
 dfData = pd.read_parquet("dfData.parquet")
 
+# Replace NA with 0
+dfData = dfData.replace(np.nan, 0)
+
 # Split data into wip and finished jobs. This serves as test and train data.
 dfDataFinished = dfData[dfData['wip'] == 0]
 dfDataWIP = dfData[dfData['wip'] == 1]
@@ -107,6 +110,9 @@ train_data_y = train_data[[sDepVar]]
 x_scaler = x_scaler.fit(train_data_X)
 y_scaler = y_scaler.fit(train_data_y)
 
+# Change customer zip to string
+dfData['customer_zip'] = dfData['customer_zip'].astype(str)
+dfData['zip'] = dfData['zip'].astype(str)
 dfData.to_parquet('./dfData_reg.parquet')
 
 # For col in colIndepVarNum scale dfData using x_scaler
@@ -127,4 +133,4 @@ dfDataWIP.to_parquet('./dfData_reg_scaled_wip.parquet')
 joblib.dump(x_scaler, "./.AUX/x_scaler.save")
 joblib.dump(y_scaler, "./.AUX/y_scaler.save")
 
-plt.close()
+plt.close('all')

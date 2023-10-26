@@ -122,8 +122,8 @@ lIndepVar = [col for col in lIndepVar if not col.startswith('cluster_')]
 
 # Sparse model with OLS variables
 start_time_en_sparse = datetime.datetime.now()
-elastic_net_cv_sparse.fit(dfDataScaledTrain[lIndepVar], dfDataScaledTrain[sDepVar])
-dfData['predicted_en_sparse'] = elastic_net_cv_sparse.predict(dfDataScaled[lIndepVar])
+elastic_net_cv_sparse.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
+dfData['predicted_en_sparse'] = elastic_net_cv_sparse.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
 dfData['predicted_en_sparse'] = y_scaler.inverse_transform(dfData['predicted_en_sparse'].values.reshape(-1, 1))
 end_time_en_sparse = datetime.datetime.now()
 print(f'ElasticNet finished in {end_time_en_sparse - start_time_en_sparse}.')
@@ -197,11 +197,11 @@ rf_cv = RandomizedSearchCV(rf, rf_grid, n_iter=100, n_jobs=-1, scoring="neg_mean
                            refit=True)
 # Fit to the training data
 start_time_rf = datetime.datetime.now()
-rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 # Predict and rescale using RF
 dfData['predicted_rf_full'] = rf_cv.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_rf_full'] = y_scaler.inverse_transform(dfData['predicted_rf_full'].values.reshape(-1, 1))
 end_time_rf = datetime.datetime.now()
 print(f'RF Full fit finished in {end_time_rf - start_time_rf}.')
@@ -264,7 +264,7 @@ rf_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.diff
           dfDataScaledTrain[sDepVar])
 # Predict and rescale using RF
 dfData['predicted_rf_sparse'] = rf_cv.predict(
-    dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])])
+    dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_rf_sparse'] = y_scaler.inverse_transform(dfData['predicted_rf_sparse'].values.reshape(-1, 1))
 end_time_rf = datetime.datetime.now()
 print(f'RF Sparse fit finished in {end_time_rf - start_time_rf}.')
@@ -337,11 +337,11 @@ gb_cv = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid, n
 
 # Fit to the training data
 start_time_gb = datetime.datetime.now()
-gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 # Predict and rescale using GB
 dfData['predicted_gb'] = gb_cv.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_gb'] = y_scaler.inverse_transform(dfData['predicted_gb'].values.reshape(-1, 1))
 end_time_gb = datetime.datetime.now()
 print(f'GB fit finished in {end_time_gb - start_time_gb}.')
@@ -414,11 +414,11 @@ xgb_cv = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid, n_iter=100, 
 
 # Fit to the training data
 start_time_xgb = datetime.datetime.now()
-xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
 # Predict and rescale using XGB
 dfData['predicted_xgb'] = xgb_cv.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].values.reshape(-1, 1))
 end_time_xgb = datetime.datetime.now()
 
@@ -485,94 +485,6 @@ smape_gb_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfDataPred[dfData
 # Add to dfRMSE
 dfRMSE.loc['Boosting (FC)', 'RMSE'] = rmse_gb_fc
 dfRMSE.loc['Boosting (FC)', 'sMAPE'] = smape_gb_fc
-
-### Use clustering to find similar jobs and predict sDepVar for each cluster ###
-lCluster = [2, 4, 6, 8, 10, 12, 14]
-
-# Get index of train from dfData[trainMethod]
-train_index = dfData[dfData[trainMethod] == 1].index
-
-# Split dfDataScaled into train and test
-dfDataScaledTrain = dfDataScaled.loc[train_index]
-
-# For each cluster in cluster_{lCluster} do
-for iCluster in lCluster:
-    # Get the cluster labels to list using value_counts()
-    lClusterLabels = dfData['cluster_' + str(iCluster)].value_counts().index.tolist()
-
-    # For each cluster label in lClusterLabels do
-    for iClusterLabel in lClusterLabels:
-        # Run Elastic Net
-        cv_val = len(dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][sDepVar])-1
-        print(cv_val)
-        elastic_net = ElasticNet(tol=1e-4, random_state=0)
-        elastic_net_cv_clust = RandomizedSearchCV(elastic_net, param_grid_en, n_iter=1000, scoring=None, cv=1, verbose=0,
-                                                  refit=True, n_jobs=-1)
-        # Fit
-        elastic_net_cv_clust.fit(
-            dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][sDepVar].values.reshape(-1, 1),
-            dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][
-                lIndepVar_lag_budget].replace(np.nan, 0))
-        # Predict and rescale sDepVar using OLS with lagged variables and budget and add to cluster_{iCluster}
-        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'en_cluster_' + str(
-            iCluster)] = elastic_net_cv_clust.predict(
-            dfDataScaled[dfDataScaled['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget])
-        dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'en_cluster_' + str(
-            iCluster)] = y_scaler.inverse_transform(
-            dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'en_cluster_' + str(
-                iCluster)].values.reshape(-1, 1))
-
-dfData['en_cluster_fc'] = (dfData['en_cluster_' + str(lCluster[0])]
-                           + dfData['en_cluster_' + str(lCluster[1])]
-                           + dfData['en_cluster_' + str(lCluster[2])]
-                           + dfData['en_cluster_' + str(lCluster[3])]
-                           + dfData['en_cluster_' + str(lCluster[4])]
-                           + dfData['en_cluster_' + str(lCluster[5])]
-                           + dfData['en_cluster_' + str(lCluster[6])]) / 7
-
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['en_cluster_fc'].transform('sum'),
-        label='Predicted (EN Cluster)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_4_en_cluster.png")
-plt.savefig("./Results/Presentation/4_4_en_cluster.svg")
-
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
-ax.plot(dfData['date'], dfData.groupby('date')['en_cluster_fc'].transform('sum'),
-        label='Predicted (EN Cluster)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-plt.tight_layout()
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_4_1_en_cluster.png")
-plt.savefig("./Results/Presentation/4_4_1_en_cluster.svg")
-
-# Calculate RMSE of Forecast Combination
-rmse_fc_cluster = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['en_cluster_fc'].replace(np.nan, 0)))
-# symmetric Mean Absolute Error (sMAPE)
-smape_fc_cluster = smape(dfData[dfData[trainMethod] == 0][sDepVar],
-                         dfData[dfData[trainMethod] == 0]['en_cluster_fc'])
-
-# Add RMSE and sMAPE of Forecast Combination to dfRMSE
-dfRMSE.loc['EN_cluster'] = [rmse_fc_cluster, smape_fc_cluster]
-
-dfDataPred['en_cluster_fc'] = dfData['en_cluster_fc']
 
 # Save dfDataPred to ./dfDataPred.parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")

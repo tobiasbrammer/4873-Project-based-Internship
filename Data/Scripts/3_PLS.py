@@ -55,6 +55,10 @@ dfDataWIP[sDepVar] = y_scaler.inverse_transform(dfDataWIP[sDepVar].values.reshap
 # Get the 5 most correlated variables (of numeric variables)
 lNumericCols = dfDataScaled.select_dtypes(include=[np.number]).columns.tolist()
 
+# Write to ./.AUX/lNumericCols.txt
+with open('./.AUX/lNumericCols.txt', 'w') as lVars:
+    lVars.write('\n'.join(lNumericCols))
+
 ### Split dfDataScaled into train and test ###
 # Get index of train from dfData[trainMethod]
 train_index = dfData[dfData[trainMethod] == 1].index

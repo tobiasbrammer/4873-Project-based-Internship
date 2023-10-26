@@ -27,6 +27,7 @@ dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
 dfDataPred = pd.read_parquet("./dfDataPred.parquet")
 
+
 # Define sMAPE
 def smape(actual, predicted):
     return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
@@ -115,6 +116,7 @@ model.add(Dropout(0.05))
 model.add(LSTM(units=int(iUnit / 64), return_sequences=True))
 model.add(Dropout(0.2))
 model.add(Dense(units=1, activation='tanh'))
+model.compile(optimizer="adam", loss="mse", metrics=["mean_absolute_percentage_error"])
 
 # Compile model
 model.compile(optimizer='adam', loss='mean_squared_error')
@@ -125,7 +127,7 @@ early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=
 # Fit model
 start_time_lstm = datetime.datetime.now()
 # Fit model to training data dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])]
-model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
           epochs=100,
           batch_size=16,
@@ -136,7 +138,7 @@ model.save('./.AUX/LSTM.h5')
 
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(model.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1, 0]).values.reshape(-1,
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))[:, -1, 0]).values.reshape(-1,
                                                                                                                     1)
 
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
@@ -219,42 +221,41 @@ dfData.to_parquet("./dfData_reg.parquet")
 
 ########################################################################################################################
 # if ./Results/Figures/Jobs does not exist, create it
-if not os.path.exists('./Results/Figures/Jobs'):
-    os.makedirs('./Results/Figures/Jobs')
 
-## For each job_no plot the actual and predicted sDepVar
-for job_no in dfDataPred['job_no'].unique():
-    # Get the data of job_no
-    dfDataJob = dfDataPred[dfDataPred['job_no'] == job_no]
-    # Plot the actual and predicted contribution of sJobNo
-    fig, ax = plt.subplots(figsize=(20, 10))
-    for col in dfDataJob.columns:
-        if col not in ['date', 'job_no']:
-            ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Contribution')
-    ax.set_title(f'Actual vs. Predicted Contribution of {job_no}')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.tight_layout()
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
-
-    # Plot the cumsum of actual and predicted contribution of sJobNo
-    fig, ax = plt.subplots(figsize=(20, 10))
-    for col in dfDataJob.columns:
-        if col not in ['date', 'job_no']:
-            ax.plot(dfDataJob['date'], dfDataJob[col].cumsum(), label=col)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Cumulative Contribution')
-    ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {job_no}')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.tight_layout()
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/Jobs/{job_no}_sum.png")
+# if not os.path.exists('./Results/Figures/Jobs'):
+#     os.makedirs('./Results/Figures/Jobs')
+#
+# ## For each job_no plot the actual and predicted sDepVar
+# for job_no in dfDataPred['job_no'].unique():
+#     # Get the data of job_no
+#     dfDataJob = dfDataPred[dfDataPred['job_no'] == job_no]
+#     # Plot the actual and predicted contribution of sJobNo
+#     fig, ax = plt.subplots(figsize=(20, 10))
+#     for col in dfDataJob.columns:
+#         if col not in ['date', 'job_no']:
+#             ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
+#     ax.set_xlabel('Date')
+#     ax.set_ylabel('Contribution')
+#     ax.set_title(f'Actual vs. Predicted Contribution of {job_no}')
+#     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+#     plt.tight_layout()
+#     plt.grid(alpha=0.5)
+#     plt.rcParams['axes.axisbelow'] = True
+#     plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
+#
+#     # Plot the cumsum of actual and predicted contribution of sJobNo
+#     fig, ax = plt.subplots(figsize=(20, 10))
+#     for col in dfDataJob.columns:
+#         if col not in ['date', 'job_no']:
+#             ax.plot(dfDataJob['date'], dfDataJob[col].cumsum(), label=col)
+#     ax.set_xlabel('Date')
+#     ax.set_ylabel('Cumulative Contribution')
+#     ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {job_no}')
+#     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+#     plt.tight_layout()
+#     plt.grid(alpha=0.5)
+#     plt.rcParams['axes.axisbelow'] = True
+#     plt.savefig(f"./Results/Figures/Jobs/{job_no}_sum.png")
 
 ########################################################################################################################
-
-
 
