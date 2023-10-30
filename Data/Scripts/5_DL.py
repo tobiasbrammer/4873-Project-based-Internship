@@ -22,25 +22,44 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+# Read token from Data/.AUX/dropbox.txt
+with open('./.AUX/dropbox.txt', 'r') as f:
+    token = f.read()
+
+# Format as single line
+token = token.replace('\n', '')
+
+os.environ['DROPBOX'] = token
 
 import dropbox
 from pathlib import Path
 from io import BytesIO
 import matplotlib.pyplot as plt
 
+
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
-    ax.savefig(bs, bbox_inches='tight', format=format)
 
+    # Check if the file is a .tex file and handle it differently
+    if format == 'tex':
+        # Assuming the 'ax' parameter contains the LaTeX content
+        content = ax
+        format = 'tex'
+    else:
+        ax.savefig(bs, bbox_inches='tight', format=format)
+
+    # token = os.DROPBOX
     token = os.getenv('DROPBOX')
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
-    dbx.files_upload(
-        f=bs.getvalue(),
-        path=f'/Apps/Overleaf/{project}/{path}',
-        mode=dropbox.files.WriteMode.overwrite)
+    if format == 'tex':
+        # Handle .tex files by directly uploading their content
+        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+    else:
+        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+
 
 
 # Load data
@@ -250,6 +269,8 @@ print(dfRMSE_latex)
 # Save dfRMSE to .tex
 with open('./Results/Tables/5_1_rmse.tex', 'w') as f:
     f.write(dfRMSE_latex.to_latex())
+
+upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex')
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")

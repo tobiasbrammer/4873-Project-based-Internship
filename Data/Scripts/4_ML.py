@@ -22,25 +22,45 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+# Read token from Data/.AUX/dropbox.txt
+with open('./.AUX/dropbox.txt', 'r') as f:
+    token = f.read()
+
+# Format as single line
+token = token.replace('\n', '')
+
+os.environ['DROPBOX'] = token
+
 
 import dropbox
 from pathlib import Path
 from io import BytesIO
 import matplotlib.pyplot as plt
 
+
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
-    ax.savefig(bs, bbox_inches='tight', format=format)
 
+    # Check if the file is a .tex file and handle it differently
+    if format == 'tex':
+        # Assuming the 'ax' parameter contains the LaTeX content
+        content = ax
+        format = 'tex'
+    else:
+        ax.savefig(bs, bbox_inches='tight', format=format)
+
+    # token = os.DROPBOX
     token = os.getenv('DROPBOX')
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
-    dbx.files_upload(
-        f=bs.getvalue(),
-        path=f'/Apps/Overleaf/{project}/{path}',
-        mode=dropbox.files.WriteMode.overwrite)
+    if format == 'tex':
+        # Handle .tex files by directly uploading their content
+        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+    else:
+        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+
 
 
 
@@ -189,11 +209,11 @@ plt.close('all')
 
 # Calculate RMSE of EN
 rmse_en_sparse = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_en_sparse']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfData[dfData[trainMethod] == 0]['predicted_en_sparse'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_en_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar],
-                        dfData[dfData[trainMethod] == 0]['predicted_en_sparse'])
+smape_en_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                        dfData[dfData[trainMethod] == 0]['predicted_en_sparse'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['Elastic Net', 'RMSE'] = rmse_en_sparse
@@ -268,10 +288,10 @@ upload(plt, 'Project-based Internship', 'figures/4_1_1_rf_full.png')
 
 # Calculate RMSE of RF
 rmse_rf_full = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_rf_full']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfData[dfData[trainMethod] == 0]['predicted_rf_full'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_rf_full = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_rf_full'])
+smape_rf_full = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_rf_full'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['Random Forest (Full)', 'RMSE'] = rmse_rf_full
@@ -332,11 +352,11 @@ upload(plt, 'Project-based Internship', 'figures/4_1_1_rf_sparse.png')
 
 # Calculate RMSE of RF
 rmse_rf_sparse = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfData[dfData[trainMethod] == 0]['predicted_rf_sparse']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfData[dfData[trainMethod] == 0]['predicted_rf_sparse'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_rf_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar],
-                        dfData[dfData[trainMethod] == 0]['predicted_rf_sparse'])
+smape_rf_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                        dfData[dfData[trainMethod] == 0]['predicted_rf_sparse'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['Random Forest (Sparse)', 'RMSE'] = rmse_rf_sparse
@@ -492,9 +512,9 @@ upload(plt, 'Project-based Internship', 'figures/4_3_1_xgb.png')
 
 # Calculate RMSE of XGB
 rmse_xgb = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_xgb']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_xgb'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_xgb = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_xgb'])
+smape_xgb = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_xgb'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['XGBoost', 'RMSE'] = rmse_xgb
@@ -509,10 +529,10 @@ dfData['predicted_boost'] = (dfData['predicted_gb'] + dfDataPred['predicted_xgb'
 
 # Calculate RMSE of GB_FC
 rmse_gb_fc = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
-                       dfDataPred[dfData[trainMethod] == 0]['predicted_boost']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfDataPred[dfData[trainMethod] == 0]['predicted_boost'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_gb_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfDataPred[dfData[trainMethod] == 0]['predicted_boost'])
+smape_gb_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfDataPred[dfData[trainMethod] == 0]['predicted_boost'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['Boosting (FC)', 'RMSE'] = rmse_gb_fc

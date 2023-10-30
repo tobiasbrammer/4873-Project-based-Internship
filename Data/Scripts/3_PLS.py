@@ -17,25 +17,45 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+# Read token from Data/.AUX/dropbox.txt
+with open('./.AUX/dropbox.txt', 'r') as f:
+    token = f.read()
+
+# Format as single line
+token = token.replace('\n', '')
+
+os.environ['DROPBOX'] = token
+
 
 import dropbox
 from pathlib import Path
 from io import BytesIO
 import matplotlib.pyplot as plt
 
+
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
-    ax.savefig(bs, bbox_inches='tight', format=format)
 
+    # Check if the file is a .tex file and handle it differently
+    if format == 'tex':
+        # Assuming the 'ax' parameter contains the LaTeX content
+        content = ax
+        format = 'tex'
+    else:
+        ax.savefig(bs, bbox_inches='tight', format=format)
+
+    # token = os.DROPBOX
     token = os.getenv('DROPBOX')
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
-    dbx.files_upload(
-        f=bs.getvalue(),
-        path=f'/Apps/Overleaf/{project}/{path}',
-        mode=dropbox.files.WriteMode.overwrite)
+    if format == 'tex':
+        # Handle .tex files by directly uploading their content
+        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+    else:
+        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+
 
 
 
@@ -105,6 +125,8 @@ ols = results_dst.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_0_dst.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
+
+upload(ols, 'Project-based Internship', 'tables/3_0_dst.tex')
 
 # Predict and rescale sDepVar using OLS
 dfData['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataScaled[lDST]).shift(-1).values.reshape(-1, 1))
@@ -188,6 +210,8 @@ ols = results_ols.summary(alpha=0.05).as_latex()
 with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 
+upload(ols, 'Project-based Internship', 'tables/3_1_ols.tex')
+
 # Predict and rescale sDepVar using OLS
 dfData['predicted_ols'] = results_ols.predict(dfDataScaled[lIndepVar])
 
@@ -268,6 +292,8 @@ ols = results_ols_lag.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
+
+upload(ols, 'Project-based Internship', 'tables/3_2_ols_lag.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables
 dfData['predicted_lag'] = results_ols_lag.predict(dfDataScaled[lIndepVar_lag])
@@ -352,6 +378,8 @@ ols = results_lag_budget.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
+
+upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
 dfData['predicted_lag_budget'] = results_lag_budget.predict(dfDataScaled[lIndepVar_lag_budget])

@@ -1,37 +1,37 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                   &   contribution   & \textbf{  R-squared (uncentered):}      &     0.996   \\
-\textbf{Model:}                           &       OLS        & \textbf{  Adj. R-squared (uncentered):} &     0.996   \\
-\textbf{Method:}                          &  Least Squares   & \textbf{  F-statistic:       }          & 9.048e+04   \\
-\textbf{Date:}                            & Mon, 30 Oct 2023 & \textbf{  Prob (F-statistic):}          &     0.00    \\
-\textbf{Time:}                            &     09:11:03     & \textbf{  Log-Likelihood:    }          &    7796.7   \\
-\textbf{No. Observations:}                &        4044      & \textbf{  AIC:               }          & -1.557e+04  \\
-\textbf{Df Residuals:}                    &        4034      & \textbf{  BIC:               }          & -1.551e+04  \\
-\textbf{Df Model:}                        &          10      & \textbf{                     }          &             \\
-\textbf{Covariance Type:}                 &    nonrobust     & \textbf{                     }          &             \\
+\textbf{Dep. Variable:}                &   contribution   & \textbf{  R-squared (uncentered):}      &     0.995   \\
+\textbf{Model:}                        &       OLS        & \textbf{  Adj. R-squared (uncentered):} &     0.995   \\
+\textbf{Method:}                       &  Least Squares   & \textbf{  F-statistic:       }          & 8.630e+04   \\
+\textbf{Date:}                         & Mon, 30 Oct 2023 & \textbf{  Prob (F-statistic):}          &     0.00    \\
+\textbf{Time:}                         &     15:21:42     & \textbf{  Log-Likelihood:    }          &    7705.6   \\
+\textbf{No. Observations:}             &        4046      & \textbf{  AIC:               }          & -1.539e+04  \\
+\textbf{Df Residuals:}                 &        4036      & \textbf{  BIC:               }          & -1.533e+04  \\
+\textbf{Df Model:}                     &          10      & \textbf{                     }          &             \\
+\textbf{Covariance Type:}              &    nonrobust     & \textbf{                     }          &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
-                                          & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+                                       & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{days\_until\_end}                 &       0.0068  &        0.004     &     1.903  &         0.057        &       -0.000    &        0.014     \\
-\textbf{costs\_cumsum}                    &      -0.2463  &        0.016     &   -15.450  &         0.000        &       -0.278    &       -0.215     \\
-\textbf{risk}                             &       0.5596  &        0.018     &    30.484  &         0.000        &        0.524    &        0.596     \\
-\textbf{kbyg44\_confidence\_indicator}    &       0.0084  &        0.009     &     0.954  &         0.340        &       -0.009    &        0.026     \\
-\textbf{kbyg44\_employment\_expectations} &       0.0207  &        0.008     &     2.463  &         0.014        &        0.004    &        0.037     \\
-\textbf{projektkategori\_3}               &       0.0105  &        0.008     &     1.314  &         0.189        &       -0.005    &        0.026     \\
-\textbf{costs\_lag3}                      &       0.0898  &        0.014     &     6.338  &         0.000        &        0.062    &        0.118     \\
-\textbf{costs\_scurve}                    &       0.1861  &        0.017     &    11.218  &         0.000        &        0.154    &        0.219     \\
-\textbf{costs\_lag5}                      &       0.1329  &        0.014     &     9.272  &         0.000        &        0.105    &        0.161     \\
-\textbf{revenue\_scurve\_diff}            &       0.2578  &        0.020     &    12.693  &         0.000        &        0.218    &        0.298     \\
+\textbf{costs\_cumsum}                 &      -0.2513  &        0.017     &   -14.910  &         0.000        &       -0.284    &       -0.218     \\
+\textbf{revenue\_scurve\_diff}         &       0.3079  &        0.021     &    14.636  &         0.000        &        0.267    &        0.349     \\
+\textbf{days\_until\_end}              &       0.0042  &        0.004     &     1.176  &         0.240        &       -0.003    &        0.011     \\
+\textbf{billable\_rate\_dep}           &       0.0341  &        0.004     &     8.652  &         0.000        &        0.026    &        0.042     \\
+\textbf{costs\_lag5}                   &       0.1780  &        0.011     &    15.874  &         0.000        &        0.156    &        0.200     \\
+\textbf{costs\_scurve}                 &       0.1958  &        0.018     &    11.182  &         0.000        &        0.162    &        0.230     \\
+\textbf{kbyg11}                        &       0.0032  &        0.004     &     0.735  &         0.462        &       -0.005    &        0.012     \\
+\textbf{kbyg44\_confidence\_indicator} &       0.0303  &        0.005     &     5.765  &         0.000        &        0.020    &        0.041     \\
+\textbf{risk}                          &       0.5365  &        0.018     &    29.057  &         0.000        &        0.500    &        0.573     \\
+\textbf{labor\_cost\_share}            &       0.0025  &        0.003     &     0.865  &         0.387        &       -0.003    &        0.008     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 1305.929 & \textbf{  Durbin-Watson:     } &     1.858   \\
-\textbf{Prob(Omnibus):} &   0.000  & \textbf{  Jarque-Bera (JB):  } & 295864.409  \\
-\textbf{Skew:}          &  -0.132  & \textbf{  Prob(JB):          } &      0.00   \\
-\textbf{Kurtosis:}      &  44.902  & \textbf{  Cond. No.          } &      119.   \\
+\textbf{Omnibus:}       & 1306.537 & \textbf{  Durbin-Watson:     } &     1.866   \\
+\textbf{Prob(Omnibus):} &   0.000  & \textbf{  Jarque-Bera (JB):  } & 294498.560  \\
+\textbf{Skew:}          &   0.137  & \textbf{  Prob(JB):          } &      0.00   \\
+\textbf{Kurtosis:}      &  44.795  & \textbf{  Cond. No.          } &      120.   \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
