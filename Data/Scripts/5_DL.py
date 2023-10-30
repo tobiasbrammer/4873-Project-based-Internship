@@ -10,6 +10,7 @@ import datetime
 import joblib
 from plot_config import *
 from sklearn.metrics import mean_squared_error
+import multiprocessing
 
 warnings.filterwarnings('ignore')
 
@@ -22,6 +23,7 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+
 # Read token from Data/.AUX/dropbox.txt
 with open('./.AUX/dropbox.txt', 'r') as f:
     token = f.read()
@@ -30,6 +32,7 @@ with open('./.AUX/dropbox.txt', 'r') as f:
 token = token.replace('\n', '')
 
 os.environ['DROPBOX'] = token
+
 
 import dropbox
 from pathlib import Path
@@ -40,26 +43,16 @@ import matplotlib.pyplot as plt
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
+    ax.savefig(bs, bbox_inches='tight', format=format)
 
-    # Check if the file is a .tex file and handle it differently
-    if format == 'tex':
-        # Assuming the 'ax' parameter contains the LaTeX content
-        content = ax
-        format = 'tex'
-    else:
-        ax.savefig(bs, bbox_inches='tight', format=format)
-
-    # token = os.DROPBOX
     token = os.getenv('DROPBOX')
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
-    if format == 'tex':
-        # Handle .tex files by directly uploading their content
-        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-    else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
+    dbx.files_upload(
+        f=bs.getvalue(),
+        path=f'/Apps/Overleaf/{project}/{path}',
+        mode=dropbox.files.WriteMode.overwrite)
 
 
 # Load data
@@ -129,51 +122,79 @@ train_index = dfData[dfData[trainMethod] == 1].index
 dfDataScaledTrain = dfDataScaled.loc[train_index]
 dfDataScaledTest = dfDataScaled.drop(train_index)
 
-# First, let us get a list of unique job_no's (chunk identifiers)
-lJobNo = dfData['job_no'].unique().tolist()
-
-# We can then collect all rows for each chunk identifier and store them in a dictionary for easy access.
-dJobNo = {elem: pd.DataFrame for elem in lJobNo}
-for key in dJobNo.keys():
-    dJobNo[key] = dfData[:][dfData['job_no'] == key]
-
-
 ### LSTM ###
+## Tune Hyperparameters using keras-tuner ##
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.callbacks import EarlyStopping
+import keras_tuner as kt
 
-# Create model
-iUnit = 256 * 4
-model = Sequential()
-model.add(LSTM(units=iUnit, return_sequences=True, input_shape=(
-    dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
-model.add(LSTM(units=int(iUnit / 8), return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(units=int(iUnit / 8), return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(units=int(iUnit / 16), return_sequences=False))
-model.add(Dropout(0.2))
-model.add(Dense(units=1))
-model.compile(optimizer="adam", loss="mse", metrics=["root_mean_squared_error"])
+
+def model_builder(hp):
+    model = Sequential()
+    model.add(LSTM(units=hp.Int('units_1', min_value=256, max_value=1028, step=8), return_sequences=True, input_shape=(
+        dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
+    model.add(Dropout(hp.Float('dropout_1', min_value=0.0, max_value=0.5, step=0.05)))
+    model.add(LSTM(units=hp.Int('units_2', min_value=0, max_value=512, step=8), return_sequences=True))
+    model.add(Dropout(hp.Float('dropout_2', min_value=0.0, max_value=0.5, step=0.05)))
+    model.add(LSTM(units=hp.Int('units_3', min_value=0, max_value=256, step=8), return_sequences=False))
+    model.add(Dropout(hp.Float('dropout_3', min_value=0.0, max_value=0.5, step=0.05)))
+    model.add(Dense(units=1))
+    model.compile(optimizer="adam", loss="mse", metrics=['mae'])
+    return model
+
+# Define tuner
+tuner = kt.Hyperband(model_builder,
+                     objective='val_loss',
+                     max_epochs=5,
+                     factor=3,
+                     directory='./.AUX',
+                     project_name='LSTM')
 
 # Define early stopping
 early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=5)
 
 # Fit model
-start_time_lstm = datetime.datetime.now()
-# Fit model to training data dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])]
-model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+start_time_lstm_tune = datetime.datetime.now()
+# Fit model to training data
+tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+             dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+             batch_size=int(
+                 dfDataScaledTrain[lNumericCols][
+                     dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
+                     0] / 200),
+             validation_split=0.25,
+             callbacks=[early_stop],
+             use_multiprocessing=True,
+             workers=multiprocessing.cpu_count(),
+             verbose=1)
+
+# Get the optimal hyperparameters
+best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+print(f"""
+The hyperparameter search is complete. The optimal number of units in the LSTM
+layer is {best_hps.get('units')}, and the optimal dropout rate is {best_hps.get('dropout')}.
+""")
+
+
+## Create model from optimal hyperparameters ##
+model = tuner.hypermodel.build(best_hps)
+# Fit model
+model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=3,
-          batch_size=int(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[0]/200),
+          epochs=10,
+          batch_size=int(
+              dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
+                  0] / 200),
           validation_split=0.25,
           callbacks=[early_stop],
+          use_multiprocessing=True,
+          workers=multiprocessing.cpu_count(),
           verbose=1)
-model.save('./.AUX/LSTM.h5')
+model.save('./.AUX/LSTM_tune.tf')
 
 # Plot loss
 pd.DataFrame(model.history.history).plot(figsize=(20, 10))
@@ -187,8 +208,9 @@ plt.savefig("./Results/Presentation/5_0_loss.svg")
 upload(plt, 'Project-based Internship', 'figures/5_0_loss.png')
 
 # Predict and rescale using LSTM
-dfData['predicted_lstm'] = pd.DataFrame(model.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))).values.reshape(-1,1)
+dfData['predicted_lstm'] = pd.DataFrame(
+    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])]).reshape(-1, 1)
+)
 
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].shift(-1).values.reshape(-1, 1))
 
@@ -206,7 +228,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_1_lstm.png")
@@ -224,7 +245,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_1_1_lstm.png")
@@ -243,6 +263,7 @@ dfRMSE.loc['LSTM', 'sMAPE'] = smape_lstm
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
+
 
 ########################################################################################################################
 
@@ -270,8 +291,6 @@ print(dfRMSE_latex)
 with open('./Results/Tables/5_1_rmse.tex', 'w') as f:
     f.write(dfRMSE_latex.to_latex())
 
-upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex')
-
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
@@ -295,7 +314,7 @@ dfData.to_parquet("./dfData_reg.parquet")
 #     ax.set_ylabel('Contribution')
 #     ax.set_title(f'Actual vs. Predicted Contribution of {job_no}')
 #     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-#     
+#
 #     plt.grid(alpha=0.5)
 #     plt.rcParams['axes.axisbelow'] = True
 #     plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
@@ -309,10 +328,9 @@ dfData.to_parquet("./dfData_reg.parquet")
 #     ax.set_ylabel('Cumulative Contribution')
 #     ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {job_no}')
 #     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-#     
+#
 #     plt.grid(alpha=0.5)
 #     plt.rcParams['axes.axisbelow'] = True
 #     plt.savefig(f"./Results/Figures/Jobs/{job_no}_sum.png")
 
 ########################################################################################################################
-
