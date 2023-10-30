@@ -22,6 +22,28 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import matplotlib.pyplot as plt
+
+def upload(ax, project, path):
+    bs = BytesIO()
+    format = path.split('.')[-1]
+    ax.savefig(bs, bbox_inches='tight', format=format)
+
+    token = 'sl.Bo7-uKATtz7LEqf4tvFiWV5varNl32N-zokLxk_iHsDfJRynxt4PjFtItgazMo6VFJXp8gH5Z_i5BZjuiyaUE1pP4dRgQgJzJoLPQd1p7bIKTx-Ul1ZOnrKo3UHQhMjz-W4-UtVOW0uY'
+    dbx = dropbox.Dropbox(token)
+
+    # Will throw an UploadError if it fails
+    dbx.files_upload(
+        f=bs.getvalue(),
+        path=f'/Apps/Overleaf/{project}/{path}',
+        mode=dropbox.files.WriteMode.overwrite)
+
+
+
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
@@ -144,6 +166,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_0_en.png")
 plt.savefig("./Results/Presentation/4_0_en.svg")
+upload(plt, 'Project-based Internship', 'figures/4_0_en.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -161,6 +184,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_0_1_en.png")
 plt.savefig("./Results/Presentation/4_0_1_en.svg")
+upload(plt, 'Project-based Internship', 'figures/4_0_1_en.png')
 plt.close('all')
 
 # Calculate RMSE of EN
@@ -222,6 +246,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_rf_full.png")
 plt.savefig("./Results/Presentation/4_1_rf_full.svg")
+upload(plt, 'Project-based Internship', 'figures/4_1_rf_full.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -239,6 +264,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_1_rf_full.png")
 plt.savefig("./Results/Presentation/4_1_1_rf_full.svg")
+upload(plt, 'Project-based Internship', 'figures/4_1_1_rf_full.png')
 
 # Calculate RMSE of RF
 rmse_rf_full = np.sqrt(
@@ -284,6 +310,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_rf_sparse.png")
 plt.savefig("./Results/Presentation/4_1_rf_sparse.svg")
+upload(plt, 'Project-based Internship', 'figures/4_1_rf_sparse.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -301,6 +328,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_1_rf_sparse.png")
 plt.savefig("./Results/Presentation/4_1_1_rf_sparse.svg")
+upload(plt, 'Project-based Internship', 'figures/4_1_1_rf_sparse.png')
 
 # Calculate RMSE of RF
 rmse_rf_sparse = np.sqrt(
@@ -362,6 +390,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_2_gb.png")
 plt.savefig("./Results/Presentation/4_2_gb.svg")
+upload(plt, 'Project-based Internship', 'figures/4_2_gb.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -379,6 +408,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_2_1_gb.png")
 plt.savefig("./Results/Presentation/4_2_1_gb.svg")
+upload(plt, 'Project-based Internship', 'figures/4_2_1_gb.png')
 
 # Calculate RMSE of GB
 rmse_gb = np.sqrt(
@@ -440,6 +470,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_3_xgb.png")
 plt.savefig("./Results/Presentation/4_3_xgb.svg")
+upload(plt, 'Project-based Internship', 'figures/4_3_xgb.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -457,6 +488,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_3_1_xgb.png")
 plt.savefig("./Results/Presentation/4_3_1_xgb.svg")
+upload(plt, 'Project-based Internship', 'figures/4_3_1_xgb.png')
 
 # Calculate RMSE of XGB
 rmse_xgb = np.sqrt(
@@ -542,6 +574,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_9_sum.png")
 plt.savefig("./Results/Presentation/4_9_sum.svg")
+upload(plt, 'Project-based Internship', 'figures/4_9_sum.png')
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")

@@ -12,6 +12,26 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import matplotlib.pyplot as plt
+
+def upload(ax, project, path):
+    bs = BytesIO()
+    format = path.split('.')[-1]
+    ax.savefig(bs, bbox_inches='tight', format=format)
+
+    token = 'sl.Bo7-uKATtz7LEqf4tvFiWV5varNl32N-zokLxk_iHsDfJRynxt4PjFtItgazMo6VFJXp8gH5Z_i5BZjuiyaUE1pP4dRgQgJzJoLPQd1p7bIKTx-Ul1ZOnrKo3UHQhMjz-W4-UtVOW0uY'
+    dbx = dropbox.Dropbox(token)
+
+    # Will throw an UploadError if it fails
+    dbx.files_upload(
+        f=bs.getvalue(),
+        path=f'/Apps/Overleaf/{project}/{path}',
+        mode=dropbox.files.WriteMode.overwrite)
+
+
 # Read dfData parquet file
 dfData = pd.read_parquet("dfData_org.parquet")
 
@@ -32,7 +52,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_0_costs.png")
 plt.savefig("./Results/Presentation/1_0_costs.svg")
-
+upload(plt, 'Project-based Internship', 'figures/1_0_costs.png')
 
 # Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
 plt.figure(figsize=(20, 10))
@@ -50,6 +70,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
+upload(plt, 'Project-based Internship', 'figures/1_1_revenue.png')
 
 
 # Plot sum of risk by date for each department
@@ -62,7 +83,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_2_risk.png")
 plt.savefig("./Results/Presentation/1_2_risk.svg")
-
+upload(plt, 'Project-based Internship', 'figures/1_2_risk.png')
 
 # Select random job and plot risk
 job_no = 'S161210'
@@ -86,6 +107,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_3_risk.png")
 plt.savefig("./Results/Presentation/1_3_risk.svg")
+upload(plt, 'Project-based Internship', 'figures/1_3_risk.png')
 
 
 ### Missing Data Analysis ###
@@ -111,6 +133,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
+upload(plt, 'Project-based Internship', 'figures/1_4_missing.png')
 
 # Plot kde of labor_cost_share, material_cost_share and other_cost_share
 plt.figure(figsize=(20, 10))
@@ -124,6 +147,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_5_cost_share.png")
 plt.savefig("./Results/Presentation/1_5_cost_share.svg")
+upload(plt, 'Project-based Internship', 'figures/1_5_cost_share.png')
 
 
 # Summary of Variables (mean, std, min, max, missing, % missing)
