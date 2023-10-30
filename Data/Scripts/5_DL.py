@@ -22,6 +22,26 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import matplotlib.pyplot as plt
+
+def upload(ax, project, path):
+    bs = BytesIO()
+    format = path.split('.')[-1]
+    ax.savefig(bs, bbox_inches='tight', format=format)
+
+    token = "sl.Bo6FHDjSJLJirVbVCBTy0xJ-kABnEDDsHSpSnzcFR1oxDMeo_2WtQIWGHoI1VrFkXNB0iY9yayFuHDuNl5ULl7g4bdswWfDPVpoTT7BbN1M1YGDUIZWnqXq7wMupJKw6N46r_TUujLxQ"
+    dbx = dropbox.Dropbox(token)
+
+    # Will throw an UploadError if it fails
+    dbx.files_upload(
+        f=bs.getvalue(),
+        path=f'/Apps/Overleaf/{project}/{path}',
+        mode=dropbox.files.WriteMode.overwrite)
+
+
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
@@ -155,6 +175,7 @@ plt.title("Loss of LSTM")
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/5_0_loss.png")
 plt.savefig("./Results/Presentation/5_0_loss.svg")
+upload(plt, 'Project-based Internship', 'figures/5_0_loss.png')
 
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(model.predict(
@@ -182,6 +203,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_1_lstm.png")
 plt.savefig("./Results/Presentation/5_1_lstm.svg")
+upload(plt, 'Project-based Internship', 'figures/5_1_lstm.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -199,6 +221,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_1_1_lstm.png")
 plt.savefig("./Results/Presentation/5_1_1_lstm.svg")
+upload(plt, 'Project-based Internship', 'figures/5_1_1_lstm.png')
 
 # Calculate RMSE of LSTM
 rmse_lstm = np.sqrt(

@@ -3,6 +3,8 @@ import os
 import pandas as pd
 from plot_config import *
 
+os.chdir(os.path.dirname(sys.argv[0]))
+
 # Read data
 if os.name == 'posix':
     sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
@@ -11,6 +13,26 @@ elif os.name == 'nt':
     sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 
 os.chdir(sDir)
+
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import matplotlib.pyplot as plt
+
+def upload(ax, project, path):
+    bs = BytesIO()
+    format = path.split('.')[-1]
+    ax.savefig(bs, bbox_inches='tight', format=format)
+
+    token = "sl.Bo6FHDjSJLJirVbVCBTy0xJ-kABnEDDsHSpSnzcFR1oxDMeo_2WtQIWGHoI1VrFkXNB0iY9yayFuHDuNl5ULl7g4bdswWfDPVpoTT7BbN1M1YGDUIZWnqXq7wMupJKw6N46r_TUujLxQ"
+    dbx = dropbox.Dropbox(token)
+
+    # Will throw an UploadError if it fails
+    dbx.files_upload(
+        f=bs.getvalue(),
+        path=f'/Apps/Overleaf/{project}/{path}',
+        mode=dropbox.files.WriteMode.overwrite)
+
 
 # Read dfData parquet file
 dfData = pd.read_parquet("dfData_org.parquet")
@@ -32,6 +54,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_0_costs.png")
 plt.savefig("./Results/Presentation/1_0_costs.svg")
+upload(plt, 'Project-based Internship', 'figures/1_0_costs.png')
 
 
 # Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
@@ -50,7 +73,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
-
+upload(plt, 'Project-based Internship', 'figures/1_1_revenue.png')
 
 # Plot sum of risk by date for each department
 plt.figure(figsize=(20, 10))
@@ -62,7 +85,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_2_risk.png")
 plt.savefig("./Results/Presentation/1_2_risk.svg")
-
+upload(plt, 'Project-based Internship', 'figures/1_2_risk.png')
 
 # Select random job and plot risk
 job_no = 'S161210'
@@ -71,7 +94,6 @@ plt.xlabel("Date")
 plt.ylabel("Risk")
 plt.tight_layout()
 plt.grid(alpha=0.35)
-
 
 
 # Plot kde of risk
@@ -86,7 +108,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_3_risk.png")
 plt.savefig("./Results/Presentation/1_3_risk.svg")
-
+upload(plt, 'Project-based Internship', 'figures/1_3_risk.png')
 
 ### Missing Data Analysis ###
 # Calculate missing values
@@ -111,6 +133,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
+upload(plt, 'Project-based Internship', 'figures/1_4_missing.png')
 
 # Plot kde of labor_cost_share, material_cost_share and other_cost_share
 plt.figure(figsize=(20, 10))
@@ -124,7 +147,7 @@ plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_5_cost_share.png")
 plt.savefig("./Results/Presentation/1_5_cost_share.svg")
-
+upload(plt, 'Project-based Internship', 'figures/1_5_cost_share.png')
 
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.describe().transpose()

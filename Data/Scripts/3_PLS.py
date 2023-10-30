@@ -17,6 +17,27 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import matplotlib.pyplot as plt
+
+def upload(ax, project, path):
+    bs = BytesIO()
+    format = path.split('.')[-1]
+    ax.savefig(bs, bbox_inches='tight', format=format)
+
+    token = "sl.Bo6FHDjSJLJirVbVCBTy0xJ-kABnEDDsHSpSnzcFR1oxDMeo_2WtQIWGHoI1VrFkXNB0iY9yayFuHDuNl5ULl7g4bdswWfDPVpoTT7BbN1M1YGDUIZWnqXq7wMupJKw6N46r_TUujLxQ"
+    dbx = dropbox.Dropbox(token)
+
+    # Will throw an UploadError if it fails
+    dbx.files_upload(
+        f=bs.getvalue(),
+        path=f'/Apps/Overleaf/{project}/{path}',
+        mode=dropbox.files.WriteMode.overwrite)
+
+
+
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
@@ -102,6 +123,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_0_dst.png")
 plt.savefig("./Results/Presentation/3_0_dst.svg")
+upload(plt, 'Project-based Internship', 'figures/3_0_dst.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -118,6 +140,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_0_1_dst.png")
 plt.savefig("./Results/Presentation/3_0_1_dst.svg")
+upload(plt, 'Project-based Internship', 'figures/3_0_1_dst.png')
 plt.close('all')
 
 # Calculate out-of-sample RMSE of DST
@@ -154,6 +177,7 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar].corr(), anno
 plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_0_2_corr.png")
 plt.savefig("./Results/Presentation/3_0_2_corr.svg")
+upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
 
 # Run OLS
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar], missing='drop')
@@ -184,6 +208,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_1_ols.png")
 plt.savefig("./Results/Presentation/3_1_ols.svg")
+upload(plt, 'Project-based Internship', 'figures/3_1_ols.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -200,6 +225,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_1_1_ols.png")
 plt.savefig("./Results/Presentation/3_1_1_ols.svg")
+upload(plt, 'Project-based Internship', 'figures/3_1_1_ols.png')
 plt.close('all')
 
 # Calculate out-of-sample RMSE of OLS
@@ -232,6 +258,7 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag].corr(), 
 plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_2_2_corr_incl_lag.png")
 plt.savefig("./Results/Presentation/3_2_2_corr_incl_lag.svg")
+upload(plt, 'Project-based Internship', 'figures/3_2_2_corr_incl_lag.png')
 
 # Run OLS with lagged variables
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag], missing='drop')
@@ -263,6 +290,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_3_ols_lag.png")
 plt.savefig("./Results/Presentation/3_3_ols_lag.svg")
+upload(plt, 'Project-based Internship', 'figures/3_3_ols_lag.png')
 
 #
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -280,6 +308,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_3_1_ols_lag.png")
 plt.savefig("./Results/Presentation/3_3_1_ols_lag.svg")
+upload(plt, 'Project-based Internship', 'figures/3_3_1_ols_lag.png')
 plt.close('all')
 
 # Calculate RMSE of OLS with lagged variables
@@ -313,6 +342,7 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget].c
 plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_4_2_corr_incl_lag_budget.png")
 plt.savefig("./Results/Presentation/3_4_2_corr_incl_lag_budget.svg")
+upload(plt, 'Project-based Internship', 'figures/3_4_2_corr_incl_lag_budget.png')
 
 # Run OLS with lagged variables and budget
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget], missing='drop')
@@ -344,6 +374,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_4_ols_lag_budget.png")
 plt.savefig("./Results/Presentation/3_4_ols_lag_budget.svg")
+upload(plt, 'Project-based Internship', 'figures/3_4_ols_lag_budget.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -361,6 +392,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_4_1_ols_lag_budget.png")
 plt.savefig("./Results/Presentation/3_4_1_ols_lag_budget.svg")
+upload(plt, 'Project-based Internship', 'figures/3_4_1_ols_lag_budget.png')
 plt.close('all')
 
 # Calculate RMSE of OLS with lagged variables and budget
@@ -396,6 +428,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_5_fc.png")
 plt.savefig("./Results/Presentation/3_5_fc.svg")
+upload(plt, 'Project-based Internship', 'figures/3_5_fc.png')
 
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -413,6 +446,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_5_1_fc.png")
 plt.savefig("./Results/Presentation/3_5_1_fc.svg")
+upload(plt, 'Project-based Internship', 'figures/3_5_1_fc.png')
 plt.close('all')
 
 # Calculate RMSE of Forecast Combination
@@ -487,6 +521,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_6_cluster.png")
 plt.savefig("./Results/Presentation/3_6_cluster.svg")
+upload(plt, 'Project-based Internship', 'figures/3_6_cluster.png')
 plt.close('all')
 
 # Use Forecast Combination to combine the predictions of each cluster
@@ -515,6 +550,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_7_fc_cluster.png")
 plt.savefig("./Results/Presentation/3_7_fc_cluster.svg")
+upload(plt, 'Project-based Internship', 'figures/3_7_fc_cluster.png')
 
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
@@ -529,6 +565,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_7_1_fc_cluster.png")
 plt.savefig("./Results/Presentation/3_7_1_fc_cluster.svg")
+upload(plt, 'Project-based Internship', 'figures/3_7_1_fc_cluster.png')
 plt.close('all')
 
 # Calculate RMSE of Forecast Combination
@@ -562,6 +599,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_8_fc_cluster_dst.png")
 plt.savefig("./Results/Presentation/3_8_fc_cluster_dst.svg")
+upload(plt, 'Project-based Internship', 'figures/3_8_fc_cluster_dst.png')
 
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
@@ -576,6 +614,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_8_1_fc_cluster_dst.png")
 plt.savefig("./Results/Presentation/3_8_1_fc_cluster_dst.svg")
+upload(plt, 'Project-based Internship', 'figures/3_8_1_fc_cluster_dst.png')
 plt.close('all')
 
 # Calculate RMSE of Forecast Combination
