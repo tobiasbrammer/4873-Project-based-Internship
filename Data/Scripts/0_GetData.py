@@ -27,6 +27,29 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
+
+
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import matplotlib.pyplot as plt
+
+def upload(ax, project, path):
+    bs = BytesIO()
+    format = path.split('.')[-1]
+    ax.savefig(bs, bbox_inches='tight', format=format)
+
+    # token = os.DROPBOX
+    token = os.getenv('DROPBOX')
+    dbx = dropbox.Dropbox(token)
+
+    # Will throw an UploadError if it fails
+    dbx.files_upload(
+        f=bs.getvalue(),
+        path=f'/Apps/Overleaf/{project}/{path}',
+        mode=dropbox.files.WriteMode.overwrite)
+
+
 from plot_config import *
 
 # If time is 05:00 - 05:15, then wait until 05:15
@@ -244,6 +267,7 @@ for col in ['revenue', 'costs', 'contribution']:
     plt.tight_layout()
     plt.savefig(f"./Results/Figures/1_6_{col}_acf_pacf.png")
     plt.savefig(f"./Results/Presentation/1_6_{col}_acf_pacf.svg")
+    upload(plt, 'Project-based Internship', f'figures/1_6_{col}_acf_pacf.png')
 
 # Get 5 lagged values for revenue, costs and contribution for each job_no
 for col in ['revenue', 'costs', 'contribution']:
@@ -342,6 +366,7 @@ plt.annotate('Source: ELCON A/S',
              fontsize=10)
 plt.savefig("./Results/Figures/1_7_description.png")
 plt.savefig("./Results/Presentation/1_7_description.svg")
+upload(plt, 'Project-based Internship', 'figures/1_7_description.png')
 
 
 # Left join with the original DataFrame
@@ -503,6 +528,7 @@ fig.suptitle('DST data')
 plt.tight_layout()
 plt.savefig("./Results/Figures/1_8_dst_data.png")
 plt.savefig("./Results/Presentation/1_8_dst_data.svg")
+upload(plt, 'Project-based Internship', 'figures/1_8_dst_data.png')
 
 del dst_df
 
