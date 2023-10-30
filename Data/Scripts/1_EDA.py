@@ -22,7 +22,8 @@ def upload(ax, project, path):
     format = path.split('.')[-1]
     ax.savefig(bs, bbox_inches='tight', format=format)
 
-    token = 'sl.Bo7-uKATtz7LEqf4tvFiWV5varNl32N-zokLxk_iHsDfJRynxt4PjFtItgazMo6VFJXp8gH5Z_i5BZjuiyaUE1pP4dRgQgJzJoLPQd1p7bIKTx-Ul1ZOnrKo3UHQhMjz-W4-UtVOW0uY'
+    # token = os.DROPBOX
+    token = os.getenv('DROPBOX')
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
@@ -48,7 +49,6 @@ plt.xlabel("Costs (mDKK)")
 plt.ylabel("Density")
 plt.xlim(dfData['budget_costs'].quantile(0.00000000001), 10)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-plt.tight_layout()
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_0_costs.png")
 plt.savefig("./Results/Presentation/1_0_costs.svg")
@@ -66,7 +66,7 @@ plt.xlabel("Revenue (mDKK)")
 plt.ylabel("Density")
 # legend below x-axis label
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-plt.tight_layout()
+
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
@@ -79,7 +79,7 @@ sns.lineplot(x='date', y='risk', hue='department', data=dfData, errorbar=None)
 plt.xlabel("Date")
 plt.ylabel("Risk")
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-plt.tight_layout()
+
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_2_risk.png")
 plt.savefig("./Results/Presentation/1_2_risk.svg")
@@ -90,7 +90,7 @@ job_no = 'S161210'
 dfData[dfData['job_no'] == job_no].plot(x='date', y='risk', figsize=(20, 10))
 plt.xlabel("Date")
 plt.ylabel("Risk")
-plt.tight_layout()
+
 plt.grid(alpha=0.35)
 
 
@@ -103,7 +103,7 @@ plt.xlabel("Risk (mDKK)")
 plt.ylabel("Density")
 plt.xlim(dfData['risk'].quantile(0.01), dfData['risk'].quantile(0.99))
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=1).get_frame().set_linewidth(0.0)
-plt.tight_layout()
+
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_3_risk.png")
 plt.savefig("./Results/Presentation/1_3_risk.svg")
@@ -128,7 +128,7 @@ sns.barplot(x=dfMissing[dfMissing['missing_pct'] > 0]['column'],
 plt.xticks(rotation=90)
 plt.xlabel("Columns")
 plt.ylabel("Missing Percentage")
-plt.tight_layout()
+
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/1_4_missing.png")
@@ -143,7 +143,7 @@ plt.xlabel("Share")
 plt.ylabel("Density")
 plt.xlim(0, 1)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-plt.tight_layout()
+
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_5_cost_share.png")
 plt.savefig("./Results/Presentation/1_5_cost_share.svg")

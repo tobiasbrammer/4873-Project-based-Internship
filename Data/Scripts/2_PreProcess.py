@@ -30,7 +30,7 @@ def upload(ax, project, path):
     format = path.split('.')[-1]
     ax.savefig(bs, bbox_inches='tight', format=format)
 
-    token = 'sl.Bo7-uKATtz7LEqf4tvFiWV5varNl32N-zokLxk_iHsDfJRynxt4PjFtItgazMo6VFJXp8gH5Z_i5BZjuiyaUE1pP4dRgQgJzJoLPQd1p7bIKTx-Ul1ZOnrKo3UHQhMjz-W4-UtVOW0uY'
+    token = os.getenv('DROPBOX')
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
