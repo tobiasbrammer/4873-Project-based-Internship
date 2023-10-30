@@ -85,7 +85,7 @@ dfDataRescaled = dfDataScaled.copy()
 dfDataRescaled[colIndepVarNum] = x_scaler.inverse_transform(dfDataScaled[colIndepVarNum].values)
 dfDataRescaled[sDepVar] = y_scaler.inverse_transform(dfDataScaled[sDepVar].values.reshape(-1, 1))
 
-train_index = dfData[dfData[trainMethod] == 0].index
+train_index = dfData[dfData[trainMethod] == 1].index
 dfDataScaledTrain = dfDataScaled.loc[train_index]
 dfDataScaledTest = dfDataScaled.drop(train_index)
 
@@ -111,38 +111,26 @@ iUnit = 256 * 4
 model = Sequential()
 model.add(LSTM(units=iUnit, return_sequences=True, input_shape=(
     dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
-model.add(Dropout(0.2))
-model.add(LSTM(units=int(iUnit / 2), return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(units=int(iUnit / 4), return_sequences=True))
+model.add(LSTM(units=int(iUnit / 8), return_sequences=True))
 model.add(Dropout(0.2))
 model.add(LSTM(units=int(iUnit / 8), return_sequences=True))
 model.add(Dropout(0.2))
-model.add(LSTM(units=int(iUnit / 16), return_sequences=True))
+model.add(LSTM(units=int(iUnit / 16), return_sequences=False))
 model.add(Dropout(0.2))
-model.add(LSTM(units=int(iUnit / 32), return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(units=int(iUnit / 64), return_sequences=False))
-model.add(Dropout(0.2))
-model.add(Dense(units=int(iUnit / 128), activation='tanh'))
-model.add(Dropout(0.2))
-model.add(Dense(units=1, activation='softmax'))
-model.compile(optimizer="adam", loss="mse", metrics=["mean_absolute_percentage_error"])
-
-# Compile model
-model.compile(optimizer='adam', loss='mean_squared_error')
+model.add(Dense(units=1))
+model.compile(optimizer="adam", loss="mse", metrics=["root_mean_squared_error"])
 
 # Define early stopping
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=10)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=5)
 
 # Fit model
 start_time_lstm = datetime.datetime.now()
 # Fit model to training data dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])]
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=10,
-          batch_size=64,
-          validation_split=0.1,
+          epochs=3,
+          batch_size=int(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[0]/200),
+          validation_split=0.25,
           callbacks=[early_stop],
           verbose=1)
 model.save('./.AUX/LSTM.h5')
@@ -153,13 +141,13 @@ plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss of LSTM")
 plt.grid(alpha=0.35)
+plt.show()
 plt.savefig("./Results/Figures/5_0_loss.png")
 plt.savefig("./Results/Presentation/5_0_loss.svg")
 
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(model.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))[:, -1, 0]).values.reshape(-1,
-                                                                                                                    1)
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))).values.reshape(-1,1)
 
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].shift(-1).values.reshape(-1, 1))
 
@@ -222,12 +210,16 @@ dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 
 
 # dfRMSE to latex
 dfRMSE_latex = dfRMSE.copy()
-# Bold the lowest RMSE
-dfRMSE_latex.loc[dfRMSE['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'] = '\\textbf{' + dfRMSE_latex['RMSE'].astype(
-    str) + '}'
-# Bold the lowest sMAPE
-dfRMSE_latex.loc[dfRMSE['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] = '\\textbf{' + dfRMSE_latex['sMAPE'].astype(
-    str) + '}'
+dfRMSE_latex = dfRMSE_latex.round(4)
+dfRMSE_latex['RMSE'] = dfRMSE_latex['RMSE'].apply(lambda x: '{0:.4f}'.format(x))
+dfRMSE_latex['sMAPE'] = dfRMSE_latex['sMAPE'].apply(lambda x: '{0:.4f}'.format(x))
+
+# Bold the lowest RMSE to save to .tex
+dfRMSE_latex.loc[dfRMSE_latex['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'] = r'\textbf{' + dfRMSE_latex.loc[
+    dfRMSE_latex['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'].astype(str) + '}'
+# Bold the lowest sMAPE to save to .tex
+dfRMSE_latex.loc[dfRMSE_latex['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] = r'\textbf{' + dfRMSE_latex.loc[
+    dfRMSE_latex['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'].astype(str) + '}'
 
 print(dfRMSE_latex)
 

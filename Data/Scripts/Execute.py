@@ -16,7 +16,6 @@ os.chdir(sDir)
 import subprocess
 import datetime
 from plot_config import *
-# import winsound
 
 # Add plot_config.py to env variables
 os.environ['PYTHONPATH'] = os.getcwd()
@@ -61,4 +60,10 @@ subprocess.run(["python", "./Scripts/5_DL.py"])
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
 # Play sound when finished
-# winsound.Beep(frequency=600, duration=800)
+if os.name == 'posix':
+    os.system('say "Finished.')
+# If operating system is Windows then
+elif os.name == 'nt':
+    import winsound
+    winsound.Beep(frequency=600, duration=800)
+
