@@ -77,17 +77,15 @@ with open('./.AUX/lDST.txt', 'w') as lVars:
     lVars.write('\n'.join(lDST))
 
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lDST])
-results = model.fit()
+results_dst = model.fit()
 # Save results to LaTeX
-ols = results.summary(alpha=0.05).as_latex()
+ols = results_dst.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_0_dst.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 
-dfData['predicted_ols'] = y_scaler.inverse_transform(results.predict(dfDataScaled[lDST]).values.reshape(-1, 1))
-
 # Predict and rescale sDepVar using OLS
-dfData['predicted_dst'] = y_scaler.inverse_transform(results.predict(dfDataScaled[lDST]).values.reshape(-1, 1))
+dfData['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataScaled[lDST]).shift(-1).values.reshape(-1, 1))
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -132,7 +130,7 @@ smape_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_dst'])
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lDST]).values.reshape(-1, 1))
+dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataWIP[lDST]).shift(-1).values.reshape(-1, 1))
 
 ### Using correlation to select variables ###
 corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
@@ -159,17 +157,17 @@ plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 
 # Run OLS
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar], missing='drop')
-results = model.fit()
+results_ols = model.fit()
 # Save results to LaTeX
-ols = results.summary(alpha=0.05).as_latex()
+ols = results_ols.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 
 # Predict and rescale sDepVar using OLS
-dfData['predicted_ols'] = results.predict(dfDataScaled[lIndepVar])
+dfData['predicted_ols'] = results_ols.predict(dfDataScaled[lIndepVar])
 
-dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].values.reshape(-1, 1))
+dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].shift(-1).values.reshape(-1, 1))
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -213,7 +211,7 @@ smape_ols = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_ols'])
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar]).values.reshape(-1, 1))
+dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results_ols.predict(dfDataWIP[lIndepVar]).shift(-1).values.reshape(-1, 1))
 
 ### Add lagged variables to lIndepVar ###
 # Add lagged variables to lIndepVar
@@ -237,17 +235,17 @@ plt.savefig("./Results/Presentation/3_2_2_corr_incl_lag.svg")
 
 # Run OLS with lagged variables
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag], missing='drop')
-results = model.fit()
+results_ols_lag = model.fit()
 # Save results to LaTeX
-ols = results.summary(alpha=0.05).as_latex()
+ols = results_ols_lag.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 
 # Predict and rescale sDepVar using OLS with lagged variables
-dfData['predicted_lag'] = results.predict(dfDataScaled[lIndepVar_lag])
+dfData['predicted_lag'] = results_ols_lag.predict(dfDataScaled[lIndepVar_lag])
 
-dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].values.reshape(-1, 1))
+dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].shift(-1).values.reshape(-1, 1))
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -293,7 +291,7 @@ smape_ols_lag = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                       dfData[dfData[trainMethod] == 0]['predicted_lag'])
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results.predict(dfDataWIP[lIndepVar_lag]).values.reshape(-1, 1))
+dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results_ols_lag.predict(dfDataWIP[lIndepVar_lag]).shift(-1).values.reshape(-1, 1))
 
 # Include production_estimate_contribution and sales_estimate_contribution
 lIndepVar_lag_budget = lIndepVar_lag + ['production_estimate_contribution', 'sales_estimate_contribution']
@@ -318,17 +316,17 @@ plt.savefig("./Results/Presentation/3_4_2_corr_incl_lag_budget.svg")
 
 # Run OLS with lagged variables and budget
 model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget], missing='drop')
-results = model.fit()
+results_lag_budget = model.fit()
 # Save results to LaTeX
-ols = results.summary(alpha=0.05).as_latex()
+ols = results_lag_budget.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
-dfData['predicted_lag_budget'] = results.predict(dfDataScaled[lIndepVar_lag_budget])
+dfData['predicted_lag_budget'] = results_lag_budget.predict(dfDataScaled[lIndepVar_lag_budget])
 
-dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_lag_budget'].values.reshape(-1, 1))
+dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_lag_budget'].shift(-1).values.reshape(-1, 1))
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -373,14 +371,14 @@ smape_ols_lag_budget = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                              dfData[dfData[trainMethod] == 0]['predicted_lag_budget'])
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_lag_budget'] = results.predict(dfDataWIP[lIndepVar_lag_budget])
+dfDataWIP['predicted_lag_budget'] = results_lag_budget.predict(dfDataWIP[lIndepVar_lag_budget])
 
 dfDataWIP['predicted_lag_budget'] = y_scaler.inverse_transform(
-    dfDataWIP['predicted_lag_budget'].values.reshape(-1, 1))
+    dfDataWIP['predicted_lag_budget'].shift(-1).values.reshape(-1, 1))
 
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
-dfData['predicted_fc'] = (dfData['predicted_dst'] + dfData['predicted_lag_budget']) / 2
+dfData['predicted_fc'] = dfData['predicted_dst']*0.2 + dfData['predicted_lag_budget']*0.8
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -441,19 +439,19 @@ for iCluster in lCluster:
     # For each cluster label in lClusterLabels do
     for iClusterLabel in lClusterLabels:
         # Run OLS
-        model = sm.OLS(dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][sDepVar],
+        model_cluster = sm.OLS(dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][sDepVar],
                        dfDataScaledTrain[dfDataScaledTrain['cluster_' + str(iCluster)] == iClusterLabel][
                            lIndepVar_lag_budget]
                        , missing='drop')
-        results = model.fit()
+        results_cluster = model_cluster.fit()
         # Predict and rescale sDepVar using OLS with lagged variables and budget and add to cluster_{iCluster}
         dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
-            iCluster)] = results.predict(
+            iCluster)] = results_cluster.predict(
             dfDataScaled[dfDataScaled['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget])
         dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
             iCluster)] = y_scaler.inverse_transform(
             dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
-                iCluster)].values.reshape(-1, 1))
+                iCluster)].shift(-1).values.reshape(-1, 1))
 
 # Plot the sum of all predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -546,7 +544,7 @@ dfRMSE.loc['FC_cluster'] = [rmse_fc_cluster, smape_fc_cluster]
 
 ### Combine Cluster Forecast Combination and DST ###
 
-dfData['predicted_fc_cluster_dst'] = (dfData['predicted_cluster_fc'] + dfData['predicted_dst']) / 2
+dfData['predicted_fc_cluster_dst'] = 0.8*dfData['predicted_cluster_fc'] + dfData['predicted_dst']*0.2
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))

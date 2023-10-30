@@ -124,7 +124,7 @@ lIndepVar = [col for col in lIndepVar if not col.startswith('cluster_')]
 start_time_en_sparse = datetime.datetime.now()
 elastic_net_cv_sparse.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
 dfData['predicted_en_sparse'] = elastic_net_cv_sparse.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
-dfData['predicted_en_sparse'] = y_scaler.inverse_transform(dfData['predicted_en_sparse'].values.reshape(-1, 1))
+dfData['predicted_en_sparse'] = y_scaler.inverse_transform(dfData['predicted_en_sparse'].shift(-1).values.reshape(-1, 1))
 end_time_en_sparse = datetime.datetime.now()
 print(f'ElasticNet finished in {end_time_en_sparse - start_time_en_sparse}.')
 
@@ -202,7 +202,7 @@ rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 # Predict and rescale using RF
 dfData['predicted_rf_full'] = rf_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_rf_full'] = y_scaler.inverse_transform(dfData['predicted_rf_full'].values.reshape(-1, 1))
+dfData['predicted_rf_full'] = y_scaler.inverse_transform(dfData['predicted_rf_full'].shift(-1).values.reshape(-1, 1))
 end_time_rf = datetime.datetime.now()
 print(f'RF Full fit finished in {end_time_rf - start_time_rf}.')
 
@@ -265,7 +265,7 @@ rf_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.diff
 # Predict and rescale using RF
 dfData['predicted_rf_sparse'] = rf_cv.predict(
     dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_rf_sparse'] = y_scaler.inverse_transform(dfData['predicted_rf_sparse'].values.reshape(-1, 1))
+dfData['predicted_rf_sparse'] = y_scaler.inverse_transform(dfData['predicted_rf_sparse'].shift(-1).values.reshape(-1, 1))
 end_time_rf = datetime.datetime.now()
 print(f'RF Sparse fit finished in {end_time_rf - start_time_rf}.')
 
@@ -342,7 +342,7 @@ gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 # Predict and rescale using GB
 dfData['predicted_gb'] = gb_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_gb'] = y_scaler.inverse_transform(dfData['predicted_gb'].values.reshape(-1, 1))
+dfData['predicted_gb'] = y_scaler.inverse_transform(dfData['predicted_gb'].shift(-1).values.reshape(-1, 1))
 end_time_gb = datetime.datetime.now()
 print(f'GB fit finished in {end_time_gb - start_time_gb}.')
 
@@ -419,7 +419,7 @@ xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].colum
 # Predict and rescale using XGB
 dfData['predicted_xgb'] = xgb_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].values.reshape(-1, 1))
+dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].shift(-1).values.reshape(-1, 1))
 end_time_xgb = datetime.datetime.now()
 
 print(f'XGB fit finished in {end_time_xgb - start_time_xgb}.')

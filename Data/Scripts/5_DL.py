@@ -89,6 +89,15 @@ train_index = dfData[dfData[trainMethod] == 0].index
 dfDataScaledTrain = dfDataScaled.loc[train_index]
 dfDataScaledTest = dfDataScaled.drop(train_index)
 
+# First, let us get a list of unique job_no's (chunk identifiers)
+lJobNo = dfData['job_no'].unique().tolist()
+
+# We can then collect all rows for each chunk identifier and store them in a dictionary for easy access.
+dJobNo = {elem: pd.DataFrame for elem in lJobNo}
+for key in dJobNo.keys():
+    dJobNo[key] = dfData[:][dfData['job_no'] == key]
+
+
 ### LSTM ###
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from keras.models import Sequential
@@ -106,16 +115,18 @@ model.add(Dropout(0.2))
 model.add(LSTM(units=int(iUnit / 2), return_sequences=True))
 model.add(Dropout(0.2))
 model.add(LSTM(units=int(iUnit / 4), return_sequences=True))
-model.add(Dropout(0.1))
-model.add(LSTM(units=int(iUnit / 8), return_sequences=True))
-model.add(Dropout(0.1))
-model.add(LSTM(units=int(iUnit / 16), return_sequences=True))
-model.add(Dropout(0.1))
-model.add(LSTM(units=int(iUnit / 32), return_sequences=True))
-model.add(Dropout(0.05))
-model.add(LSTM(units=int(iUnit / 64), return_sequences=True))
 model.add(Dropout(0.2))
-model.add(Dense(units=1, activation='tanh'))
+model.add(LSTM(units=int(iUnit / 8), return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=int(iUnit / 16), return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=int(iUnit / 32), return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(units=int(iUnit / 64), return_sequences=False))
+model.add(Dropout(0.2))
+model.add(Dense(units=int(iUnit / 128), activation='tanh'))
+model.add(Dropout(0.2))
+model.add(Dense(units=1, activation='softmax'))
 model.compile(optimizer="adam", loss="mse", metrics=["mean_absolute_percentage_error"])
 
 # Compile model
@@ -129,19 +140,28 @@ start_time_lstm = datetime.datetime.now()
 # Fit model to training data dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])]
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=100,
-          batch_size=16,
+          epochs=10,
+          batch_size=64,
           validation_split=0.1,
           callbacks=[early_stop],
-          verbose=0)
+          verbose=1)
 model.save('./.AUX/LSTM.h5')
+
+# Plot loss
+pd.DataFrame(model.history.history).plot(figsize=(20, 10))
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title("Loss of LSTM")
+plt.grid(alpha=0.35)
+plt.savefig("./Results/Figures/5_0_loss.png")
+plt.savefig("./Results/Presentation/5_0_loss.svg")
 
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(model.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))[:, -1, 0]).values.reshape(-1,
                                                                                                                     1)
 
-dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
+dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].shift(-1).values.reshape(-1, 1))
 
 end_time_lstm = datetime.datetime.now()
 print(f'LSTM fit finished in {end_time_lstm - start_time_lstm}.')
