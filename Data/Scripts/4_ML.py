@@ -540,7 +540,7 @@ print(dfRMSE)
 
 dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 
-pl.close('all')
+plt.close('all')
 
 ########################################################################################################################
 
@@ -576,12 +576,11 @@ ax.plot(dfDataPredSum['date'],
         label='Gradient Boosting')
 ax.plot(dfDataPredSum['date'],
         dfDataPredSum.groupby('date')['predicted_boost'].transform('sum'),
-        label='Forecast Combination')
+        label='XGBoost')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_9_sum.png")

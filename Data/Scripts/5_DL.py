@@ -211,17 +211,21 @@ plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss of LSTM")
 plt.grid(alpha=0.35)
-plt.show()
 plt.savefig("./Results/Figures/5_0_loss.png")
 plt.savefig("./Results/Presentation/5_0_loss.svg")
 upload(plt, 'Project-based Internship', 'figures/5_0_loss.png')
 
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(
-    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])]).reshape(-1, 1)
+    # Ignore index
+    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])]).reshape(-1, 1),
+    index=dfDataScaled.index
 )
 
-dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].shift(-1).values.reshape(-1, 1))
+y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
+
+
+dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
 
 
 print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
@@ -279,6 +283,44 @@ dfRMSE = dfRMSE.round(4)
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
 dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar])].mean(axis=1)
 
+# dfData
+dfData['predicted_avg'] = dfDataPred['predicted_avg']
+
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_avg'].transform('sum'),
+        label='Predicted (Average)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Out of Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/5_2_avg.png")
+plt.savefig("./Results/Presentation/5_2_avg.svg")
+upload(plt, 'Project-based Internship', 'figures/5_2_avg.png')
+
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_avg'].transform('sum'),
+        label='Predicted (Average)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/5_2_1_avg.png")
+plt.savefig("./Results/Presentation/5_2_1_avg.svg")
+upload(plt, 'Project-based Internship', 'figures/5_2_1_avg.png')
+
 
 ########################################################################################################################
 
@@ -299,46 +341,42 @@ print(dfRMSE_latex)
 
 upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex')
 
+
+# Add production_estimate_contribution to dfDataPred
+dfDataPred['production_estimate_contribution'] = dfData['production_estimate_contribution']
+# Add final_estimate_contribution to dfDataPred
+dfDataPred['final_estimate_contribution'] = dfData['final_estimate_contribution']
+
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
 
 ########################################################################################################################
-# if ./Results/Figures/Jobs does not exist, create it
+#if ./Results/Figures/Jobs does not exist, create it
 
-# if not os.path.exists('./Results/Figures/Jobs'):
-#     os.makedirs('./Results/Figures/Jobs')
-#
-# ## For each job_no plot the actual and predicted sDepVar
-# for job_no in dfDataPred['job_no'].unique():
-#     # Get the data of job_no
-#     dfDataJob = dfDataPred[dfDataPred['job_no'] == job_no]
-#     # Plot the actual and predicted contribution of sJobNo
-#     fig, ax = plt.subplots(figsize=(20, 10))
-#     for col in dfDataJob.columns:
-#         if col not in ['date', 'job_no']:
-#             ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
-#     ax.set_xlabel('Date')
-#     ax.set_ylabel('Contribution')
-#     ax.set_title(f'Actual vs. Predicted Contribution of {job_no}')
-#     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-#
-#     plt.grid(alpha=0.5)
-#     plt.rcParams['axes.axisbelow'] = True
-#     plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
-#
-#     # Plot the cumsum of actual and predicted contribution of sJobNo
-#     fig, ax = plt.subplots(figsize=(20, 10))
-#     for col in dfDataJob.columns:
-#         if col not in ['date', 'job_no']:
-#             ax.plot(dfDataJob['date'], dfDataJob[col].cumsum(), label=col)
-#     ax.set_xlabel('Date')
-#     ax.set_ylabel('Cumulative Contribution')
-#     ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {job_no}')
-#     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-#
-#     plt.grid(alpha=0.5)
-#     plt.rcParams['axes.axisbelow'] = True
-#     plt.savefig(f"./Results/Figures/Jobs/{job_no}_sum.png")
+if not os.path.exists('./Results/Figures/Jobs'):
+    os.makedirs('./Results/Figures/Jobs')
+
+## For each job_no plot the actual and predicted sDepVar
+for job_no in dfDataPred['job_no'].unique():
+    # Get the data of job_no
+    dfDataJob = dfDataPred[dfDataPred['job_no'] == job_no]
+    # Plot the cumsum of actual and predicted contribution of sJobNo
+    fig, ax = plt.subplots(figsize=(20, 10))
+    for col in dfDataJob.columns:
+        if col in ['contribution', 'production_estimate_contribution', 'predicted_avg', 'final_estimate_contribution']:
+            if col == 'production_estimate_contribution':
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+            elif col == 'final_estimate_contribution':
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
+            else:
+                ax.plot(dfDataJob['date'], dfDataJob[col].cumsum(), label=col)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Cumulative Contribution')
+    ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {job_no}')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
 
 ########################################################################################################################
