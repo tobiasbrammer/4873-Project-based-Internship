@@ -12,6 +12,10 @@ from plot_config import *
 from sklearn.metrics import mean_squared_error
 import multiprocessing
 
+# Get values between '{"access_token": " and ", "token_type":
+db_access = os.popen("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr").read().split('{"access_token": "')[1].split('", "token_type":')[0]
+
+
 warnings.filterwarnings('ignore')
 
 # Load ./dfData.parquet
@@ -23,15 +27,7 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
-
-# Read token from Data/.AUX/dropbox.txt
-with open('./.AUX/dropbox.txt', 'r') as f:
-    token = f.read()
-
-# Format as single line
-token = token.replace('\n', '')
-
-os.environ['DROPBOX'] = token
+os.environ['DROPBOX'] = db_access
 
 
 import dropbox
@@ -43,17 +39,25 @@ import matplotlib.pyplot as plt
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
-    ax.savefig(bs, bbox_inches='tight', format=format)
 
-    token = os.getenv('DROPBOX')
+    # Check if the file is a .tex file and handle it differently
+    if format == 'tex':
+        # Assuming the 'ax' parameter contains the LaTeX content
+        content = ax
+        format = 'tex'
+    else:
+        ax.savefig(bs, bbox_inches='tight', format=format)
+
+    # token = os.DROPBOX
+    token = os.popen("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr").read().split('{"access_token": "')[1].split('", "token_type":')[0]
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
-    dbx.files_upload(
-        f=bs.getvalue(),
-        path=f'/Apps/Overleaf/{project}/{path}',
-        mode=dropbox.files.WriteMode.overwrite)
-
+    if format == 'tex':
+        # Handle .tex files by directly uploading their content
+        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+    else:
+        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
 
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
@@ -135,12 +139,12 @@ import keras_tuner as kt
 
 def model_builder(hp):
     model = Sequential()
-    model.add(LSTM(units=hp.Int('units_1', min_value=256, max_value=1028, step=8), return_sequences=True, input_shape=(
+    model.add(LSTM(units=hp.Int('units_1', min_value=256, max_value=1028, step=4), return_sequences=True, input_shape=(
         dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
     model.add(Dropout(hp.Float('dropout_1', min_value=0.0, max_value=0.5, step=0.05)))
-    model.add(LSTM(units=hp.Int('units_2', min_value=0, max_value=512, step=8), return_sequences=True))
+    model.add(LSTM(units=hp.Int('units_2', min_value=32, max_value=512, step=4), return_sequences=True))
     model.add(Dropout(hp.Float('dropout_2', min_value=0.0, max_value=0.5, step=0.05)))
-    model.add(LSTM(units=hp.Int('units_3', min_value=0, max_value=256, step=8), return_sequences=False))
+    model.add(LSTM(units=hp.Int('units_3', min_value=16, max_value=256, step=4), return_sequences=False))
     model.add(Dropout(hp.Float('dropout_3', min_value=0.0, max_value=0.5, step=0.05)))
     model.add(Dense(units=1))
     model.compile(optimizer="adam", loss="mse", metrics=['mae'])
@@ -175,8 +179,16 @@ tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].col
 # Get the optimal hyperparameters
 best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
 print(f"""
-The hyperparameter search is complete. The optimal number of units in the LSTM
-layer is {best_hps.get('units')}, and the optimal dropout rate is {best_hps.get('dropout')}.
+The hyperparameter search is complete. The optimal number of units in the first LSTM
+layer is {best_hps.get('units_1')}, and the optimal dropout rate is {best_hps.get('dropout_1')}.
+""")
+print(f"""
+The optimal number of units in the second LSTM
+layer is {best_hps.get('units_2')}, and the optimal dropout rate is {best_hps.get('dropout_2')}.
+""")
+print(f"""
+The optimal number of units in the third LSTM
+layer is {best_hps.get('units_3')}, and the optimal dropout rate is {best_hps.get('dropout_3')}.
 """)
 
 
@@ -197,7 +209,10 @@ model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 model.save('./.AUX/LSTM_tune.tf')
 
 # Plot loss
-pd.DataFrame(model.history.history).plot(figsize=(20, 10))
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(model.history.history['loss'], label='Train')
+ax.plot(model.history.history['val_loss'], label='Validation')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss of LSTM")
@@ -214,8 +229,8 @@ dfData['predicted_lstm'] = pd.DataFrame(
 
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].shift(-1).values.reshape(-1, 1))
 
-end_time_lstm = datetime.datetime.now()
-print(f'LSTM fit finished in {end_time_lstm - start_time_lstm}.')
+
+print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -253,9 +268,9 @@ upload(plt, 'Project-based Internship', 'figures/5_1_1_lstm.png')
 
 # Calculate RMSE of LSTM
 rmse_lstm = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_lstm']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_lstm'])
+smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan,0), dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['LSTM', 'RMSE'] = rmse_lstm
@@ -269,6 +284,7 @@ dfRMSE = dfRMSE.round(4)
 
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
 dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar])].mean(axis=1)
+
 
 ########################################################################################################################
 
@@ -287,9 +303,7 @@ dfRMSE_latex.loc[dfRMSE_latex['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] 
 
 print(dfRMSE_latex)
 
-# Save dfRMSE to .tex
-with open('./Results/Tables/5_1_rmse.tex', 'w') as f:
-    f.write(dfRMSE_latex.to_latex())
+upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex')
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
