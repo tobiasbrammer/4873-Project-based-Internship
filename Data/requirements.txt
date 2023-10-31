@@ -14,3 +14,6 @@ joblib>=1.2.0
 keras>=2.11.0
 ipython>=8.6.0
 pydst>=0.2.0
+dropbox>=11.36.2
+xgboost>=1.7.3
+pyoverleaf>=0.1.4

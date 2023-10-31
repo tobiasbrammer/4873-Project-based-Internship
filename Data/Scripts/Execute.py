@@ -34,7 +34,7 @@ print(f"Dependent variable: {sDepVar}")
 print('Preparing to run sequence of scripts...')
 # Run 0_GetData.py
 print("Running 0_GetData.py...")
-# subprocess.run(["python", "./Scripts/0_GetData.py"])
+subprocess.run(["python", "./Scripts/0_GetData.py"])
 
 # Run 1_EDA.py
 print("Running 1_EDA.py...")

@@ -32,12 +32,8 @@ import dropbox
 from pathlib import Path
 from io import BytesIO
 import matplotlib.pyplot as plt
-
-import os
-from io import BytesIO
-import dropbox
 import re
-
+import subprocess
 
 def upload(ax, project, path):
     bs = BytesIO()
@@ -52,7 +48,7 @@ def upload(ax, project, path):
         ax.savefig(bs, bbox_inches='tight', format=format)
 
     # token = os.DROPBOX
-    token = os.popen("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr").read().split('{"access_token": "')[1].split('", "token_type":')[0]
+    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
@@ -65,41 +61,40 @@ def upload(ax, project, path):
 
 from plot_config import *
 
-# If time is 05:00 - 05:15, then wait until 05:15
-if datetime.datetime.now().hour == 5 and datetime.datetime.now().minute < 15:
-    print("Waiting until 5:15...")
-    while datetime.datetime.now().minute < 15:
+# If time is 05:00 - 05:30, then wait until 05:30
+if datetime.datetime.now().hour == 5 and datetime.datetime.now().minute < 30:
+    print("Waiting until 5:30...")
+    while datetime.datetime.now().minute < 30:
         pass
 # If time is 8:00 - 8:15, then wait until 8:15
-elif datetime.datetime.now().hour == 8 and datetime.datetime.now().minute < 15:
-    print("Waiting until 8:15...")
-    while datetime.datetime.now().minute < 15:
+elif datetime.datetime.now().hour == 8 and datetime.datetime.now().minute < 30:
+    print("Waiting until 8:30...")
+    while datetime.datetime.now().minute < 30:
         pass
 # If time is 11:30 - 11:45, then wait until 11:45
-elif datetime.datetime.now().hour == 11 and 45 > datetime.datetime.now().minute >= 30:
-    print("Waiting until 11:45...")
-    while datetime.datetime.now().minute < 45:
-        print(datetime.datetime.now().strftime("%H:%M:%S"))
+elif datetime.datetime.now().hour == 11 and 59 > datetime.datetime.now().minute >= 30:
+    print("Waiting until 12:00...")
+    while datetime.datetime.now().minute < 59:
         pass
 # If time is 14:00 - 14:15, then wait until 14:15
-elif datetime.datetime.now().hour == 14 and datetime.datetime.now().minute < 15:
-    print("Waiting until 14:15...")
-    while datetime.datetime.now().minute < 15:
+elif datetime.datetime.now().hour == 14 and datetime.datetime.now().minute < 30:
+    print("Waiting until 14:30...")
+    while datetime.datetime.now().minute < 30:
         pass
 # If time is 17:00 - 17:15, then wait until 17:15
-elif datetime.datetime.now().hour == 17 and datetime.datetime.now().minute < 15:
-    print("Waiting until 17:15...")
-    while datetime.datetime.now().minute < 15:
+elif datetime.datetime.now().hour == 17 and datetime.datetime.now().minute < 30:
+    print("Waiting until 17:30...")
+    while datetime.datetime.now().minute < 30:
         pass
 # If time is 21:00 - 21:15, then wait until 21:15
-elif datetime.datetime.now().hour == 21 and datetime.datetime.now().minute < 15:
-    print("Waiting until 21:15...")
-    while datetime.datetime.now().minute < 15:
+elif datetime.datetime.now().hour == 21 and datetime.datetime.now().minute < 30:
+    print("Waiting until 21:30...")
+    while datetime.datetime.now().minute < 30:
         pass
 # If time is 02:00 - 02:15, then wait until 02:15
-elif datetime.datetime.now().hour == 2 and datetime.datetime.now().minute < 15:
-    print("Waiting until 2:15...")
-    while datetime.datetime.now().minute < 15:
+elif datetime.datetime.now().hour == 2 and datetime.datetime.now().minute < 30:
+    print("Waiting until 2:30...")
+    while datetime.datetime.now().minute < 30:
         pass
 
 # Connect to the database using SQLAlchemy
@@ -334,6 +329,7 @@ print('Running text processing...')
 ### Text Processing ###
 # Step 1: Filter out the latest description for each job_no
 dfDesc = dfData.sort_values('date').groupby('job_no').last().reset_index()
+# Replace ø with oe, æ with ae and å with aa
 dfDesc = dfDesc[['job_no', 'description']]
 dfDesc = dfDesc[dfDesc['description'] != ""]
 
@@ -351,6 +347,10 @@ def preprocess(text):
 
 
 dfDesc['description'] = dfDesc['description'].apply(preprocess)
+dfDesc['description'] = dfDesc['description'].str.replace('ø', 'oe')
+dfDesc['description'] = dfDesc['description'].str.replace('æ', 'ae')
+dfDesc['description'] = dfDesc['description'].str.replace('å', 'aa')
+
 
 # Step 3: Convert to Document-Term Matrix and remove sparse terms
 vectorizer = CountVectorizer(min_df=0.02, max_df=0.15)

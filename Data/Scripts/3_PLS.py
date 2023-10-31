@@ -22,7 +22,8 @@ import dropbox
 from pathlib import Path
 from io import BytesIO
 import matplotlib.pyplot as plt
-
+import re
+import subprocess
 
 def upload(ax, project, path):
     bs = BytesIO()
@@ -37,7 +38,7 @@ def upload(ax, project, path):
         ax.savefig(bs, bbox_inches='tight', format=format)
 
     # token = os.DROPBOX
-    token = os.popen("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr").read().split('{"access_token": "')[1].split('", "token_type":')[0]
+    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
@@ -46,7 +47,6 @@ def upload(ax, project, path):
         dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
     else:
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
 
 
 
