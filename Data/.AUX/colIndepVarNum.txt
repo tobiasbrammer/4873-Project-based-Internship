@@ -17,6 +17,7 @@ costs
 costs_of_labor
 costs_of_materials
 other_costs
+contribution
 estimated_revenue
 estimated_contribution
 billable_hours_qty
@@ -73,7 +74,6 @@ contribution_lag3
 contribution_lag4
 contribution_lag5
 total_costs
-total_contribution
 total_margin
 labor_cost_share
 material_cost_share
