@@ -133,14 +133,12 @@ import keras_tuner as kt
 
 def model_builder(hp):
     model = Sequential()
-    model.add(LSTM(units=hp.Int('units_1', min_value=256, max_value=1028, step=4), return_sequences=True, input_shape=(
+    model.add(LSTM(units=hp.Int('input_unit', min_value=256, max_value=1028, step=4), return_sequences=True, input_shape=(
         dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
-    model.add(Dropout(hp.Float('dropout_1', min_value=0.0, max_value=0.5, step=0.05)))
-    model.add(LSTM(units=hp.Int('units_2', min_value=32, max_value=512, step=4), return_sequences=True))
-    model.add(Dropout(hp.Float('dropout_2', min_value=0.0, max_value=0.5, step=0.05)))
-    model.add(LSTM(units=hp.Int('units_3', min_value=16, max_value=256, step=4), return_sequences=False))
-    model.add(Dropout(hp.Float('dropout_3', min_value=0.0, max_value=0.5, step=0.05)))
-    model.add(Dense(units=1))
+    for i in range(hp.Int('n_layers', 1, 4)):
+        model.add(LSTM(units=hp.Int(f'units_{i}', min_value=256, max_value=1028, step=4), return_sequences=True))
+        model.add(Dropout(hp.Float(f'dropout_{i}', min_value=0.0, max_value=0.5, step=0.1)))
+    model.add(Dense(1, activation=hp.Choice('dense_activation',values=['relu', 'sigmoid'],default='relu')))
     model.compile(optimizer="adam", loss="mse", metrics=['mae'])
     return model
 
@@ -191,7 +189,7 @@ model = tuner.hypermodel.build(best_hps)
 # Fit model
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=10,
+          epochs=250,
           batch_size=int(
               dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
                   0] / 200),
@@ -282,22 +280,82 @@ dfRMSE = dfRMSE.round(4)
 
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
 dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar])].mean(axis=1)
-
-# dfData
 dfData['predicted_avg'] = dfDataPred['predicted_avg']
+
+### Explore different weighting schemes ###
+# Bate and Granger weights use sample estimates for the population-optimal weights in ω∗ = (I'Σ^(-1)I)Σ^(-1)I
+# where I is the identity matrix and Σ^(-1) is the inverse of the covariance matrix of the forecast errors.
+# The Bate and Granger weights are given by ω = (I'Σ^(-1)I)Σ^(-1)I / (I'Σ^(-1)I)Σ^(-1)I1
+# where 1 is a vector of ones.
+
+# Calculate covariance matrix of the forecast errors. The forecast errors are the difference between the actual and
+# predicted values of sDepVar.
+dfDataPredError = pd.DataFrame()
+for col in dfDataPred.columns:
+    if col not in ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution', trainMethod]:
+        dfDataPredError[f'{col}'] = pd.DataFrame(dfDataPred[col] - dfDataPred[sDepVar]).mean(axis=0)
+
+# Calculate the weights as dfDataPredError.transpose() / sum(dfDataPredError.transpose())
+dfDataPredWeights = pd.DataFrame()
+dfDataPredWeights['weights'] = dfDataPredError.transpose() / dfDataPredError.sum(axis=1)[0]
+
+# Calculate the weighted average of the predicted values
+dfDataPred['predicted_bates_granger'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar, trainMethod])].mul(dfDataPredWeights['weights'], axis=1).sum(axis=1)
+dfData['predicted_bates_granger'] = dfDataPred['predicted_bates_granger']
+# Calculate RMSE of Bates and Granger
+rmse_bates_granger = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_bates_granger'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_bates_granger = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_bates_granger'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['Bates and Granger', 'RMSE'] = rmse_bates_granger
+dfRMSE.loc['Bates and Granger', 'sMAPE'] = smape_bates_granger
+
+## MSE-based weights as ω = MSE^(-1) / sum(MSE^(-1))
+# Calculate MSE
+dfDataPredMSE = pd.DataFrame()
+for col in dfDataPred.columns:
+    if col not in ['date', 'job_no', sDepVar,'production_estimate_contribution', 'final_estimate_contribution', trainMethod]:
+        dfDataPredMSE[f'{col}'] = pd.DataFrame((dfDataPred[col] - dfDataPred[sDepVar]) ** 2).mean(axis=0)
+
+# Calculate the weights as dfDataPredMSE.transpose() / sum(dfDataPredMSE.transpose())
+dfDataPredWeights = pd.DataFrame()
+dfDataPredWeights['weights'] = dfDataPredMSE.transpose() / dfDataPredMSE.sum(axis=1)[0]
+
+# Calculate the weighted average of the predicted values
+dfDataPred['predicted_mse'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution', trainMethod])].mul(dfDataPredWeights['weights'], axis=1).sum(axis=1)
+
+dfData['predicted_mse'] = dfDataPred['predicted_mse']
+
+# Calculate RMSE of MSE
+rmse_mse = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_mse'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_mse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_mse'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['MSE', 'RMSE'] = rmse_mse
+dfRMSE.loc['MSE', 'sMAPE'] = smape_mse
 
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_avg'].transform('sum'),
         label='Predicted (Average)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_bates_granger'].transform('sum'),
+        label='Predicted (Bates and Granger)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_mse'].transform('sum'),
+        label='Predicted (MSE)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_2_avg.png")
@@ -307,14 +365,20 @@ upload(plt, 'Project-based Internship', 'figures/5_2_avg.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_avg'].transform('sum'),
         label='Predicted (Average)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_bates_granger'].transform('sum'),
+        label='Predicted (Bates and Granger)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_mse'].transform('sum'),
+        label='Predicted (MSE)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_2_1_avg.png")
@@ -341,11 +405,13 @@ print(dfRMSE_latex)
 
 upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex')
 
+plt.close('all')
 
 # Add production_estimate_contribution to dfDataPred
 dfDataPred['production_estimate_contribution'] = dfData['production_estimate_contribution']
 # Add final_estimate_contribution to dfDataPred
 dfDataPred['final_estimate_contribution'] = dfData['final_estimate_contribution']
+
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
@@ -378,5 +444,6 @@ for job_no in dfDataPred['job_no'].unique():
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
     plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
+    plt.close('all')
 
 ########################################################################################################################

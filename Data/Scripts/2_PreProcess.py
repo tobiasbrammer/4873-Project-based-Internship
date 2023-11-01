@@ -60,12 +60,9 @@ dfDataFinished = dfData[dfData['wip'] == 0]
 dfDataWIP = dfData[dfData['wip'] == 1]
 
 ### Training Method ###
-trainMethod = 'train_TS'
-
-# Save trainMethod to .AUX/
-with open('./.AUX/trainMethod.txt', 'w') as f:
-    f.write(trainMethod)
-
+# Load trainMethod from ./.AUX/trainMethod.txt
+with open('./.AUX/trainMethod.txt', 'r') as f:
+    trainMethod = f.read()
 
 ## Only look at finished jobs in the beginning. Set to dfData when code is ready.
 dfData = dfDataFinished.copy()
@@ -108,7 +105,7 @@ colIndepVarNum = [col for col in dfData[numeric_cols].columns if col != sDepVar]
 
 # Shift all independent variables three periods back, so that the independent variables are lagged.
 # This is done to avoid leakage, and to ensure that the model can be used for forecasting.
-dfData[colIndepVarNum] = dfData[colIndepVarNum].shift(1)
+# dfData[colIndepVarNum] = dfData[colIndepVarNum].shift(1)
 
 # Split the finished jobs into train and test
 dfDataTrain = dfData[dfData[trainMethod] == 1]

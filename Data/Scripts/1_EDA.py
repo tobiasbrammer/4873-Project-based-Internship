@@ -104,8 +104,6 @@ plt.ylabel("Risk")
 
 plt.grid(alpha=0.35)
 
-
-
 # Plot kde of risk
 # Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
 plt.figure(figsize=(20, 10))

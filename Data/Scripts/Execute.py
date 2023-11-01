@@ -24,11 +24,15 @@ os.environ['PYTHONPATH'] = os.getcwd()
 start_time = datetime.datetime.now()
 
 #### INPUT DEPENDENT VARIABLE ####
-sDepVar = 'contribution'
+sDepVar = 'total_contribution'
+trainMethod = 'train'
 
 # Save depvar to ./.AUX/sDepVar.txt
 with open('./.AUX/sDepVar.txt', 'w') as f:
     f.write(sDepVar)
+
+with open('./.AUX/trainMethod.txt', 'w') as f:
+    f.write(trainMethod)
 
 print(f"Dependent variable: {sDepVar}")
 print('Preparing to run sequence of scripts...')
