@@ -1,14 +1,14 @@
 ,RMSE,sMAPE
-DST,0.8414,83.6092
-OLS,0.2875,77.6506
-OLS with lagged variables,0.2246,77.4849
-OLS with lagged variables and budget,0.2247,77.236
-FC,0.2826,78.0109
-FC_cluster,0.2255,77.8104
-FC_cluster_DST,0.2822,79.2112
-Elastic Net,0.3021,79.6161
-Random Forest (Full),0.3014,79.5746
-Random Forest (Sparse),0.3044,79.6847
-Gradient Boosting,0.3018,79.587
-XGBoost,0.3022,79.6618
-Boosting (FC),0.302,79.6193
+DST,2.4542,67.6613
+OLS,3.1282,85.339
+OLS with lagged variables,2.4705,53.5398
+OLS with lagged variables and budget,2.4073,51.2474
+FC,2.3303,50.3125
+FC_cluster,2.2258,41.467
+FC_cluster_DST,2.1735,49.2102
+Elastic Net,2.3721,62.0001
+Random Forest (Full),2.602,66.0913
+Random Forest (Sparse),2.5231,65.6842
+Gradient Boosting,2.5885,66.2375
+XGBoost,2.5923,65.8877
+Boosting (FC),2.5874,65.8566

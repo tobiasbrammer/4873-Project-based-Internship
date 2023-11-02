@@ -3,14 +3,17 @@ import os
 import warnings
 import numpy as np
 import pandas as pd
-# import mlforecast
-# import neuralforecast
-# import keras
 import datetime
 import joblib
 from plot_config import *
 from sklearn.metrics import mean_squared_error
 import multiprocessing
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Dropout
+from keras.callbacks import EarlyStopping
+import keras_tuner as kt
 
 warnings.filterwarnings('ignore')
 
@@ -30,6 +33,7 @@ import matplotlib.pyplot as plt
 import re
 import subprocess
 
+
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
@@ -43,7 +47,10 @@ def upload(ax, project, path):
         ax.savefig(bs, bbox_inches='tight', format=format)
 
     # token = os.DROPBOX
-    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
+    token = subprocess.run(
+        "curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr",
+        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[
+        1].split('", "token_type":')[0]
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
@@ -52,6 +59,7 @@ def upload(ax, project, path):
         dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
     else:
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+
 
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
@@ -123,35 +131,41 @@ dfDataScaledTest = dfDataScaled.drop(train_index)
 ### LSTM ###
 ## Tune Hyperparameters using keras-tuner ##
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
-from keras.layers import Dropout
-from keras.callbacks import EarlyStopping
-import keras_tuner as kt
 
 
 def model_builder(hp):
     model = Sequential()
-    model.add(LSTM(units=hp.Int('input_unit', min_value=256, max_value=1028, step=4), return_sequences=True, input_shape=(
-        dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
-    for i in range(hp.Int('n_layers', 1, 4)):
-        model.add(LSTM(units=hp.Int(f'units_{i}', min_value=256, max_value=1028, step=4), return_sequences=True))
-        model.add(Dropout(hp.Float(f'dropout_{i}', min_value=0.0, max_value=0.5, step=0.1)))
-    model.add(Dense(1, activation=hp.Choice('dense_activation',values=['relu', 'sigmoid'],default='relu')))
+    model.add(
+        LSTM(units=hp.Int('input_unit', min_value=32, max_value=1028, step=4), return_sequences=True, input_shape=(
+            dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1],
+            1)))
+    for l in range(hp.Int('n_layers', 1, 5)):
+        model.add(LSTM(units=hp.Int(f'units_{l}', min_value=32, max_value=1028, step=4), return_sequences=True))
+        model.add(Dropout(hp.Float(f'dropout_{l}', min_value=0.0, max_value=0.5, step=0.01)))
+    model.add(Dense(1, activation=hp.Choice('dense_activation', values=['relu',
+                                                                        'sigmoid',
+                                                                        'softmax',
+                                                                        'linear',
+                                                                        'tanh',
+                                                                        'selu',
+                                                                        'elu',
+                                                                        'exponential'
+                                                                        ], default='relu')))
     model.compile(optimizer="adam", loss="mse", metrics=['mae'])
     return model
+
 
 # Define tuner
 tuner = kt.Hyperband(model_builder,
                      objective='val_loss',
-                     max_epochs=5,
+                     max_epochs=10,
                      factor=3,
-                     directory='./.AUX',
+                     seed=607,
+                     directory='./.MODS',
                      project_name='LSTM')
 
 # Define early stopping
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=5)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=10)
 
 # Fit model
 start_time_lstm_tune = datetime.datetime.now()
@@ -161,7 +175,7 @@ tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].col
              batch_size=int(
                  dfDataScaledTrain[lNumericCols][
                      dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
-                     0] / 200),
+                     0] / 300),
              validation_split=0.25,
              callbacks=[early_stop],
              use_multiprocessing=True,
@@ -170,19 +184,14 @@ tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].col
 
 # Get the optimal hyperparameters
 best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
-print(f"""
-The hyperparameter search is complete. The optimal number of units in the first LSTM
-layer is {best_hps.get('units_1')}, and the optimal dropout rate is {best_hps.get('dropout_1')}.
-""")
-print(f"""
-The optimal number of units in the second LSTM
-layer is {best_hps.get('units_2')}, and the optimal dropout rate is {best_hps.get('dropout_2')}.
-""")
-print(f"""
-The optimal number of units in the third LSTM
-layer is {best_hps.get('units_3')}, and the optimal dropout rate is {best_hps.get('dropout_3')}.
-""")
 
+# Print optimal hyperparameters. Account for the fact that the number of layers is not the same as the number of units
+print(f"""The optimal number of units in the first LSTM layer is {best_hps.get('input_unit')}.
+The optimal number of additional layers is {best_hps.get('n_layers')}.""")
+for i in range(best_hps.get('n_layers')):
+    print(f"""The optimal number of units in the {i + 1}. hidden layer is {best_hps.get(f'units_{i}')}.
+    With an optimal dropout of  {round(best_hps.get(f'dropout_{i}'), 2)}. """)
+print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
 ## Create model from optimal hyperparameters ##
 model = tuner.hypermodel.build(best_hps)
@@ -192,13 +201,13 @@ model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
           epochs=250,
           batch_size=int(
               dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
-                  0] / 200),
+                  0] / 300),
           validation_split=0.25,
           callbacks=[early_stop],
           use_multiprocessing=True,
           workers=multiprocessing.cpu_count(),
           verbose=1)
-model.save('./.AUX/LSTM_tune.tf')
+model.save('./.MODS/LSTM_tune.tf')
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -215,16 +224,13 @@ upload(plt, 'Project-based Internship', 'figures/5_0_loss.png')
 
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(
-    # Ignore index
-    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])]).reshape(-1, 1),
+    # Ignore index and get the last value of the prediction
+    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1,
+    0].reshape(-1, 1),
     index=dfDataScaled.index
 )
 
-y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
-
-
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
-
 
 print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 
@@ -264,9 +270,11 @@ upload(plt, 'Project-based Internship', 'figures/5_1_1_lstm.png')
 
 # Calculate RMSE of LSTM
 rmse_lstm = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0)))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                       dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan,0), dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0))
+smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                   dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['LSTM', 'RMSE'] = rmse_lstm
@@ -275,12 +283,12 @@ dfRMSE.loc['LSTM', 'sMAPE'] = smape_lstm
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
 
-
 ########################################################################################################################
 
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
 dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar])].mean(axis=1)
 dfData['predicted_avg'] = dfDataPred['predicted_avg']
+dfDataPred[sDepVar] = dfData[sDepVar]
 
 ### Explore different weighting schemes ###
 # Bate and Granger weights use sample estimates for the population-optimal weights in ω∗ = (I'Σ^(-1)I)Σ^(-1)I
@@ -292,7 +300,8 @@ dfData['predicted_avg'] = dfDataPred['predicted_avg']
 # predicted values of sDepVar.
 dfDataPredError = pd.DataFrame()
 for col in dfDataPred.columns:
-    if col not in ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution', trainMethod]:
+    if col not in ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution',
+                   trainMethod]:
         dfDataPredError[f'{col}'] = pd.DataFrame(dfDataPred[col] - dfDataPred[sDepVar]).mean(axis=0)
 
 # Calculate the weights as dfDataPredError.transpose() / sum(dfDataPredError.transpose())
@@ -300,13 +309,17 @@ dfDataPredWeights = pd.DataFrame()
 dfDataPredWeights['weights'] = dfDataPredError.transpose() / dfDataPredError.sum(axis=1)[0]
 
 # Calculate the weighted average of the predicted values
-dfDataPred['predicted_bates_granger'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar, trainMethod])].mul(dfDataPredWeights['weights'], axis=1).sum(axis=1)
+dfDataPred['predicted_bates_granger'] = dfDataPred[
+    dfDataPred.columns.difference(['date', 'job_no', sDepVar, trainMethod])].mul(dfDataPredWeights['weights'],
+                                                                                 axis=1).sum(axis=1)
 dfData['predicted_bates_granger'] = dfDataPred['predicted_bates_granger']
 # Calculate RMSE of Bates and Granger
 rmse_bates_granger = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_bates_granger'].replace(np.nan, 0)))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfData[dfData[trainMethod] == 0]['predicted_bates_granger'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_bates_granger = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_bates_granger'].replace(np.nan, 0))
+smape_bates_granger = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                            dfData[dfData[trainMethod] == 0]['predicted_bates_granger'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['Bates and Granger', 'RMSE'] = rmse_bates_granger
@@ -316,7 +329,8 @@ dfRMSE.loc['Bates and Granger', 'sMAPE'] = smape_bates_granger
 # Calculate MSE
 dfDataPredMSE = pd.DataFrame()
 for col in dfDataPred.columns:
-    if col not in ['date', 'job_no', sDepVar,'production_estimate_contribution', 'final_estimate_contribution', trainMethod]:
+    if col not in ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution',
+                   trainMethod]:
         dfDataPredMSE[f'{col}'] = pd.DataFrame((dfDataPred[col] - dfDataPred[sDepVar]) ** 2).mean(axis=0)
 
 # Calculate the weights as dfDataPredMSE.transpose() / sum(dfDataPredMSE.transpose())
@@ -324,19 +338,47 @@ dfDataPredWeights = pd.DataFrame()
 dfDataPredWeights['weights'] = dfDataPredMSE.transpose() / dfDataPredMSE.sum(axis=1)[0]
 
 # Calculate the weighted average of the predicted values
-dfDataPred['predicted_mse'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution', trainMethod])].mul(dfDataPredWeights['weights'], axis=1).sum(axis=1)
+dfDataPred['predicted_mse'] = dfDataPred[dfDataPred.columns.difference(
+    ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution', trainMethod])].mul(
+    dfDataPredWeights['weights'], axis=1).sum(axis=1)
 
 dfData['predicted_mse'] = dfDataPred['predicted_mse']
 
 # Calculate RMSE of MSE
 rmse_mse = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_mse'].replace(np.nan, 0)))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfData[dfData[trainMethod] == 0]['predicted_mse'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_mse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_mse'].replace(np.nan, 0))
+smape_mse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                  dfData[dfData[trainMethod] == 0]['predicted_mse'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['MSE', 'RMSE'] = rmse_mse
 dfRMSE.loc['MSE', 'sMAPE'] = smape_mse
+
+# Calculate RMSE of final_estimate_contribution
+rmse_final_estimate = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                          dfData[dfData[trainMethod] == 0]['final_estimate_contribution'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_final_estimate = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                                dfData[dfData[trainMethod] == 0]['final_estimate_contribution'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['Final Estimate', 'RMSE'] = rmse_final_estimate
+dfRMSE.loc['Final Estimate', 'sMAPE'] = smape_final_estimate
+
+# Calculate RMSE of production_estimate_contribution
+rmse_production_estimate = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                            dfData[dfData[trainMethod] == 0]['production_estimate_contribution'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_production_estimate = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                                        dfData[dfData[trainMethod] == 0]['production_estimate_contribution'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['Production Estimate', 'RMSE'] = rmse_production_estimate
+dfRMSE.loc['Production Estimate', 'sMAPE'] = smape_production_estimate
 
 
 # Plot the sum of predicted and actual sDepVar by date
@@ -385,7 +427,6 @@ plt.savefig("./Results/Figures/5_2_1_avg.png")
 plt.savefig("./Results/Presentation/5_2_1_avg.svg")
 upload(plt, 'Project-based Internship', 'figures/5_2_1_avg.png')
 
-
 ########################################################################################################################
 
 # dfRMSE to latex
@@ -412,13 +453,14 @@ dfDataPred['production_estimate_contribution'] = dfData['production_estimate_con
 # Add final_estimate_contribution to dfDataPred
 dfDataPred['final_estimate_contribution'] = dfData['final_estimate_contribution']
 
+dfDataPred['risk'] = dfData['risk']
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
 
 ########################################################################################################################
-#if ./Results/Figures/Jobs does not exist, create it
+# if ./Results/Figures/Jobs does not exist, create it
 
 if not os.path.exists('./Results/Figures/Jobs'):
     os.makedirs('./Results/Figures/Jobs')
@@ -430,17 +472,19 @@ for job_no in dfDataPred['job_no'].unique():
     # Plot the cumsum of actual and predicted contribution of sJobNo
     fig, ax = plt.subplots(figsize=(20, 10))
     for col in dfDataJob.columns:
-        if col in ['contribution', 'production_estimate_contribution', 'predicted_avg', 'final_estimate_contribution']:
+        if col in [sDepVar, 'production_estimate_contribution', 'predicted_avg', 'final_estimate_contribution','predicted_cluster_fc','risk']:
             if col == 'production_estimate_contribution':
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
             elif col == 'final_estimate_contribution':
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
+            elif col == 'risk':
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
             else:
-                ax.plot(dfDataJob['date'], dfDataJob[col].cumsum(), label=col)
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
     ax.set_xlabel('Date')
-    ax.set_ylabel('Cumulative Contribution')
-    ax.set_title(f'Actual vs. Predicted Cumulative Contribution of {job_no}')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    ax.set_ylabel('Contribution')
+    ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
     plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")

@@ -157,6 +157,8 @@ lIndepVar = [col for col in lIndepVar if not col.startswith('cluster_')]
 # Sparse model with OLS variables
 start_time_en_sparse = datetime.datetime.now()
 elastic_net_cv_sparse.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
+# Save model to .MODS/ as pickle
+joblib.dump(elastic_net_cv_sparse, './.MODS/elastic_net_cv_sparse.pkl')
 dfData['predicted_en_sparse'] = elastic_net_cv_sparse.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
 dfData['predicted_en_sparse'] = y_scaler.inverse_transform(dfData['predicted_en_sparse'].shift(-1).values.reshape(-1, 1))
 end_time_en_sparse = datetime.datetime.now()
@@ -235,6 +237,8 @@ rf_cv = RandomizedSearchCV(rf, rf_grid, n_iter=100, n_jobs=-1, scoring="neg_mean
 start_time_rf = datetime.datetime.now()
 rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
+# Save model to .MODS/ as pickle
+joblib.dump(rf_cv, './.MODS/rf_cv.pkl')
 # Predict and rescale using RF
 dfData['predicted_rf_full'] = rf_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
@@ -300,6 +304,8 @@ rf_cv = RandomizedSearchCV(rf, rf_grid, n_iter=100, n_jobs=-1, scoring="neg_mean
 start_time_rf = datetime.datetime.now()
 rf_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar])
+# Save model to .MODS/ as pickle
+joblib.dump(rf_cv, './.MODS/rf_cv_sparse.pkl')
 # Predict and rescale using RF
 dfData['predicted_rf_sparse'] = rf_cv.predict(
     dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
@@ -379,6 +385,8 @@ gb_cv = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid, n
 start_time_gb = datetime.datetime.now()
 gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
+# Save model to .MODS/ as pickle
+joblib.dump(gb_cv, './.MODS/gb_cv.pkl')
 # Predict and rescale using GB
 dfData['predicted_gb'] = gb_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
@@ -424,9 +432,9 @@ upload(plt, 'Project-based Internship', 'figures/4_2_1_gb.png')
 
 # Calculate RMSE of GB
 rmse_gb = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb']))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb'].replace(np.nan, 0)))
 # Calculate sMAPE
-smape_gb = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb'])
+smape_gb = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['Gradient Boosting', 'RMSE'] = rmse_gb
@@ -458,6 +466,8 @@ xgb_cv = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid, n_iter=100, 
 start_time_xgb = datetime.datetime.now()
 xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
+# Save model to .MODS/ as pickle
+joblib.dump(xgb_cv, './.MODS/xgb_cv.pkl')
 # Predict and rescale using XGB
 dfData['predicted_xgb'] = xgb_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
@@ -550,8 +560,9 @@ plt.close('all')
 
 # Create dfDataPredSum
 dfDataPredSum = dfDataPred.copy()
-# Order by date
+# Omit date
 dfDataPredSum.sort_values(by=['date'], inplace=True)
+dfDataPredSum = dfDataPredSum.drop(columns=['date'])
 # Group by job_no and calculate cumulative sum of each column
 dfDataPredSum = dfDataPredSum.groupby('job_no').cumsum()
 # Add date and job_no
