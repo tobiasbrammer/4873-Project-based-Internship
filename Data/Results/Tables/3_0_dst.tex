@@ -1,31 +1,39 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                &   contribution   & \textbf{  R-squared (uncentered):}      &     0.975   \\
-\textbf{Model:}                        &       OLS        & \textbf{  Adj. R-squared (uncentered):} &     0.975   \\
-\textbf{Method:}                       &  Least Squares   & \textbf{  F-statistic:       }          & 3.871e+04   \\
-\textbf{Date:}                         & Tue, 31 Oct 2023 & \textbf{  Prob (F-statistic):}          &     0.00    \\
-\textbf{Time:}                         &     10:29:33     & \textbf{  Log-Likelihood:    }          &    4274.3   \\
-\textbf{No. Observations:}             &        4052      & \textbf{  AIC:               }          &    -8541.   \\
-\textbf{Df Residuals:}                 &        4048      & \textbf{  BIC:               }          &    -8515.   \\
-\textbf{Df Model:}                     &           4      & \textbf{                     }          &             \\
-\textbf{Covariance Type:}              &    nonrobust     & \textbf{                     }          &             \\
+\textbf{Dep. Variable:}                      & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.868   \\
+\textbf{Model:}                              &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.868   \\
+\textbf{Method:}                             &    Least Squares    & \textbf{  F-statistic:       }          &     1963.   \\
+\textbf{Date:}                               &   Thu, 02 Nov 2023  & \textbf{  Prob (F-statistic):}          &     0.00    \\
+\textbf{Time:}                               &       10:32:05      & \textbf{  Log-Likelihood:    }          &    2431.7   \\
+\textbf{No. Observations:}                   &          3590       & \textbf{  AIC:               }          &    -4839.   \\
+\textbf{Df Residuals:}                       &          3578       & \textbf{  BIC:               }          &    -4765.   \\
+\textbf{Df Model:}                           &            12       & \textbf{                     }          &             \\
+\textbf{Covariance Type:}                    &      nonrobust      & \textbf{                     }          &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
-                                       & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+                                             & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{kbyg11}                        &       0.1021  &        0.011     &     9.405  &         0.000        &        0.081    &        0.123     \\
-\textbf{kbyg22}                        &       0.1030  &        0.012     &     8.803  &         0.000        &        0.080    &        0.126     \\
-\textbf{kbyg33\_no\_limitations}       &       0.2718  &        0.008     &    35.252  &         0.000        &        0.257    &        0.287     \\
-\textbf{kbyg44\_confidence\_indicator} &       0.2872  &        0.013     &    22.068  &         0.000        &        0.262    &        0.313     \\
+\textbf{kbyg11}                              &       0.0193  &        0.021     &     0.909  &         0.363        &       -0.022    &        0.061     \\
+\textbf{kbyg22}                              &       0.0070  &        0.026     &     0.267  &         0.789        &       -0.045    &        0.059     \\
+\textbf{kbyg33\_bad\_weather}                &      -0.0014  &        0.012     &    -0.123  &         0.902        &       -0.024    &        0.021     \\
+\textbf{kbyg33\_financial\_contraints}       &       0.0456  &        0.013     &     3.589  &         0.000        &        0.021    &        0.071     \\
+\textbf{kbyg33\_insufficient\_demand}        &       0.1023  &        0.016     &     6.283  &         0.000        &        0.070    &        0.134     \\
+\textbf{kbyg33\_no\_limitations}             &       0.1716  &        0.022     &     7.803  &         0.000        &        0.128    &        0.215     \\
+\textbf{kbyg33\_other\_factors}              &       0.1120  &        0.018     &     6.260  &         0.000        &        0.077    &        0.147     \\
+\textbf{kbyg33\_shortage\_of\_labour\_force} &       0.1519  &        0.025     &     6.031  &         0.000        &        0.103    &        0.201     \\
+\textbf{kbyg33\_shortage\_of\_materials}     &       0.0151  &        0.017     &     0.904  &         0.366        &       -0.018    &        0.048     \\
+\textbf{kbyg44\_confidence\_indicator}       &       0.2023  &        0.362     &     0.559  &         0.576        &       -0.507    &        0.911     \\
+\textbf{kbyg44\_employment\_expectations}    &       0.0056  &        0.229     &     0.025  &         0.980        &       -0.444    &        0.455     \\
+\textbf{kbyg44\_stocks\_of\_orders}          &      -0.1805  &        0.132     &    -1.364  &         0.173        &       -0.440    &        0.079     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 1799.340 & \textbf{  Durbin-Watson:     } &     0.292  \\
-\textbf{Prob(Omnibus):} &   0.000  & \textbf{  Jarque-Bera (JB):  } & 11790.567  \\
-\textbf{Skew:}          &   2.009  & \textbf{  Prob(JB):          } &      0.00  \\
-\textbf{Kurtosis:}      &  10.328  & \textbf{  Cond. No.          } &      16.7  \\
+\textbf{Omnibus:}       & 1856.778 & \textbf{  Durbin-Watson:     } &     1.863  \\
+\textbf{Prob(Omnibus):} &   0.000  & \textbf{  Jarque-Bera (JB):  } & 15335.556  \\
+\textbf{Skew:}          &   2.329  & \textbf{  Prob(JB):          } &      0.00  \\
+\textbf{Kurtosis:}      &  11.991  & \textbf{  Cond. No.          } &      409.  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
