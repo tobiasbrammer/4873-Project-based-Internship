@@ -1,13 +1,13 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.786   \\
-\textbf{Model:}                        &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.785   \\
-\textbf{Method:}                       &    Least Squares    & \textbf{  F-statistic:       }          &     1315.   \\
+\textbf{Dep. Variable:}                & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.749   \\
+\textbf{Model:}                        &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.749   \\
+\textbf{Method:}                       &    Least Squares    & \textbf{  F-statistic:       }          &     1076.   \\
 \textbf{Date:}                         &   Thu, 02 Nov 2023  & \textbf{  Prob (F-statistic):}          &     0.00    \\
-\textbf{Time:}                         &       07:56:52      & \textbf{  Log-Likelihood:    }          &    1562.7   \\
-\textbf{No. Observations:}             &          3590       & \textbf{  AIC:               }          &    -3105.   \\
-\textbf{Df Residuals:}                 &          3580       & \textbf{  BIC:               }          &    -3044.   \\
+\textbf{Time:}                         &       11:18:54      & \textbf{  Log-Likelihood:    }          &   -492.79   \\
+\textbf{No. Observations:}             &          3607       & \textbf{  AIC:               }          &     1006.   \\
+\textbf{Df Residuals:}                 &          3597       & \textbf{  BIC:               }          &     1067.   \\
 \textbf{Df Model:}                     &            10       & \textbf{                     }          &             \\
 \textbf{Covariance Type:}              &      nonrobust      & \textbf{                     }          &             \\
 \bottomrule
@@ -15,23 +15,23 @@
 \begin{tabular}{lcccccc}
                                        & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{sales\_estimate\_revenue}      &       0.7529  &        0.198     &     3.795  &         0.000        &        0.364    &        1.142     \\
-\textbf{budget\_revenue}               &       0.1790  &        0.043     &     4.188  &         0.000        &        0.095    &        0.263     \\
-\textbf{final\_estimate\_revenue}      &      -0.8931  &        0.217     &    -4.115  &         0.000        &       -1.319    &       -0.468     \\
-\textbf{revenue\_scurve}               &       0.5971  &        0.072     &     8.350  &         0.000        &        0.457    &        0.737     \\
-\textbf{revenue\_cumsum}               &      -0.1218  &        0.061     &    -1.982  &         0.048        &       -0.242    &       -0.001     \\
-\textbf{production\_estimate\_revenue} &       1.0280  &        0.159     &     6.466  &         0.000        &        0.716    &        1.340     \\
-\textbf{billable\_hours\_qty\_cumsum}  &      -0.1415  &        0.039     &    -3.619  &         0.000        &       -0.218    &       -0.065     \\
-\textbf{contract\_work}                &       0.1584  &        0.138     &     1.148  &         0.251        &       -0.112    &        0.429     \\
-\textbf{contract\_work\_cumsum}        &      -0.7286  &        0.088     &    -8.311  &         0.000        &       -0.900    &       -0.557     \\
-\textbf{total\_days}                   &       0.5348  &        0.009     &    56.326  &         0.000        &        0.516    &        0.553     \\
+\textbf{budget\_revenue}               &       0.6515  &        0.086     &     7.576  &         0.000        &        0.483    &        0.820     \\
+\textbf{revenue\_cumsum}               &       0.4322  &        0.098     &     4.389  &         0.000        &        0.239    &        0.625     \\
+\textbf{final\_estimate\_revenue}      &      -0.0126  &        0.235     &    -0.054  &         0.957        &       -0.473    &        0.448     \\
+\textbf{sales\_estimate\_revenue}      &      -0.0302  &        0.234     &    -0.129  &         0.897        &       -0.490    &        0.429     \\
+\textbf{revenue\_scurve}               &      -1.1676  &        0.124     &    -9.418  &         0.000        &       -1.411    &       -0.925     \\
+\textbf{production\_estimate\_revenue} &      -0.2529  &        0.331     &    -0.763  &         0.445        &       -0.903    &        0.397     \\
+\textbf{total\_days}                   &       0.6192  &        0.033     &    18.618  &         0.000        &        0.554    &        0.684     \\
+\textbf{days\_since\_start}            &       1.0421  &        0.059     &    17.519  &         0.000        &        0.926    &        1.159     \\
+\textbf{contract\_work\_cumsum}        &      -0.8547  &        0.111     &    -7.702  &         0.000        &       -1.072    &       -0.637     \\
+\textbf{contract\_work}                &       1.3987  &        0.240     &     5.823  &         0.000        &        0.928    &        1.870     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 521.806 & \textbf{  Durbin-Watson:     } &     1.432  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } &   802.167  \\
-\textbf{Skew:}          &  -1.025 & \textbf{  Prob(JB):          } & 6.48e-175  \\
-\textbf{Kurtosis:}      &   4.076 & \textbf{  Cond. No.          } &      57.4  \\
+\textbf{Omnibus:}       & 619.540 & \textbf{  Durbin-Watson:     } &     1.231  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } &  1056.926  \\
+\textbf{Skew:}          &  -1.118 & \textbf{  Prob(JB):          } & 3.10e-230  \\
+\textbf{Kurtosis:}      &   4.427 & \textbf{  Cond. No.          } &      42.4  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}

@@ -472,7 +472,12 @@ for job_no in dfDataPred['job_no'].unique():
     # Plot the cumsum of actual and predicted contribution of sJobNo
     fig, ax = plt.subplots(figsize=(20, 10))
     for col in dfDataJob.columns:
-        if col in [sDepVar, 'production_estimate_contribution', 'predicted_avg', 'final_estimate_contribution','predicted_cluster_fc','risk']:
+        if col in [sDepVar,
+                   'production_estimate_contribution',
+                   'predicted_avg',
+                   'final_estimate_contribution',
+                   'predicted_cluster_fc',
+                   'risk']:
             if col == 'production_estimate_contribution':
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
             elif col == 'final_estimate_contribution':
