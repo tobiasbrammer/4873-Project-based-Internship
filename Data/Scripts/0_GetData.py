@@ -13,6 +13,10 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import DanishStemmer
 import re
 import PyDST
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import subprocess
 
 # Start timing
 # start_time = datetime.datetime.now()
@@ -28,13 +32,6 @@ elif os.name == 'nt':
 os.chdir(sDir)
 
 
-import dropbox
-from pathlib import Path
-from io import BytesIO
-import matplotlib.pyplot as plt
-import re
-import subprocess
-
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
@@ -48,7 +45,10 @@ def upload(ax, project, path):
         ax.savefig(bs, bbox_inches='tight', format=format)
 
     # token = os.DROPBOX
-    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
+    token = subprocess.run(
+        "curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr",
+        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[
+        1].split('", "token_type":')[0]
     dbx = dropbox.Dropbox(token)
 
     # Will throw an UploadError if it fails
@@ -182,8 +182,10 @@ dfData['days_until_end'] = (dfData['end_date'] - dfData['date']).dt.days
 dfData.loc[dfData['days_until_end'] < 0, 'days_until_end'] = 0
 
 # Calculate share of budget costs and budget revenue
-dfData['budget_costs_share'] = (dfData['revenue'].replace(np.nan, 0) / dfData['budget_revenue']).replace([np.inf, -np.inf], 0)
-dfData['budget_revenue_share'] = (dfData['costs'].replace(np.nan, 0) / dfData['budget_costs']).replace([np.inf, -np.inf], 0)
+dfData['budget_costs_share'] = (dfData['revenue'].replace(np.nan, 0) / dfData['budget_revenue']).replace(
+    [np.inf, -np.inf], 0)
+dfData['budget_revenue_share'] = (dfData['costs'].replace(np.nan, 0) / dfData['budget_costs']).replace(
+    [np.inf, -np.inf], 0)
 
 ##### Feature engineering #####
 # Calculate change in various estimates
@@ -232,12 +234,13 @@ dfData['adjusted_wip'] = (dfData['adjusted_wip']).replace([np.inf, -np.inf], np.
 # If adjusted_estimated_revenue is NA, then set to estimated_revenue
 dfData['adjusted_estimated_revenue'] = dfData['adjusted_estimated_revenue'].fillna(dfData['estimated_revenue'])
 # If adjusted_margin is NA, then set to contribution_margin
-dfData['adjusted_margin'] = dfData['adjusted_margin'].replace([np.inf, -np.inf], np.nan).fillna(dfData['contribution_margin'])
+dfData['adjusted_margin'] = dfData['adjusted_margin'].replace([np.inf, -np.inf], np.nan).fillna(
+    dfData['contribution_margin'])
 
 # Read data from .AUX/Debitor.xlsx
 dfDebitorer = pd.read_excel(".AUX/Debitorer.xlsx", sheet_name="overdue")
 # Omit all columns except cvr, date and overdue
-dfDebitorer = dfDebitorer[['date','cvr','overdue']]
+dfDebitorer = dfDebitorer[['date', 'cvr', 'overdue']]
 dfDebitorer['date'] = pd.to_datetime(dfDebitorer['date'])
 # Join on dfData by cvr and date
 dfData = pd.merge(dfData, dfDebitorer, on=['cvr', 'date'], how='left')
@@ -247,6 +250,7 @@ dfData['overdue'] = dfData['overdue'].fillna(0)
 dfData['overdue'] = dfData['overdue'] / 1000000
 
 print('Running calculation of risk...')
+
 
 # Calculate risks and other variables
 def calculate_risk(group):
@@ -294,9 +298,11 @@ dfData['total_margin'] = dfData['total_contribution'] / dfData['total_costs']
 
 # Calculate share of labor cost, material cost and other cost cumsum
 
-dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].replace(np.nan, 0) / dfData['costs_cumsum']).replace([np.inf, -np.inf], 0)
-dfData['material_cost_share'] = ((dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']).replace(np.nan, 0) / dfData[
-    'costs_cumsum']).replace([np.inf, -np.inf], 0)
+dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].replace(np.nan, 0) / dfData['costs_cumsum']).replace(
+    [np.inf, -np.inf], 0)
+dfData['material_cost_share'] = (
+            (dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']).replace(np.nan, 0) / dfData[
+        'costs_cumsum']).replace([np.inf, -np.inf], 0)
 
 # Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
 dfData.drop(columns=['costs_of_labor_cumsum', 'costs_of_materials_cumsum', 'other_costs_cumsum'], inplace=True)
@@ -351,7 +357,6 @@ dfDesc['description'] = dfDesc['description'].str.replace('ø', 'oe')
 dfDesc['description'] = dfDesc['description'].str.replace('æ', 'ae')
 dfDesc['description'] = dfDesc['description'].str.replace('å', 'aa')
 
-
 # Step 3: Convert to Document-Term Matrix and remove sparse terms
 vectorizer = CountVectorizer(min_df=0.02, max_df=0.15)
 X = vectorizer.fit_transform(dfDesc['description'])
@@ -380,7 +385,6 @@ plt.annotate('Source: ELCON A/S',
 plt.savefig("./Results/Figures/1_7_description.png")
 plt.savefig("./Results/Presentation/1_7_description.svg")
 upload(plt, 'Project-based Internship', 'figures/1_7_description.png')
-
 
 # Left join with the original DataFrame
 dfData = pd.merge(dfData, processed_data, on="job_no", how="left")
@@ -520,12 +524,10 @@ del kbyg11, kbyg22, kbyg33, kbyg44
 dst_df.rename(columns={'kbyg44_construction_industry_total_employment_expectations': 'kbyg44_employment_expectations',
                        'kbyg44_confidence_indicator_total': 'kbyg44_confidence_indicator',
                        'kbyg33_shortage_of_material_and/or_equipment': 'kbyg33_shortage_of_materials'},
-                inplace=True)
-
+              inplace=True)
 
 # Join dst_df on dfData by date
 dfData = pd.merge(dfData, dst_df, on='date', how='left')
-
 
 # Plot kbyg11, kbyg22, kbyg33_no_limitation and kbyg44_confidence_indicator_total by date
 fig, ax = plt.subplots(2, 2, figsize=(20, 10))
@@ -566,36 +568,9 @@ dfData['train'] = dfData['job_no'].isin(lJobNoTrain).astype(int)
 # We can also use another method of split, where each job is split into a training and test set. This allows us to
 # also simulate training ongoing jobs as they progress.
 # We group by job_no and split the data into a training and test set for each job_no
-dfData['train_TS'] = dfData.groupby('job_no')['job_no'].transform(lambda x: np.random.choice([0, 1], size=len(x), p=[.1, .9]))
+dfData['train_TS'] = dfData.groupby('job_no')['job_no'].transform(
+    lambda x: np.random.choice([0, 1], size=len(x), p=[.1, .9]))
 
-# Import libraries
-from sklearn.cluster import KMeans
-# Run the process for five different numbers of clusters.
-lCluster = [2, 4, 6, 8, 10, 12]
-# Assign cluster to each job
-for nCluster in lCluster:
-    # Create KMeans object
-    kmeans = KMeans(n_clusters=nCluster, random_state=0, n_init='auto')
-    # Fit the model based on sales_estimate_revenue, sales_estimate_costs, production_estimate_revenue,
-    # production_estimate_costs, final_estimate_revenue, final_estimate_costs, costs_cumsum, revenue_cumsum,
-    # contribution_cumsum, costs_scurve_diff, revenue_scurve_diff, contribution_scurve_diff, wip, adjusted_wip.
-    kmeans.fit(dfData[['sales_estimate_revenue', 'sales_estimate_costs', 'production_estimate_revenue',
-                        'production_estimate_costs', 'final_estimate_revenue', 'final_estimate_costs',
-                        'costs_cumsum', 'revenue_cumsum', 'contribution_cumsum', 'costs_scurve_diff',
-                        'revenue_scurve_diff', 'contribution_scurve_diff', 'wip', 'adjusted_wip', 'risk']].replace([np.inf, -np.inf], np.nan).replace(np.nan, 0))
-    # Predict the cluster for each observation
-    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[dfData.select_dtypes(include=[np.number]).columns].replace([np.inf, -np.inf], np.nan).replace(np.nan, 0))
-
-# Plot number of observations in each cluster in a subplot for each number of clusters
-fig, ax = plt.subplots(3, 2, figsize=(20, 10))
-for i, nCluster in enumerate(lCluster):
-    sns.countplot(x=f'cluster_{nCluster}', data=dfData, ax=ax[i // 2, i % 2])
-    ax[i // 2, i % 2].set_xlabel(f'Cluster for {nCluster} cluster solution')
-    ax[i // 2, i % 2].set_ylabel('Number of observations')
-plt.show()
-plt.savefig("./Results/Figures/1_9_cluster.png")
-plt.savefig("./Results/Presentation/1_9_cluster.svg")
-upload(plt, 'Project-based Internship', 'figures/1_9_cluster.png')
 
 # Save DataFrame to file
 dfData.to_csv("dfData.csv", index=False)

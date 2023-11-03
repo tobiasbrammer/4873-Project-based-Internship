@@ -91,14 +91,14 @@ print(f"The min number of observations per finished job is {obs.min()}.")
 dfData.replace([np.inf, -np.inf], np.nan, inplace=True)
 dfDataWIP.replace([np.inf, -np.inf], np.nan, inplace=True)
 
+# Scale all numeric columns
+numeric_cols = dfData.select_dtypes(include=[np.number]).columns.tolist()
+non_numeric_cols = dfData.select_dtypes(exclude=[np.number]).columns.tolist()
+
 # Split into dependent and independent variables
 # Read sDepVar from ./.AUX/sDepVar.txt
 with open('./.AUX/sDepVar.txt', 'r') as f:
     sDepVar = f.read()
-
-# Scale all numeric columns
-numeric_cols = dfData.select_dtypes(include=[np.number]).columns.tolist()
-non_numeric_cols = dfData.select_dtypes(exclude=[np.number]).columns.tolist()
 
 # Remove sDepVar from independent variables
 colIndepVarNum = [col for col in dfData[numeric_cols].columns if col != sDepVar]
@@ -143,7 +143,8 @@ y_scaler = y_scaler.fit(train_data_y)
 # Change customer zip to string
 dfData['customer_zip'] = dfData['customer_zip'].astype(str)
 dfData['zip'] = dfData['zip'].astype(str)
-dfData.to_parquet('./dfData_reg.parquet')
+
+dfData_reg = dfData.copy() # Unscaled dfData
 
 # For col in colIndepVarNum scale dfData using x_scaler
 dfData[colIndepVarNum] = x_scaler.transform(dfData[colIndepVarNum])
@@ -151,9 +152,43 @@ dfData[sDepVar] = y_scaler.transform(dfData[[sDepVar]])
 dfDataWIP[colIndepVarNum] = x_scaler.transform(dfDataWIP[colIndepVarNum])
 dfDataWIP[sDepVar] = y_scaler.transform(dfDataWIP[[sDepVar]])
 
+from sklearn.cluster import KMeans
+# Run the process for five different numbers of clusters.
+lCluster = [2, 3, 4, 5]
+# Assign cluster to each job
+for nCluster in lCluster:
+    # Create KMeans object
+    kmeans = KMeans(n_clusters=nCluster, random_state=607, n_init='auto', max_iter=1000)
+    # Fit the model.
+    kmeans.fit(dfData[['sales_estimate_contribution',
+                       'production_estimate_contribution',
+                       'final_estimate_contribution']].replace(np.nan, 0))
+    # Predict the cluster for each observation
+    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['sales_estimate_contribution',
+                                                           'production_estimate_contribution',
+                                                           'final_estimate_contribution']].replace(np.nan, 0))
+    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['sales_estimate_contribution',
+                                                                    'production_estimate_contribution',
+                                                                    'final_estimate_contribution']].replace(np.nan, 0))
+    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['sales_estimate_contribution',
+                                                                    'production_estimate_contribution',
+                                                                    'final_estimate_contribution']].replace(np.nan, 0))
+
+# Plot number of observations in each cluster in a subplot for each number of clusters
+fig, ax = plt.subplots(2, 2, figsize=(20, 10))
+for i, nCluster in enumerate(lCluster):
+    sns.countplot(x=f'cluster_{nCluster}', data=dfData, ax=ax[i // 2, i % 2])
+    ax[i // 2, i % 2].set_xlabel(f'Cluster for {nCluster} cluster solution')
+    ax[i // 2, i % 2].set_ylabel('Number of observations')
+plt.show()
+plt.savefig("./Results/Figures/1_9_cluster.png")
+plt.savefig("./Results/Presentation/1_9_cluster.svg")
+upload(plt, 'Project-based Internship', 'figures/1_9_cluster.png')
+
 # Save dfData to parquet as dfData_scaled
 dfData.to_parquet('./dfData_reg_scaled.parquet')
 dfDataWIP.to_parquet('./dfData_reg_scaled_wip.parquet')
+dfData.to_parquet('./dfData_reg.parquet')
 
 # Rescale dfData
 # dfData[colIndepVarNum] = x_scaler.inverse_transform(dfData[colIndepVarNum])
