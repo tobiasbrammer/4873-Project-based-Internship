@@ -17,7 +17,6 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
-
 import dropbox
 from pathlib import Path
 from io import BytesIO
@@ -170,6 +169,72 @@ smape_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
 
 # Predict dfDataWIP[sDepVar]
 dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataWIP[lDST]).values.reshape(-1, 1))
+
+
+### OLS with s-curve differences. ###
+
+lSCurve = ['revenue_scurve_diff','costs_scurve_diff','contribution_scurve_diff']
+
+model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lSCurve])
+results_scurve = model.fit()
+# Save model to .MODS/
+results_scurve.save('./.MODS/results_scurve.pickle')
+# Save results to LaTeX
+ols = results_scurve.summary(alpha=0.05).as_latex()
+
+with open('Results/Tables/3_9_scurve.tex', 'w', encoding='utf-8') as f:
+    f.write(ols)
+
+upload(ols, 'Project-based Internship', 'tables/3_9_scurve.tex')
+
+# Predict and rescale sDepVar using OLS
+dfData['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predict(dfDataScaled[lSCurve]).values.reshape(-1, 1))
+
+# Plot the sum of predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_scurve'].transform('sum'), label='Predicted')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Out of Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_9_scurve.png")
+plt.savefig("./Results/Presentation/3_9_scurve.svg")
+upload(plt, 'Project-based Internship', 'figures/3_9_scurve.png')
+
+# Plot the sum of predicted and actual sDepVar by date (full sample)
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_scurve'].transform('sum'), label='Predicted')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_9_1_scurve.png")
+plt.savefig("./Results/Presentation/3_9_1_scurve.svg")
+upload(plt, 'Project-based Internship', 'figures/3_9_1_scurve.png')
+plt.close('all')
+
+# Calculate out-of-sample RMSE of DST
+rmse_scurve = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
+                       dfData[dfData[trainMethod] == 0]['predicted_scurve'].replace(np.nan, 0)
+                       ))
+# symmetric Mean Absolute Error (sMAPE)
+smape_scurve = smape(dfData[dfData[trainMethod] == 0][sDepVar],
+                  dfData[dfData[trainMethod] == 0]['predicted_scurve'].replace(np.nan, 0))
+
+# Predict dfDataWIP[sDepVar]
+dfDataWIP['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predict(dfDataWIP[lSCurve]).values.reshape(-1, 1))
+
 
 ### Using correlation to select variables ###
 corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
@@ -438,7 +503,7 @@ dfDataWIP['predicted_lag_budget'] = y_scaler.inverse_transform(
 
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
-dfData['predicted_fc'] = dfData['predicted_dst']*0.2 + dfData['predicted_lag_budget']*0.8
+dfData['predicted_fc'] = dfData['predicted_dst']*0.1 + dfData['predicted_lag_budget']*0.45 + dfData['predicted_scurve']*0.45
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -484,15 +549,15 @@ rmse_fc = np.sqrt(
 smape_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc'])
 
 # Compare RMSE and sMAPE of the different models in a table
-dfRMSE = pd.DataFrame({'RMSE': [rmse_dst, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
-                       'sMAPE': [smape_dst, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
-                      index=['DST', 'OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'FC'])
+dfRMSE = pd.DataFrame({'RMSE': [rmse_dst, rmse_scurve, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
+                       'sMAPE': [smape_dst, smape_scurve, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
+                      index=['DST', 'S-curve', 'OLS', 'OLS with lagged variables', 'OLS with lagged variables and budget', 'FC'])
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
 
 ### Use clustering to find similar jobs and predict sDepVar for each cluster ###
-lCluster = [2, 4, 6, 8, 10, 12]
+lCluster = [2, 3, 4, 5]
 # For each cluster in cluster_{lCluster} do
 
 for iCluster in lCluster:
@@ -530,24 +595,10 @@ for iCluster in lCluster:
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_2'].transform('sum'),
-        label='Predicted (2 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_4'].transform('sum'),
-        label='Predicted (4 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_6'].transform('sum'),
-        label='Predicted (6 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_8'].transform('sum'),
-        label='Predicted (8 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_10'].transform('sum'),
-        label='Predicted (10 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_12'].transform('sum'),
-        label='Predicted (12 clusters)')
+for iCluster in lCluster:
+    ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+            dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_' + str(iCluster)].transform('sum'),
+            label='Predicted (Cluster ' + str(iCluster) + ')')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
@@ -564,9 +615,7 @@ plt.close('all')
 dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])]
                                   + dfData['predicted_cluster_' + str(lCluster[1])]
                                   + dfData['predicted_cluster_' + str(lCluster[2])]
-                                  + dfData['predicted_cluster_' + str(lCluster[3])]
-                                  + dfData['predicted_cluster_' + str(lCluster[4])]
-                                  + dfData['predicted_cluster_' + str(lCluster[5])]) / 6
+                                  + dfData['predicted_cluster_' + str(lCluster[3])]) / 4
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))

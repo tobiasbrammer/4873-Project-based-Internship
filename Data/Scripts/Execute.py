@@ -54,11 +54,11 @@ subprocess.run(["python", "./Scripts/3_PLS.py"])
 
 # Run 4_ML.py
 print("Running 4_ML.py...")
-subprocess.run(["python", "./Scripts/4_ML.py"])
+# subprocess.run(["python", "./Scripts/4_ML.py"])
 
 # Run 5_DL.py
 print("Running 5_DL.py...")
-subprocess.run(["python", "./Scripts/5_DL.py"])
+# subprocess.run(["python", "./Scripts/5_DL.py"])
 
 # Total runtime
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')

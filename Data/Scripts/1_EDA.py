@@ -84,27 +84,45 @@ plt.savefig("./Results/Presentation/1_1_revenue.svg")
 upload(plt, 'Project-based Internship', 'figures/1_1_revenue.png')
 
 
-# Plot sum of risk by date for each department
-plt.figure(figsize=(20, 10))
-sns.lineplot(x='date', y='risk', hue='department', data=dfData, errorbar=None)
-plt.xlabel("Date")
-plt.ylabel("Risk")
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-
+# Select random job
+job_no = 'S309436'
+dfJob = dfData[dfData['job_no'] == job_no]
+# Order by date
+dfJob.sort_values('date', inplace=True)
+fig, ax = plt.subplots(2, 1, figsize=(20, 10))
+sns.lineplot(x='date', y='revenue_cumsum', data=dfJob, ax=ax[0], color=vColors[0], label='revenue')
+sns.lineplot(x='date', y='revenue_scurve', data=dfJob, ax=ax[0], color=vColors[0], label='revenue_scurve', linestyle='--')
+ax[0].set_xlabel("Date")
+ax[0].set_ylabel("Revenue (mDKK)")
+ax[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+sns.lineplot(x='date', y='costs_cumsum', data=dfJob, ax=ax[1], color=vColors[1], label='costs')
+sns.lineplot(x='date', y='costs_scurve', data=dfJob, ax=ax[1], color=vColors[1], label='costs_scurve', linestyle='--')
+ax[1].set_xlabel("Date")
+ax[1].set_ylabel("Costs (mDKK)")
+ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.35)
-plt.savefig("./Results/Figures/1_2_risk.png")
-plt.savefig("./Results/Presentation/1_2_risk.svg")
-upload(plt, 'Project-based Internship', 'figures/1_2_risk.png')
+plt.suptitle(f"Job {job_no}")
+plt.savefig("./Results/Figures/1_2_scurve.png")
+plt.savefig("./Results/Presentation/1_2_scurve.svg")
+upload(plt, 'Project-based Internship', 'figures/1_2_scurve.png')
 
-# Select random job and plot risk
-job_no = 'S161210'
-dfData[dfData['job_no'] == job_no].plot(x='date', y='risk', figsize=(20, 10))
-plt.xlabel("Date")
-plt.ylabel("Risk")
-
+# Plot kde of risk and sum of risk by date for each department in a grid with 2 rows and 1 column
+fig, ax = plt.subplots(2, 1, figsize=(20, 10))
+sns.kdeplot(data=dfData, x='risk', label='risk', ax=ax[0])
+ax[0].set_xlabel("Risk (mDKK)")
+ax[0].set_ylabel("Density")
+ax[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=1).get_frame().set_linewidth(0.0)
+# Limit x-axis to cover 99.99% of the data
+ax[0].set_xlim(dfData['risk'].quantile(0.01), 0.99)
+sns.lineplot(x='date', y='risk', hue='department', data=dfData, errorbar=None, ax=ax[1])
+ax[1].set_xlabel("Date")
+ax[1].set_ylabel("Risk")
+ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.35)
+plt.savefig("./Results/Figures/1_3_risk.png")
+plt.savefig("./Results/Presentation/1_3_risk.svg")
+upload(plt, 'Project-based Internship', 'figures/1_3_risk.png')
 
-# Plot kde of risk
 # Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
 plt.figure(figsize=(20, 10))
 sns.kdeplot(data=dfData, x='risk', label='risk')
@@ -112,7 +130,6 @@ plt.xlabel("Risk (mDKK)")
 plt.ylabel("Density")
 plt.xlim(dfData['risk'].quantile(0.01), dfData['risk'].quantile(0.99))
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=1).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_3_risk.png")
 plt.savefig("./Results/Presentation/1_3_risk.svg")
@@ -137,7 +154,6 @@ sns.barplot(x=dfMissing[dfMissing['missing_pct'] > 0]['column'],
 plt.xticks(rotation=90)
 plt.xlabel("Columns")
 plt.ylabel("Missing Percentage")
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/1_4_missing.png")
