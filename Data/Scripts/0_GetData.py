@@ -571,15 +571,31 @@ dfData['train_TS'] = dfData.groupby('job_no')['job_no'].transform(lambda x: np.r
 # Import libraries
 from sklearn.cluster import KMeans
 # Run the process for five different numbers of clusters.
-lCluster = [2, 4, 6, 8, 10, 12, 14]
+lCluster = [2, 4, 6, 8, 10, 12]
 # Assign cluster to each job
 for nCluster in lCluster:
     # Create KMeans object
     kmeans = KMeans(n_clusters=nCluster, random_state=0, n_init='auto')
-    # Fit the model
-    kmeans.fit(dfData[dfData.select_dtypes(include=[np.number]).columns].replace([np.inf, -np.inf], np.nan).replace(np.nan, 0))
+    # Fit the model based on sales_estimate_revenue, sales_estimate_costs, production_estimate_revenue,
+    # production_estimate_costs, final_estimate_revenue, final_estimate_costs, costs_cumsum, revenue_cumsum,
+    # contribution_cumsum, costs_scurve_diff, revenue_scurve_diff, contribution_scurve_diff, wip, adjusted_wip.
+    kmeans.fit(dfData[['sales_estimate_revenue', 'sales_estimate_costs', 'production_estimate_revenue',
+                        'production_estimate_costs', 'final_estimate_revenue', 'final_estimate_costs',
+                        'costs_cumsum', 'revenue_cumsum', 'contribution_cumsum', 'costs_scurve_diff',
+                        'revenue_scurve_diff', 'contribution_scurve_diff', 'wip', 'adjusted_wip', 'risk']].replace([np.inf, -np.inf], np.nan).replace(np.nan, 0))
     # Predict the cluster for each observation
     dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[dfData.select_dtypes(include=[np.number]).columns].replace([np.inf, -np.inf], np.nan).replace(np.nan, 0))
+
+# Plot number of observations in each cluster in a subplot for each number of clusters
+fig, ax = plt.subplots(3, 2, figsize=(20, 10))
+for i, nCluster in enumerate(lCluster):
+    sns.countplot(x=f'cluster_{nCluster}', data=dfData, ax=ax[i // 2, i % 2])
+    ax[i // 2, i % 2].set_xlabel(f'Cluster for {nCluster} cluster solution')
+    ax[i // 2, i % 2].set_ylabel('Number of observations')
+plt.show()
+plt.savefig("./Results/Figures/1_9_cluster.png")
+plt.savefig("./Results/Presentation/1_9_cluster.svg")
+upload(plt, 'Project-based Internship', 'figures/1_9_cluster.png')
 
 # Save DataFrame to file
 dfData.to_csv("dfData.csv", index=False)

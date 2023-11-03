@@ -492,7 +492,7 @@ dfRMSE = pd.DataFrame({'RMSE': [rmse_dst, rmse_ols, rmse_ols_lag, rmse_ols_lag_b
 dfRMSE = dfRMSE.round(4)
 
 ### Use clustering to find similar jobs and predict sDepVar for each cluster ###
-lCluster = [2, 4, 6, 8, 10, 12, 14]
+lCluster = [2, 4, 6, 8, 10, 12]
 # For each cluster in cluster_{lCluster} do
 
 for iCluster in lCluster:
@@ -548,9 +548,6 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_12'].transform('sum'),
         label='Predicted (12 clusters)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_14'].transform('sum'),
-        label='Predicted (14 clusters)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
@@ -569,8 +566,7 @@ dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])
                                   + dfData['predicted_cluster_' + str(lCluster[2])]
                                   + dfData['predicted_cluster_' + str(lCluster[3])]
                                   + dfData['predicted_cluster_' + str(lCluster[4])]
-                                  + dfData['predicted_cluster_' + str(lCluster[5])]
-                                  + dfData['predicted_cluster_' + str(lCluster[6])]) / 7
+                                  + dfData['predicted_cluster_' + str(lCluster[5])]) / 6
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
