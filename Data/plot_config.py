@@ -1,6 +1,5 @@
 
 # Configuration file for setting plot styles
-
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -11,7 +10,7 @@ plt.rcParams.update({
     'text.usetex': True,
     'font.family': 'serif',
     'font.serif': 'cm',
-    'font.size': 10,
+    'font.size': 20,
     'axes.edgecolor': 'grey',
     'xtick.color': 'black',
     'ytick.color': 'black',
@@ -22,6 +21,8 @@ plt.rcParams.update({
     'xtick.direction': 'in',
     'ytick.direction': 'in'
 })
+
+plt.rcParams.update({'font.size': 20})
 
 # vColors = ["#006e64", "#c17150", "#7cab53", "#344B47", "#96B1AC", "#416391", "#7795C7"]
 # vColors = ['#006e64', '#317454', '#547944', '#767a38', '#987838', '#a37b3b', '#ae7d3f', '#ba7f43', '#b08a3d', '#a3963d', '#91a145', '#7cab53']

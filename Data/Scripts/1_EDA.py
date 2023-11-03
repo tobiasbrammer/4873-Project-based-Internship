@@ -56,8 +56,10 @@ sns.kdeplot(data=dfData, x='budget_costs', label='budget costs')
 sns.kdeplot(data=dfData, x='sales_estimate_costs', label='sales estimate costs')
 sns.kdeplot(data=dfData, x='production_estimate_costs', label='production estimate costs')
 sns.kdeplot(data=dfData, x='final_estimate_costs', label='final estimate costs')
-plt.xlabel("Costs (mDKK)")
-plt.ylabel("Density")
+plt.rcParams.update({'font.size': 20})
+# Set font size of x and y labels
+plt.xlabel("Costs (mDKK)", fontsize=20)
+plt.ylabel("Density", fontsize=20)
 plt.xlim(dfData['budget_costs'].quantile(0.00000000001), 10)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.35)
@@ -88,6 +90,7 @@ upload(plt, 'Project-based Internship', 'figures/1_1_revenue.png')
 job_no = 'S309436'
 dfJob = dfData[dfData['job_no'] == job_no]
 # Order by date
+pd.options.mode.chained_assignment = None  # default='warn'
 dfJob.sort_values('date', inplace=True)
 fig, ax = plt.subplots(2, 1, figsize=(20, 10))
 sns.lineplot(x='date', y='revenue_cumsum', data=dfJob, ax=ax[0], color=vColors[0], label='revenue')
