@@ -102,6 +102,11 @@ with open('./.AUX/colIndepVarNum.txt', 'r') as f:
     colIndepVarNum = f.read()
 colIndepVarNum = colIndepVarNum.split('\n')
 
+# Import lIndepVar
+with open('./.AUX/lIndepVar.txt', 'r') as f:
+    lIndepVar = f.read()
+
+
 # Import sDepVar from ./.AUX/sDepVar.txt
 with open('./.AUX/sDepVar.txt', 'r') as f:
     sDepVar = f.read()
@@ -136,19 +141,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 def model_builder(hp):
     model = Sequential()
     model.add(
-        LSTM(units=hp.Int('input_unit', min_value=32, max_value=1028, step=4), return_sequences=True, input_shape=(
+        LSTM(units=hp.Int('input_unit', min_value=32, max_value=1028, step=16), return_sequences=True, input_shape=(
             dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1],
             1)))
     for l in range(hp.Int('n_layers', 1, 5)):
-        model.add(LSTM(units=hp.Int(f'units_{l}', min_value=32, max_value=1028, step=4), return_sequences=True))
-        model.add(Dropout(hp.Float(f'dropout_{l}', min_value=0.0, max_value=0.5, step=0.01)))
+        model.add(LSTM(units=hp.Int(f'units_{l}', min_value=32, max_value=514, step=8), return_sequences=True))
+        model.add(Dropout(hp.Float(f'dropout_{l}', min_value=0.0, max_value=0.5, step=0.05)))
     model.add(Dense(1, activation=hp.Choice('dense_activation', values=['relu',
                                                                         'sigmoid',
-                                                                        'softmax',
                                                                         'linear',
                                                                         'tanh',
-                                                                        'selu',
-                                                                        'elu',
                                                                         'exponential'
                                                                         ], default='relu')))
     model.compile(optimizer="adam", loss="mse", metrics=['mae'])
@@ -158,25 +160,22 @@ def model_builder(hp):
 # Define tuner
 tuner = kt.Hyperband(model_builder,
                      objective='val_loss',
-                     max_epochs=10,
+                     max_epochs=5,
                      factor=3,
                      seed=607,
                      directory='./.MODS',
                      project_name='LSTM')
 
 # Define early stopping
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=10)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=3)
 
 # Fit model
 start_time_lstm_tune = datetime.datetime.now()
 # Fit model to training data
 tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
              dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-             batch_size=int(
-                 dfDataScaledTrain[lNumericCols][
-                     dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
-                     0] / 300),
-             validation_split=0.25,
+             batch_size=1,
+             validation_split=0.20,
              callbacks=[early_stop],
              use_multiprocessing=True,
              workers=multiprocessing.cpu_count(),
@@ -198,11 +197,9 @@ model = tuner.hypermodel.build(best_hps)
 # Fit model
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=250,
-          batch_size=int(
-              dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
-                  0] / 300),
-          validation_split=0.25,
+          epochs=10,
+          batch_size=1,
+          validation_split=0.15,
           callbacks=[early_stop],
           use_multiprocessing=True,
           workers=multiprocessing.cpu_count(),

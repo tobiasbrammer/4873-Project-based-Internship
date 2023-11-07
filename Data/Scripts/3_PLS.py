@@ -110,8 +110,11 @@ lDST = [col for col in dfDataScaled.columns if re.match('kbyg', col)]
 with open('./.AUX/lDST.txt', 'w') as lVars:
     lVars.write('\n'.join(lDST))
 
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lDST])
-results_dst = model.fit()
+# model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lDST])
+# Add constant to independent variables
+
+model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lDST]))
+results_dst = model.fit(cov_type='HAC')
 # Save model to .MODS/
 results_dst.save('./.MODS/results_dst.pickle')
 # Save results to LaTeX
@@ -175,8 +178,8 @@ dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDa
 
 lSCurve = ['revenue_scurve_diff','costs_scurve_diff','contribution_scurve_diff']
 
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lSCurve])
-results_scurve = model.fit()
+model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lSCurve]))
+results_scurve = model.fit(cov_type='HAC')
 # Save model to .MODS/
 results_scurve.save('./.MODS/results_scurve.pickle')
 # Save results to LaTeX
@@ -240,10 +243,10 @@ dfDataWIP['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predic
 corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
 corr = corr.sort_values(by=sDepVar, ascending=False)
 corr = corr[sDepVar]
-# Filter out variables with "contribution" or "revenue" in the name
-corr = corr[~corr.index.str.contains('contribution')]
+# Filter out variables with "contribution", "revenue" or cost in the name
+corr = corr[~corr.index.str.contains('contribution|revenue|costs|cost')]
 corr = corr[0:10]
-# Save the 5 most correlated variables in a list
+# Save the 10 most correlated variables in a list
 lIndepVar = corr.index.tolist()
 
 # Plot correlation between sDepVar and lIndepVar
@@ -261,8 +264,8 @@ plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
 
 # Run OLS
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar], missing='drop')
-results_ols = model.fit()
+model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar]), missing='drop')
+results_ols = model.fit(cov_type='HAC')
 # Save model to .MODS/
 results_ols.save('./.MODS/results_ols.pickle')
 # Save results to LaTeX
@@ -346,8 +349,8 @@ plt.savefig("./Results/Presentation/3_2_2_corr_incl_lag.svg")
 upload(plt, 'Project-based Internship', 'figures/3_2_2_corr_incl_lag.png')
 
 # Run OLS with lagged variables
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag], missing='drop')
-results_ols_lag = model.fit()
+model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag]), missing='drop')
+results_ols_lag = model.fit(cov_type='HAC')
 # Save model to .MODS/
 results_ols_lag.save('./.MODS/results_ols_lag.pickle')
 # Save results to LaTeX
@@ -434,8 +437,8 @@ plt.savefig("./Results/Presentation/3_4_2_corr_incl_lag_budget.svg")
 upload(plt, 'Project-based Internship', 'figures/3_4_2_corr_incl_lag_budget.png')
 
 # Run OLS with lagged variables and budget
-model = sm.OLS(dfDataScaledTrain[sDepVar], dfDataScaledTrain[lIndepVar_lag_budget], missing='drop')
-results_lag_budget = model.fit()
+model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag_budget]), missing='drop')
+results_lag_budget = model.fit(cov_type='HAC')
 # Save model to .MODS/
 results_lag_budget.save('./.MODS/results_lag_budget.pickle')
 # Save results to LaTeX
@@ -572,8 +575,8 @@ for iCluster in lCluster:
         # Check if the subset of data has enough observations for OLS
         if data_subset.shape[0] > 1:
             # Run OLS
-            model_cluster = sm.OLS(data_subset[sDepVar], data_subset[lIndepVar_lag_budget])
-            results_cluster = model_cluster.fit()
+            model_cluster = sm.OLS(data_subset[sDepVar], sm.add_constant(data_subset[lIndepVar_lag_budget]))
+            results_cluster = model_cluster.fit(cov_type='HAC')
             # Save model to .MODS/
             results_cluster.save('./.MODS/results_cluster_' + str(iCluster) + '_' + str(iClusterLabel) + '.pickle')
             # Predict and rescale sDepVar using OLS with lagged variables and budget and add to cluster_{iCluster}
@@ -588,8 +591,6 @@ for iCluster in lCluster:
             print("Not enough data points for OLS in cluster", iCluster, "and label", iClusterLabel)
             dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
                 iCluster)] = np.nan
-
-
 
 # Plot the sum of all predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))

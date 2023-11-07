@@ -180,10 +180,13 @@ for i, nCluster in enumerate(lCluster):
     sns.countplot(x=f'cluster_{nCluster}', data=dfData, ax=ax[i // 2, i % 2])
     ax[i // 2, i % 2].set_xlabel(f'Cluster for {nCluster} cluster solution')
     ax[i // 2, i % 2].set_ylabel('Number of observations')
-plt.show()
 plt.savefig("./Results/Figures/1_9_cluster.png")
 plt.savefig("./Results/Presentation/1_9_cluster.svg")
 upload(plt, 'Project-based Internship', 'figures/1_9_cluster.png')
+
+# Add intercept to dfData
+dfData['intercept'] = 1
+dfDataWIP['intercept'] = 1
 
 # Save dfData to parquet as dfData_scaled
 dfData.to_parquet('./dfData_reg_scaled.parquet')

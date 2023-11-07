@@ -11,6 +11,13 @@ import joblib
 from plot_config import *
 from sklearn.metrics import mean_squared_error
 import multiprocessing
+from keras.models import Sequential
+from keras.models import load_model
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Dropout
+from keras.callbacks import EarlyStopping
+import keras_tuner as kt
 
 warnings.filterwarnings('ignore')
 
@@ -54,15 +61,7 @@ def upload(ax, project, path):
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
 
 # Load data
-dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
-dfData = pd.read_parquet("./dfData_reg.parquet")
-dfDataPred = pd.read_parquet("./dfDataPred.parquet")
-
-
-# Define sMAPE
-def smape(actual, predicted):
-    return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
-
+dfDataWIP = pd.read_parquet("./dfData_reg_scaled_wip.parquet")
 
 # Import lNumericCols from ./.AUX/lNumericCols.txt
 with open('./.AUX/lNumericCols.txt', 'r') as f:
@@ -70,16 +69,10 @@ with open('./.AUX/lNumericCols.txt', 'r') as f:
 lNumericCols = lNumericCols.split('\n')
 
 # Replace infinite values with NaN
-dfDataScaled.replace([np.inf, -np.inf], np.nan, inplace=True)
-dfData.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-# Keep only numeric columns
-dfDataScaled = dfDataScaled[lNumericCols + ['train']]
-# dfData = dfData[lNumericCols + ['train']]
+dfDataWIP.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 # Replace NaN with 0
-dfDataScaled.fillna(0, inplace=True)
-dfData[lNumericCols].fillna(0, inplace=True)
+dfDataWIP[lNumericCols].fillna(0, inplace=True)
 
 # Import scales
 x_scaler = joblib.load("./.AUX/x_scaler.save")
@@ -112,10 +105,111 @@ lIndepVar_lag_budget = lIndepVar_lag_budget.split('\n')
 dfRMSE = pd.read_csv("./Results/Tables/3_4_rmse.csv", index_col=0)
 
 # Rescale dfDataScaled to dfData
-dfDataRescaled = dfDataScaled.copy()
-dfDataRescaled[colIndepVarNum] = x_scaler.inverse_transform(dfDataScaled[colIndepVarNum].values)
-dfDataRescaled[sDepVar] = y_scaler.inverse_transform(dfDataScaled[sDepVar].values.reshape(-1, 1))
+#dfDataWIP[colIndepVarNum] = x_scaler.inverse_transform(dfDataWIP[colIndepVarNum])
 
-train_index = dfData[dfData[trainMethod] == 1].index
-dfDataScaledTrain = dfDataScaled.loc[train_index]
-dfDataScaledTest = dfDataScaled.drop(train_index)
+# Top 5 models based on smape
+lModels = list(dfRMSE.sort_values(by='sMAPE').head(5).index)
+
+## Load models from ./.MODS
+# For each model in ./.MODS
+for model in os.listdir("./.MODS"):
+    # Load model
+    model = joblib.load(f"./.MODS/{model}")
+    # Predict
+    dfDataWIP[f"{model}"] = model.predict(dfDataWIP[colIndep])
+    # Rescale
+    dfDataWIP[f"{model}"] = y_scaler.inverse_transform(dfDataWIP[f"{model}"].values.reshape(-1, 1))
+
+# Load lstm from ./.MODS/LSTM_tune.tf
+lstm = load_model("./.MODS/LSTM_tune.tf")
+
+# Use saved model to predict out of sample data. The model is trained on finished jobs, and the prediction is made on
+# the WIP jobs.
+# Predict
+
+
+
+job_no = 'S283202'
+# Get the data of job_no
+dfDataJob = dfDataWIP[dfDataWIP['job_no'] == job_no]
+# Plot the cumsum of actual and predicted contribution of sJobNo
+fig, ax = plt.subplots(figsize=(20, 10))
+for col in ['LSTM',
+               'production_estimate_contribution',
+               'final_estimate_contribution',
+               'contribution_cumsum',
+               'risk']:
+    if col == 'production_estimate_contribution':
+        ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+    elif col == 'final_estimate_contribution':
+        ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
+    elif col == 'risk':
+        ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
+    else:
+        ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
+ax.set_xlabel('Date')
+ax.set_ylabel('Contribution')
+ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.show()
+
+
+### Calculate mean of all models ###
+# Create list of models to include
+for model in os.listdir("./.MODS"):
+    if model.endswith(".pickle"):
+        lModels = [model for model in os.listdir("./.MODS") if model.endswith(".pickle")]
+
+# Add LSTM to lModels
+lModels.append("LSTM")
+
+
+
+
+########################################################################################################################
+# if ./Results/Figures/Jobs does not exist, create it
+
+if not os.path.exists('./Results/Figures/WIP'):
+    os.makedirs('./Results/Figures/WIP')
+
+## For each job_no plot the actual and predicted sDepVar
+for job_no in dfDataWIP['job_no'].unique():
+    # Get the data of job_no
+    dfDataJob = dfDataWIP[dfDataWIP['job_no'] == job_no]
+
+    dfDataJob['LSTM'] = pd.DataFrame(
+        # Ignore index and get the last value of the prediction
+        lstm.predict(dfDataJob[lNumericCols])[:, -1, 0].reshape(-1, 1),
+        index=dfDataJob.index
+    )
+    # Rescale
+    dfDataJob["LSTM"] = y_scaler.inverse_transform(dfDataJob["LSTM"].values.reshape(-1, 1))
+
+    # Plot the cumsum of actual and predicted contribution of sJobNo
+    fig, ax = plt.subplots(figsize=(20, 10))
+    for col in dfDataJob.columns:
+        if col in ['production_estimate_contribution',
+                   'LSTM',
+                   'final_estimate_contribution',
+                   'contribution_cumsum',
+                   'risk']:
+            if col == 'production_estimate_contribution':
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+            elif col == 'final_estimate_contribution':
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
+            elif col == 'risk':
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
+            else:
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Contribution')
+    ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/WIP/{job_no}.png")
+    plt.close('all')
+
+########################################################################################################################

@@ -154,11 +154,16 @@ lIndepVar = list(dict.fromkeys(lIndepVar))
 # If lIndepVar contains like 'cluster_' then remove it
 lIndepVar = [col for col in lIndepVar if not col.startswith('cluster_')]
 
+# Save lIndepVar to ./.AUX/lIndepVar.txt
+with open('./.AUX/lIndepVar.txt', 'w') as f:
+    f.write('\n'.join(lIndepVar))
+
+lIndepVar = lIndepVar + ['intercept']
 # Sparse model with OLS variables
 start_time_en_sparse = datetime.datetime.now()
 elastic_net_cv_sparse.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
 # Save model to .MODS/ as pickle
-joblib.dump(elastic_net_cv_sparse, './.MODS/elastic_net_cv_sparse.pkl')
+joblib.dump(elastic_net_cv_sparse, './.MODS/elastic_net_cv_sparse.pickle')
 dfData['predicted_en_sparse'] = elastic_net_cv_sparse.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
 dfData['predicted_en_sparse'] = y_scaler.inverse_transform(dfData['predicted_en_sparse'].shift(-1).values.reshape(-1, 1))
 end_time_en_sparse = datetime.datetime.now()
@@ -238,7 +243,7 @@ start_time_rf = datetime.datetime.now()
 rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 # Save model to .MODS/ as pickle
-joblib.dump(rf_cv, './.MODS/rf_cv.pkl')
+joblib.dump(rf_cv, './.MODS/rf_cv.pickle')
 # Predict and rescale using RF
 dfData['predicted_rf_full'] = rf_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
@@ -257,7 +262,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_rf_full.png")
@@ -275,7 +279,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_1_rf_full.png")
@@ -305,7 +308,7 @@ start_time_rf = datetime.datetime.now()
 rf_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar])
 # Save model to .MODS/ as pickle
-joblib.dump(rf_cv, './.MODS/rf_cv_sparse.pkl')
+joblib.dump(rf_cv, './.MODS/rf_cv_sparse.pickle')
 # Predict and rescale using RF
 dfData['predicted_rf_sparse'] = rf_cv.predict(
     dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
@@ -386,7 +389,7 @@ start_time_gb = datetime.datetime.now()
 gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 # Save model to .MODS/ as pickle
-joblib.dump(gb_cv, './.MODS/gb_cv.pkl')
+joblib.dump(gb_cv, './.MODS/gb_cv.pickle')
 # Predict and rescale using GB
 dfData['predicted_gb'] = gb_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
@@ -467,7 +470,7 @@ start_time_xgb = datetime.datetime.now()
 xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
 # Save model to .MODS/ as pickle
-joblib.dump(xgb_cv, './.MODS/xgb_cv.pkl')
+joblib.dump(xgb_cv, './.MODS/xgb_cv.pickle')
 # Predict and rescale using XGB
 dfData['predicted_xgb'] = xgb_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
