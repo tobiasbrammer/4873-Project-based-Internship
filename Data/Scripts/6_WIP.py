@@ -102,7 +102,7 @@ with open('./.AUX/lIndepVar_lag_budget.txt', 'r') as f:
 lIndepVar_lag_budget = lIndepVar_lag_budget.split('\n')
 
 # Import dfRMSE from ./Results/Tables/3_4_rmse.csv
-dfRMSE = pd.read_csv("./Results/Tables/3_4_rmse.csv", index_col=0)
+dfRMSE = pd.read_csv("./Results/Tables/5_1_rmse.csv", index_col=0)
 
 # Rescale dfDataScaled to dfData
 #dfDataWIP[colIndepVarNum] = x_scaler.inverse_transform(dfDataWIP[colIndepVarNum])
@@ -126,23 +126,29 @@ lstm = load_model("./.MODS/LSTM_tune.tf")
 # Use saved model to predict out of sample data. The model is trained on finished jobs, and the prediction is made on
 # the WIP jobs.
 # Predict
+dfDataWIP['LSTM'] = pd.DataFrame(
+    # Ignore index and get the last value of the prediction
+    lstm.predict(dfDataWIP[lNumericCols])[:, -1, 0].reshape(-1, 1),
+    index=dfDataWIP.index
+)
 
-
+# Rescale
+dfDataWIP["LSTM"] = y_scaler.inverse_transform(dfDataWIP["LSTM"].values.reshape(-1, 1))
 
 job_no = 'S283202'
 # Get the data of job_no
 dfDataJob = dfDataWIP[dfDataWIP['job_no'] == job_no]
 # Plot the cumsum of actual and predicted contribution of sJobNo
 fig, ax = plt.subplots(figsize=(20, 10))
-for col in ['LSTM',
+for col in ['contribution_cumsum',
                'production_estimate_contribution',
                'final_estimate_contribution',
-               'contribution_cumsum',
+               'LSTM',
                'risk']:
     if col == 'production_estimate_contribution':
         ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
     elif col == 'final_estimate_contribution':
-        ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
+        ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
     elif col == 'risk':
         ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
     else:
@@ -189,20 +195,19 @@ for job_no in dfDataWIP['job_no'].unique():
 
     # Plot the cumsum of actual and predicted contribution of sJobNo
     fig, ax = plt.subplots(figsize=(20, 10))
-    for col in dfDataJob.columns:
-        if col in ['production_estimate_contribution',
-                   'LSTM',
-                   'final_estimate_contribution',
-                   'contribution_cumsum',
-                   'risk']:
-            if col == 'production_estimate_contribution':
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
-            elif col == 'final_estimate_contribution':
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
-            elif col == 'risk':
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
-            else:
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
+    for col in ['contribution_cumsum',
+                'production_estimate_contribution',
+                'final_estimate_contribution',
+                'LSTM',
+                'risk']:
+        if col == 'production_estimate_contribution':
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+        elif col == 'final_estimate_contribution':
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+        elif col == 'risk':
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
+        else:
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
     ax.set_xlabel('Date')
     ax.set_ylabel('Contribution')
     ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')

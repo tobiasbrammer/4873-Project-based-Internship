@@ -174,15 +174,15 @@ start_time_lstm_tune = datetime.datetime.now()
 # Fit model to training data
 tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
              dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-             batch_size=1,
-             validation_split=0.20,
+             batch_size=5,
+             validation_split=0.10,
              callbacks=[early_stop],
              use_multiprocessing=True,
              workers=multiprocessing.cpu_count(),
              verbose=1)
 
 # Get the optimal hyperparameters
-best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+best_hps = tuner.get_best_hyperparameters()[0]
 
 # Print optimal hyperparameters. Account for the fact that the number of layers is not the same as the number of units
 print(f"""The optimal number of units in the first LSTM layer is {best_hps.get('input_unit')}.
@@ -197,14 +197,17 @@ model = tuner.hypermodel.build(best_hps)
 # Fit model
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=10,
-          batch_size=1,
-          validation_split=0.15,
+          epochs=best_hps.get('tuner/epochs'),
+          batch_size=5,
+          validation_split=0.10,
           callbacks=[early_stop],
           use_multiprocessing=True,
           workers=multiprocessing.cpu_count(),
           verbose=1)
+
 model.save('./.MODS/LSTM_tune.tf')
+
+model.summary()
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -276,6 +279,9 @@ smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar],
 # Add to dfRMSE
 dfRMSE.loc['LSTM', 'RMSE'] = rmse_lstm
 dfRMSE.loc['LSTM', 'sMAPE'] = smape_lstm
+
+# Add to dfDataPred
+dfDataPred['predicted_lstm'] = dfData['predicted_lstm']
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
@@ -452,6 +458,8 @@ dfDataPred['final_estimate_contribution'] = dfData['final_estimate_contribution'
 
 dfDataPred['risk'] = dfData['risk']
 
+dfRMSE.to_csv("./Results/Tables/5_1_rmse.csv")
+
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
@@ -471,16 +479,17 @@ for job_no in dfDataPred['job_no'].unique():
     for col in dfDataJob.columns:
         if col in [sDepVar,
                    'production_estimate_contribution',
-                   'predicted_avg',
+                   'predicted_lstm',
                    'final_estimate_contribution',
-                   'predicted_cluster_fc',
                    'risk']:
             if col == 'production_estimate_contribution':
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
             elif col == 'final_estimate_contribution':
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
             elif col == 'risk':
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
+            elif col == sDepVar:
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
             else:
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
     ax.set_xlabel('Date')
