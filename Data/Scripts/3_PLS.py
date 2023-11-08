@@ -2,6 +2,12 @@
 import os
 import numpy as np
 import pandas as pd
+import dropbox
+from pathlib import Path
+from io import BytesIO
+import matplotlib.pyplot as plt
+import re
+import subprocess
 from matplotlib.colors import LinearSegmentedColormap
 import statsmodels.api as sm
 import joblib
@@ -16,13 +22,6 @@ elif os.name == 'nt':
     sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 
 os.chdir(sDir)
-
-import dropbox
-from pathlib import Path
-from io import BytesIO
-import matplotlib.pyplot as plt
-import re
-import subprocess
 
 def upload(ax, project, path):
     bs = BytesIO()
@@ -46,7 +45,6 @@ def upload(ax, project, path):
         dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
     else:
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
 
 
 # Load data
@@ -104,7 +102,7 @@ dfDataScaledTest = dfDataScaled.drop(train_index)
 
 # Get variables starting with kbyg
 lDST = [col for col in dfDataScaled.columns if re.match('kbyg', col)]
-
+lDST = ['intercept'] + lDST
 
 # Write lDST to .AUX/
 with open('./.AUX/lDST.txt', 'w') as lVars:
@@ -114,7 +112,7 @@ with open('./.AUX/lDST.txt', 'w') as lVars:
 # Add constant to independent variables
 
 model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lDST]))
-results_dst = model.fit(cov_type='HAC')
+results_dst = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_dst.save('./.MODS/results_dst.pickle')
 # Save results to LaTeX
@@ -125,13 +123,13 @@ with open('Results/Tables/3_0_dst.tex', 'w', encoding='utf-8') as f:
 
 upload(ols, 'Project-based Internship', 'tables/3_0_dst.tex')
 
-# Predict and rescale sDepVar using OLS
+# Predict and rescale sDepVar using OLS. Be sure to add constant to dfDataScaled[lDST]
 dfData['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataScaled[lDST]).values.reshape(-1, 1))
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_dst'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
@@ -147,7 +145,7 @@ upload(plt, 'Project-based Internship', 'figures/3_0_dst.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_dst'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
@@ -176,10 +174,10 @@ dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDa
 
 ### OLS with s-curve differences. ###
 
-lSCurve = ['revenue_scurve_diff','costs_scurve_diff','contribution_scurve_diff']
+lSCurve = ['revenue_scurve_diff', 'costs_scurve_diff', 'contribution_scurve_diff', 'intercept']
 
 model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lSCurve]))
-results_scurve = model.fit(cov_type='HAC')
+results_scurve = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_scurve.save('./.MODS/results_scurve.pickle')
 # Save results to LaTeX
@@ -196,7 +194,7 @@ dfData['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predict(d
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_scurve'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
@@ -212,7 +210,7 @@ upload(plt, 'Project-based Internship', 'figures/3_9_scurve.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_scurve'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
@@ -263,9 +261,11 @@ plt.savefig("./Results/Figures/3_0_2_corr.png")
 plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
 
+# Add intercept to lIndepVar
+lIndepVar = ['intercept'] + lIndepVar
 # Run OLS
 model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar]), missing='drop')
-results_ols = model.fit(cov_type='HAC')
+results_ols = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_ols.save('./.MODS/results_ols.pickle')
 # Save results to LaTeX
@@ -278,13 +278,12 @@ upload(ols, 'Project-based Internship', 'tables/3_1_ols.tex')
 
 # Predict and rescale sDepVar using OLS
 dfData['predicted_ols'] = results_ols.predict(dfDataScaled[lIndepVar])
-
 dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].values.reshape(-1, 1))
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_ols'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
@@ -301,14 +300,13 @@ upload(plt, 'Project-based Internship', 'figures/3_1_ols.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_ols'].transform('sum'), label='Predicted')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_1_1_ols.png")
@@ -335,7 +333,7 @@ lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
 
 # Correlation between sDepVar and lIndepVar_lag
 fig, ax = plt.subplots(figsize=(20, 10))
-sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag].corr(), annot=True, vmin=-1, vmax=1,
+sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag.remove('intercept')].corr(), annot=True, vmin=-1, vmax=1,
             fmt='.2f',
             cmap=LinearSegmentedColormap.from_list('custom_cmap', [
                 (0, vColors[1]),
@@ -350,7 +348,7 @@ upload(plt, 'Project-based Internship', 'figures/3_2_2_corr_incl_lag.png')
 
 # Run OLS with lagged variables
 model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag]), missing='drop')
-results_ols_lag = model.fit(cov_type='HAC')
+results_ols_lag = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_ols_lag.save('./.MODS/results_ols_lag.pickle')
 # Save results to LaTeX
@@ -369,7 +367,7 @@ dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].val
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag'].transform('sum'),
         label='Predicted (incl. lag)')
@@ -377,7 +375,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_3_ols_lag.png")
@@ -387,7 +384,7 @@ upload(plt, 'Project-based Internship', 'figures/3_3_ols_lag.png')
 #
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lag'].transform('sum'),
         label='Predicted (incl. lag)')
@@ -423,7 +420,7 @@ with open('./.AUX/lIndepVar_lag_budget.txt', 'w') as lVars:
 
 # Correlation between sDepVar and lIndepVar_lag_budget
 fig, ax = plt.subplots(figsize=(20, 10))
-sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget].corr(), annot=True, vmin=-1, vmax=1,
+sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget.remove('intercept')].corr(), annot=True, vmin=-1, vmax=1,
             fmt='.2f',
             cmap=LinearSegmentedColormap.from_list('custom_cmap', [
                 (0, vColors[1]),
@@ -438,7 +435,7 @@ upload(plt, 'Project-based Internship', 'figures/3_4_2_corr_incl_lag_budget.png'
 
 # Run OLS with lagged variables and budget
 model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag_budget]), missing='drop')
-results_lag_budget = model.fit(cov_type='HAC')
+results_lag_budget = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_lag_budget.save('./.MODS/results_lag_budget.pickle')
 # Save results to LaTeX
@@ -457,7 +454,7 @@ dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_la
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lag_budget'].transform('sum'),
         label='Predicted (incl. lag and budget)')
@@ -475,7 +472,7 @@ upload(plt, 'Project-based Internship', 'figures/3_4_ols_lag_budget.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lag_budget'].transform('sum'),
         label='Predicted (incl. lag and budget)')
@@ -511,7 +508,7 @@ dfData['predicted_fc'] = dfData['predicted_dst']*0.1 + dfData['predicted_lag_bud
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc'].transform('sum'),
         label='Predicted (Forecast Combination)')
@@ -529,7 +526,7 @@ upload(plt, 'Project-based Internship', 'figures/3_5_fc.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_fc'].transform('sum'),
         label='Predicted (Forecast Combination)')
@@ -576,7 +573,7 @@ for iCluster in lCluster:
         if data_subset.shape[0] > 1:
             # Run OLS
             model_cluster = sm.OLS(data_subset[sDepVar], sm.add_constant(data_subset[lIndepVar_lag_budget]))
-            results_cluster = model_cluster.fit(cov_type='HAC')
+            results_cluster = model_cluster.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
             # Save model to .MODS/
             results_cluster.save('./.MODS/results_cluster_' + str(iCluster) + '_' + str(iClusterLabel) + '.pickle')
             # Predict and rescale sDepVar using OLS with lagged variables and budget and add to cluster_{iCluster}
@@ -595,7 +592,7 @@ for iCluster in lCluster:
 # Plot the sum of all predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 for iCluster in lCluster:
     ax.plot(dfData[dfData[trainMethod] == 0]['date'],
             dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_' + str(iCluster)].transform('sum'),
@@ -603,7 +600,7 @@ for iCluster in lCluster:
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_6_cluster.png")
@@ -621,7 +618,7 @@ dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_fc'].transform('sum'),
         label='Predicted (Forecast Combination)')
@@ -636,7 +633,7 @@ plt.savefig("./Results/Presentation/3_7_fc_cluster.svg")
 upload(plt, 'Project-based Internship', 'figures/3_7_fc_cluster.png')
 
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'], dfData.groupby('date')['predicted_cluster_fc'].transform('sum'),
         label='Predicted (Forecast Combination)')
 ax.set_xlabel('Date')
@@ -668,7 +665,7 @@ dfData['predicted_fc_cluster_dst'] = 0.8*dfData['predicted_cluster_fc'] + dfData
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_fc_cluster_dst'].transform('sum'),
         label='Predicted (Forecast Combination)')
@@ -683,7 +680,7 @@ plt.savefig("./Results/Presentation/3_8_fc_cluster_dst.svg")
 upload(plt, 'Project-based Internship', 'figures/3_8_fc_cluster_dst.png')
 
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+ax.plot(dfData['date'], dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'], dfData.groupby('date')['predicted_fc_cluster_dst'].transform('sum'),
         label='Predicted (Forecast Combination)')
 ax.set_xlabel('Date')
@@ -723,6 +720,7 @@ dfDataPred = dfData[
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
+dfDataWIP.to_parquet("./dfDataWIP_pred.parquet")
 
 ########################################################################################################################
 

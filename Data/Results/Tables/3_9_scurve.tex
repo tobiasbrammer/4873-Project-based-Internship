@@ -1,35 +1,35 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}             & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.874   \\
-\textbf{Model:}                     &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.874   \\
-\textbf{Method:}                    &    Least Squares    & \textbf{  F-statistic:       }          &     8325.   \\
-\textbf{Date:}                      &   Fri, 03 Nov 2023  & \textbf{  Prob (F-statistic):}          &     0.00    \\
-\textbf{Time:}                      &       12:53:16      & \textbf{  Log-Likelihood:    }          &    2462.7   \\
-\textbf{No. Observations:}          &          3616       & \textbf{  AIC:               }          &    -4919.   \\
-\textbf{Df Residuals:}              &          3613       & \textbf{  BIC:               }          &    -4901.   \\
-\textbf{Df Model:}                  &             3       & \textbf{                     }          &             \\
-\textbf{Covariance Type:}           &      nonrobust      & \textbf{                     }          &             \\
+\textbf{Dep. Variable:}             & total\_contribution & \textbf{  R-squared:         } &     0.120   \\
+\textbf{Model:}                     &         OLS         & \textbf{  Adj. R-squared:    } &     0.119   \\
+\textbf{Method:}                    &    Least Squares    & \textbf{  F-statistic:       } &     52.08   \\
+\textbf{Date:}                      &   Wed, 08 Nov 2023  & \textbf{  Prob (F-statistic):} &  6.01e-33   \\
+\textbf{Time:}                      &       09:45:09      & \textbf{  Log-Likelihood:    } &    2929.4   \\
+\textbf{No. Observations:}          &          3609       & \textbf{  AIC:               } &    -5851.   \\
+\textbf{Df Residuals:}              &          3605       & \textbf{  BIC:               } &    -5826.   \\
+\textbf{Df Model:}                  &             3       & \textbf{                     } &             \\
+\textbf{Covariance Type:}           &         HAC         & \textbf{                     } &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
-                                    & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+                                    & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P$> |$z$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{revenue\_scurve\_diff}      &       0.4035  &        0.015     &    27.347  &         0.000        &        0.375    &        0.432     \\
-\textbf{costs\_scurve\_diff}        &       0.3055  &        0.017     &    18.061  &         0.000        &        0.272    &        0.339     \\
-\textbf{contribution\_scurve\_diff} &       0.4691  &        0.017     &    27.895  &         0.000        &        0.436    &        0.502     \\
+\textbf{revenue\_scurve\_diff}      &      -0.4109  &        0.125     &    -3.282  &         0.001        &       -0.656    &       -0.166     \\
+\textbf{costs\_scurve\_diff}        &       0.1185  &        0.112     &     1.058  &         0.290        &       -0.101    &        0.338     \\
+\textbf{contribution\_scurve\_diff} &       0.1706  &        0.040     &     4.318  &         0.000        &        0.093    &        0.248     \\
+\textbf{intercept}                  &       0.5557  &        0.095     &     5.822  &         0.000        &        0.369    &        0.743     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 761.815 & \textbf{  Durbin-Watson:     } &    1.964  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 4475.215  \\
-\textbf{Skew:}          &   0.871 & \textbf{  Prob(JB):          } &     0.00  \\
-\textbf{Kurtosis:}      &   8.164 & \textbf{  Cond. No.          } &     5.88  \\
+\textbf{Omnibus:}       & 534.992 & \textbf{  Durbin-Watson:     } &    1.942  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 8056.166  \\
+\textbf{Skew:}          &   0.106 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &  10.316 & \textbf{  Cond. No.          } &     58.4  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
 \end{center}
 
 Notes: \newline
- [1] R² is computed without centering (uncentered) since the model does not contain a constant. \newline
- [2] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+ [1] Standard Errors are heteroscedasticity and autocorrelation robust (HAC) using 3 lags and without small sample correction

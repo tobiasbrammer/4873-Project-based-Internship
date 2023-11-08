@@ -65,6 +65,7 @@ def upload(ax, project, path):
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
 dfDataPred = pd.read_parquet("./dfDataPred.parquet")
+dfDataWIP = pd.read_parquet("./dfDataWIP_pred.parquet")
 
 
 # Define sMAPE
@@ -237,7 +238,7 @@ print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm'].transform('sum'),
         label='Predicted (LSTM)')
@@ -254,7 +255,7 @@ upload(plt, 'Project-based Internship', 'figures/5_1_lstm.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lstm'].transform('sum'),
         label='Predicted (LSTM)')
@@ -283,15 +284,45 @@ dfRMSE.loc['LSTM', 'sMAPE'] = smape_lstm
 # Add to dfDataPred
 dfDataPred['predicted_lstm'] = dfData['predicted_lstm']
 
+# Predict WIP
+dfDataWIP['predicted_lstm'] = pd.DataFrame(
+    # Ignore index and get the last value of the prediction
+    model.predict(dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])])[:, -1, 0].reshape(
+        -1, 1),
+    index=dfDataWIP.index
+)
+
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
 
 ########################################################################################################################
 
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
-dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', sDepVar])].mean(axis=1)
+dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
+                                        'predicted_en_sparse',
+                                        'predicted_gb',
+                                        'predicted_lag',
+                                        'predicted_lag_budget',
+                                        'predicted_lstm',
+                                        'predicted_ols',
+                                        'predicted_rf_full',
+                                        'predicted_rf_sparse',
+                                        'predicted_xgb']].mean(axis=1)
 dfData['predicted_avg'] = dfDataPred['predicted_avg']
 dfDataPred[sDepVar] = dfData[sDepVar]
+
+dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
+                                        'predicted_en_sparse',
+                                        'predicted_gb',
+                                        'predicted_lag',
+                                        'predicted_lag_budget',
+                                        'predicted_lstm',
+                                        'predicted_ols',
+                                        'predicted_rf_full',
+                                        'predicted_rf_sparse',
+                                        'predicted_xgb']].mean(axis=1)
+
+
 
 ### Explore different weighting schemes ###
 # Bate and Granger weights use sample estimates for the population-optimal weights in ω∗ = (I'Σ^(-1)I)Σ^(-1)I
@@ -316,6 +347,19 @@ dfDataPred['predicted_bates_granger'] = dfDataPred[
     dfDataPred.columns.difference(['date', 'job_no', sDepVar, trainMethod])].mul(dfDataPredWeights['weights'],
                                                                                  axis=1).sum(axis=1)
 dfData['predicted_bates_granger'] = dfDataPred['predicted_bates_granger']
+
+dfDataWIP['predicted_bates_granger'] = dfDataWIP[['predicted_boost',
+                                        'predicted_en_sparse',
+                                        'predicted_gb',
+                                        'predicted_lag',
+                                        'predicted_lag_budget',
+                                        'predicted_lstm',
+                                        'predicted_ols',
+                                        'predicted_rf_full',
+                                        'predicted_rf_sparse',
+                                        'predicted_xgb']].mul(dfDataPredWeights['weights'],
+                                                                                 axis=1).sum(axis=1)
+
 # Calculate RMSE of Bates and Granger
 rmse_bates_granger = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
@@ -337,15 +381,27 @@ for col in dfDataPred.columns:
         dfDataPredMSE[f'{col}'] = pd.DataFrame((dfDataPred[col] - dfDataPred[sDepVar]) ** 2).mean(axis=0)
 
 # Calculate the weights as dfDataPredMSE.transpose() / sum(dfDataPredMSE.transpose())
-dfDataPredWeights = pd.DataFrame()
-dfDataPredWeights['weights'] = dfDataPredMSE.transpose() / dfDataPredMSE.sum(axis=1)[0]
+dfDataPredWeightsMSE = pd.DataFrame()
+dfDataPredWeightsMSE['weights'] = dfDataPredMSE.transpose() / dfDataPredMSE.sum(axis=1)[0]
 
 # Calculate the weighted average of the predicted values
 dfDataPred['predicted_mse'] = dfDataPred[dfDataPred.columns.difference(
     ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution', trainMethod])].mul(
-    dfDataPredWeights['weights'], axis=1).sum(axis=1)
+    dfDataPredWeightsMSE['weights'], axis=1).sum(axis=1)
 
 dfData['predicted_mse'] = dfDataPred['predicted_mse']
+
+dfDataWIP['predicted_mse'] = dfDataWIP[['predicted_boost',
+                                        'predicted_en_sparse',
+                                        'predicted_gb',
+                                        'predicted_lag',
+                                        'predicted_lag_budget',
+                                        'predicted_lstm',
+                                        'predicted_ols',
+                                        'predicted_rf_full',
+                                        'predicted_rf_sparse',
+                                        'predicted_xgb']].mul(dfDataPredWeightsMSE['weights'],
+                                                                                 axis=1).sum(axis=1)
 
 # Calculate RMSE of MSE
 rmse_mse = np.sqrt(
@@ -483,13 +539,13 @@ for job_no in dfDataPred['job_no'].unique():
                    'final_estimate_contribution',
                    'risk']:
             if col == 'production_estimate_contribution':
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
             elif col == 'final_estimate_contribution':
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
             elif col == 'risk':
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
             elif col == sDepVar:
-                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
+                ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
             else:
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
     ax.set_xlabel('Date')
@@ -499,6 +555,52 @@ for job_no in dfDataPred['job_no'].unique():
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
     plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
+    plt.close('all')
+
+########################################################################################################################
+
+
+########################################################################################################################
+# if ./Results/Figures/Jobs does not exist, create it
+
+if not os.path.exists('./Results/Figures/WIP'):
+    os.makedirs('./Results/Figures/WIP')
+
+## For each job_no plot the actual and predicted sDepVar
+for job_no in dfDataWIP['job_no'].unique():
+    # Get the data of job_no
+    dfDataJob = dfDataWIP[dfDataWIP['job_no'] == job_no]
+
+    dfDataJob['LSTM'] = pd.DataFrame(
+        # Ignore index and get the last value of the prediction
+        model.predict(dfDataJob[lNumericCols])[:, -1, 0].reshape(-1, 1),
+        index=dfDataJob.index
+    )
+    # Rescale
+    dfDataJob["LSTM"] = y_scaler.inverse_transform(dfDataJob["LSTM"].values.reshape(-1, 1))
+
+    # Plot the cumsum of actual and predicted contribution of sJobNo
+    fig, ax = plt.subplots(figsize=(20, 10))
+    for col in ['contribution_cumsum',
+                'predicted_en_sparse',
+                'final_estimate_contribution',
+                'LSTM',
+                'risk']:
+        if col == 'contribution_cumsum':
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+        elif col == 'final_estimate_contribution':
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+        elif col == 'risk':
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
+        else:
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Contribution')
+    ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/WIP/{job_no}.png")
     plt.close('all')
 
 ########################################################################################################################

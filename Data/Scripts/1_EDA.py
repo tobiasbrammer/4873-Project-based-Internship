@@ -1,7 +1,12 @@
 # Import required libraries
 import os
 import pandas as pd
+import numpy as np
 from plot_config import *
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+# Turn off RuntimeWarning
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Read data
 if os.name == 'posix':
@@ -179,20 +184,29 @@ upload(plt, 'Project-based Internship', 'figures/1_5_cost_share.png')
 
 
 # Summary of Variables (mean, std, min, max, missing, % missing)
-summary_data = dfData.describe().transpose()
-# Format all numerical values in DataFrame with thousands separator.
+summary_data = dfData.select_dtypes(exclude=['datetime']).describe().transpose()
+summary_data_date = dfData.select_dtypes(include=['datetime']).describe().transpose()
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
+formatted_df_eda_1_date = summary_data_date[['mean', 'min', 'max']]
+# Format as dd-mm-yyyy
+formatted_df_eda_1_date = formatted_df_eda_1_date.applymap(lambda x: x.strftime('%d-%m-%Y'))
+formatted_df_eda_1_date.insert(1, 'std', np.nan)
 # Count number of missing values for each variable
 missing_values = dfData.isnull().sum().to_frame()
 # Rename column
 missing_values = missing_values.rename(columns={0: 'missing'})
 # Percentage of missing values
 missing_values['% missing'] = missing_values['missing'] / len(dfData) * 100
-# Add missing values to formatted_df_eda_1
+formatted_df_eda_1 = formatted_df_eda_1.select_dtypes(include=[np.number]).map('{:,.2f}'.format)
+# Add mean and std to formatted_df_eda_1_date (set to NA)
+formatted_df_eda_1_date['mean'] = np.nan
+formatted_df_eda_1_date['std'] = np.nan
+# Join formatted_df_eda_1 and formatted_df_eda_1_date. Date variables are first.
+# AttributeError: 'DataFrame' object has no attribute 'append'
+formatted_df_eda_1 = pd.concat([formatted_df_eda_1_date, formatted_df_eda_1], axis=0)
+# Join missing
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
-# Format to show two decimals and use thousands separator
-formatted_df_eda_1 = formatted_df_eda_1.round(2).applymap('{:,.2f}'.format)
 
 # Output to LaTeX with landscape orientation
 eda_1 = formatted_df_eda_1.style.to_latex(

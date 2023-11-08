@@ -54,14 +54,15 @@ def upload(ax, project, path):
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
 
 
-
-
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
 
 # Load dfDataPred from ./dfDataPred.parquet
 dfDataPred = pd.read_parquet("./dfDataPred.parquet")
+
+# Load dfDataWIP from ./dfDataWIP_pred.parquet
+dfDataWIP = pd.read_parquet("./dfDataWIP_pred.parquet")
 
 
 # Define sMAPE
@@ -139,12 +140,12 @@ dfRMSE = pd.read_csv("./Results/Tables/3_4_rmse.csv", index_col=0)
 # Define hyperparameter grid
 param_grid_en = {
     'alpha': np.arange(0.1, 10, 0.01),
-    'l1_ratio': np.arange(0.001, 1.00, 0.001),
-    'tol': [0.0001, 0.001, 0.01]
+    'l1_ratio': np.arange(0.0000001, 1.00, 0.0001),
+    'tol': np.arange(0.00001, 0.50, 0.01)
 }
 # Define randomized search
 elastic_net = ElasticNet(tol=1e-4, random_state=0)
-elastic_net_cv_sparse = RandomizedSearchCV(elastic_net, param_grid_en, n_iter=1000, scoring=None, cv=3, verbose=0,
+elastic_net_cv = RandomizedSearchCV(elastic_net, param_grid_en, n_iter=1000, scoring=None, cv=3, verbose=0,
                                            refit=True, n_jobs=-1)
 
 # get unique entries in lIndepVar_lag_budget + lDST
@@ -161,26 +162,42 @@ with open('./.AUX/lIndepVar.txt', 'w') as f:
 lIndepVar = lIndepVar + ['intercept']
 # Sparse model with OLS variables
 start_time_en_sparse = datetime.datetime.now()
-elastic_net_cv_sparse.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
+elastic_net_cv.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
+
+# Get more precise hyperparamters list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('learning_rate')).round(2)),
+param_grid_en_detail = {
+    'alpha': list((np.arange(0.8, 1.2, 0.01)*elastic_net_cv.best_params_.get('alpha')).round(4)),
+    'l1_ratio': list((np.arange(0.8, 1.2, 0.01)*elastic_net_cv.best_params_.get('l1_ratio')).round(4)),
+    'tol': list((np.arange(0.8, 1.2, 0.01)*elastic_net_cv.best_params_.get('tol')).round(4))
+}
+elastic_net_cv = RandomizedSearchCV(elastic_net, param_grid_en_detail, n_iter=1000, scoring=None, cv=3, verbose=0,
+                                           refit=True, n_jobs=-1)
+elastic_net_cv.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
+
+# Get best hyperparameters
+print(f'The optimal EN alpha is {elastic_net_cv.best_params_.get("alpha")}.')
+print(f'The optimal EN l1_ratio is {elastic_net_cv.best_params_.get("l1_ratio")}.')
+print(f'The optimal EN tol is {elastic_net_cv.best_params_.get("tol")}.')
+
 # Save model to .MODS/ as pickle
-joblib.dump(elastic_net_cv_sparse, './.MODS/elastic_net_cv_sparse.pickle')
-dfData['predicted_en_sparse'] = elastic_net_cv_sparse.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
-dfData['predicted_en_sparse'] = y_scaler.inverse_transform(dfData['predicted_en_sparse'].shift(-1).values.reshape(-1, 1))
+joblib.dump(elastic_net_cv, './.MODS/elastic_net_cv.pickle')
+
+dfData['predicted_en'] = elastic_net_cv.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
+dfData['predicted_en'] = y_scaler.inverse_transform(dfData['predicted_en'].shift(-1).values.reshape(-1, 1))
 end_time_en_sparse = datetime.datetime.now()
 print(f'ElasticNet finished in {end_time_en_sparse - start_time_en_sparse}.')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_en_sparse'].transform('sum'),
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_en'].transform('sum'),
         label='Predicted (Elastic Net)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_0_en.png")
@@ -190,15 +207,14 @@ upload(plt, 'Project-based Internship', 'figures/4_0_en.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_en_sparse'].transform('sum'),
+        dfData.groupby('date')['predicted_en'].transform('sum'),
         label='Predicted (Elastic Net)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_0_1_en.png")
@@ -209,17 +225,21 @@ plt.close('all')
 # Calculate RMSE of EN
 rmse_en_sparse = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
-                       dfData[dfData[trainMethod] == 0]['predicted_en_sparse'].replace(np.nan, 0)))
+                       dfData[dfData[trainMethod] == 0]['predicted_en'].replace(np.nan, 0)))
 # Calculate sMAPE
 smape_en_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
-                        dfData[dfData[trainMethod] == 0]['predicted_en_sparse'].replace(np.nan, 0))
+                        dfData[dfData[trainMethod] == 0]['predicted_en'].replace(np.nan, 0))
 
 # Add to dfRMSE
 dfRMSE.loc['Elastic Net', 'RMSE'] = rmse_en_sparse
 dfRMSE.loc['Elastic Net', 'sMAPE'] = smape_en_sparse
 
 # Add to dfDataPred
-dfDataPred['predicted_en_sparse'] = dfData['predicted_en_sparse']
+dfDataPred['predicted_en'] = dfData['predicted_en']
+
+# Predict WIP
+dfDataWIP['predicted_en'] = elastic_net_cv.predict(dfDataWIP[lIndepVar].replace(np.nan, 0))
+dfDataWIP['predicted_en'] = y_scaler.inverse_transform(dfDataWIP['predicted_en'].shift(-1).values.reshape(-1, 1))
 
 ### Random Forest Regression ###
 # Define Random Forest model
@@ -227,12 +247,12 @@ rf = RandomForestRegressor(n_jobs=-1, random_state=0, verbose=False)
 
 ## Define hyperparameter grid ##
 rf_grid = {
-    "n_estimators": np.arange(10, 300, 20),  # Number of trees
-    "max_depth": [None, 1, 3, 5, 10, 15, 20, 25],  # Depth of each tree
-    "min_samples_split": np.arange(2, 60, 2),  # Minimum samples required to split an internal node
-    "min_samples_leaf": np.arange(1, 60, 2),  # Minimum samples required to be at a leaf node
-    "max_features": [1 / 3, 0.5, 1, "sqrt", "log2", None],  # Number of features to consider for split
-    "max_samples": [100, 150, 250, 500, 1000, 1500, None]  # Number of samples to train each tree
+    "n_estimators": np.arange(10, 300, 5),  # Number of trees
+    "max_depth": [1, 3, 5, 10, 15, 20, 25, 50, 75, 100],  # Depth of each tree
+    "min_samples_split": np.arange(1, 60, 1),  # Minimum samples required to split an internal node
+    "min_samples_leaf": np.arange(1, 60, 1),  # Minimum samples required to be at a leaf node
+    "max_features": [1 / 3, 0.5, 1, "sqrt", "log2"],  # Number of features to consider for split
+    "max_samples": [50, 100, 150, 250, 500, 750, 1000, 1500]  # Number of samples to train each tree
 }
 
 # Define randomized search
@@ -242,19 +262,46 @@ rf_cv = RandomizedSearchCV(rf, rf_grid, n_iter=100, n_jobs=-1, scoring="neg_mean
 start_time_rf = datetime.datetime.now()
 rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
+
+rf_grid_detail = {
+    "n_estimators": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('n_estimators')).astype('int')),
+    "max_depth": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('max_depth')).astype('int')),
+    "min_samples_split": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('min_samples_split')).astype('int')),
+    "min_samples_leaf": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('min_samples_leaf')).astype('int')),
+    "max_features": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('max_features')).round(2)),
+    "max_samples": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('max_samples')).astype('int'))
+}
+
+rf_cv = RandomizedSearchCV(rf, rf_grid_detail, n_iter=100, n_jobs=-1, scoring="neg_mean_squared_error", cv=3, verbose=False,
+                           refit=True)
+rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+          dfDataScaledTrain[sDepVar])
+
 # Save model to .MODS/ as pickle
 joblib.dump(rf_cv, './.MODS/rf_cv.pickle')
+
 # Predict and rescale using RF
 dfData['predicted_rf_full'] = rf_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_rf_full'] = y_scaler.inverse_transform(dfData['predicted_rf_full'].shift(-1).values.reshape(-1, 1))
+
 end_time_rf = datetime.datetime.now()
+
+print(f'     ')
 print(f'RF Full fit finished in {end_time_rf - start_time_rf}.')
+# Print hyperparameters
+print(f'The optimal RF number of estimators is {rf_cv.best_params_.get("n_estimators")}.')
+print(f'The optimal RF maximum depth is {rf_cv.best_params_.get("max_depth").astype("int")}.')
+print(f'The optimal RF minimum sample split is {rf_cv.best_params_.get("min_samples_split").astype("int")}.')
+print(f'The optimal RF minimum sample leaf is {rf_cv.best_params_.get("min_samples_leaf").astype("int")}.')
+print(f'The optimal RF maximum features is {rf_cv.best_params_.get("max_features")}.')
+print(f'The optimal RF maximum samples is {rf_cv.best_params_.get("max_samples").astype("int")}.')
+print(f'The optimal RF RMSE is {np.sqrt(-rf_cv.best_score_).round(4)}.')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_full'].transform('sum'),
         label='Predicted (Full Random Forest)')
@@ -271,7 +318,7 @@ upload(plt, 'Project-based Internship', 'figures/4_1_rf_full.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_rf_full'].transform('sum'),
         label='Predicted (Full Random Forest)')
@@ -299,9 +346,25 @@ dfRMSE.loc['Random Forest (Full)', 'sMAPE'] = smape_rf_full
 # Add to dfDataPred
 dfDataPred['predicted_rf_full'] = dfData['predicted_rf_full']
 
+# Predict WIP
+dfDataWIP['predicted_rf_full'] = rf_cv.predict(
+    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
+dfDataWIP['predicted_rf_full'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_full'].shift(-1).values.reshape(-1, 1))
+
+# Variable importance
+dfVarImp = pd.DataFrame(rf_cv.best_estimator_.feature_importances_, index=[dfDataWIP[lNumericCols].columns.difference([sDepVar])], columns=['importance'])
+dfVarImp.drop('intercept', inplace=True)
+dfVarImp = dfVarImp[dfVarImp['importance'] > 0.01]
+dfVarImp.sort_values(by='importance', ascending=False, inplace=True)
+dfVarImp['cumsum'] = dfVarImp['importance'].cumsum()
+dfVarImp['cumsum'] = dfVarImp['cumsum'] / dfVarImp['cumsum'].max()
+
+dfVarImp
+
+
 # Random Forest using only lIndepVar
 # Define randomized search
-rf_cv = RandomizedSearchCV(rf, rf_grid, n_iter=100, n_jobs=-1, scoring="neg_mean_squared_error", cv=3, verbose=False,
+rf_cv = RandomizedSearchCV(rf, rf_grid_detail, n_iter=100, n_jobs=-1, scoring="neg_mean_squared_error", cv=3, verbose=False,
                            refit=True)
 # Fit to the training data
 start_time_rf = datetime.datetime.now()
@@ -314,11 +377,12 @@ dfData['predicted_rf_sparse'] = rf_cv.predict(
     dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_rf_sparse'] = y_scaler.inverse_transform(dfData['predicted_rf_sparse'].shift(-1).values.reshape(-1, 1))
 end_time_rf = datetime.datetime.now()
+print(f'     ')
 print(f'RF Sparse fit finished in {end_time_rf - start_time_rf}.')
 
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_sparse'].transform('sum'),
         label='Predicted (Sparse Random Forest)')
@@ -326,7 +390,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_rf_sparse.png")
@@ -336,7 +399,7 @@ upload(plt, 'Project-based Internship', 'figures/4_1_rf_sparse.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_rf_sparse'].transform('sum'),
         label='Predicted (Sparse Random Forest)')
@@ -344,7 +407,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_1_1_rf_sparse.png")
@@ -366,8 +428,15 @@ dfRMSE.loc['Random Forest (Sparse)', 'sMAPE'] = smape_rf_sparse
 # Add to dfDataPred
 dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
 
-### Boosted Regression Trees ###
+# Predict WIP
+dfDataWIP['predicted_rf_sparse'] = rf_cv.predict(
+    dfDataWIP[lIndepVar][dfDataWIP[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
+dfDataWIP['predicted_rf_sparse'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_sparse'].shift(-1).values.reshape(-1, 1))
 
+
+
+
+### Boosted Regression Trees ###
 # Define Boosted Regression Trees model
 from sklearn.ensemble import GradientBoostingRegressor
 
@@ -388,19 +457,47 @@ gb_cv = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid, n
 start_time_gb = datetime.datetime.now()
 gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
+
+# Generate of sequence of numbers based on gb_cv.best_params_ to get more appropriate parameters in the defined range.
+gb_grid_detail = {
+    'learning_rate': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('learning_rate')).round(2)),
+    'max_depth': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('max_depth')).astype("int")),
+    'min_samples_leaf': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('min_samples_leaf')).astype("int")),
+    'max_features': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('max_features')).round(2)),
+    'n_estimators': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('n_estimators')).astype("int")),
+}
+
+# Define randomized search
+gb_cv_det = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid_detail, n_iter=100, scoring=None, cv=3,
+                           verbose=0, refit=True, n_jobs=-1)
+# Fit to the training data
+gb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+          dfDataScaledTrain[sDepVar])
+
 # Save model to .MODS/ as pickle
-joblib.dump(gb_cv, './.MODS/gb_cv.pickle')
+joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
+
 # Predict and rescale using GB
-dfData['predicted_gb'] = gb_cv.predict(
+dfData['predicted_gb'] = gb_cv_det.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_gb'] = y_scaler.inverse_transform(dfData['predicted_gb'].shift(-1).values.reshape(-1, 1))
+
 end_time_gb = datetime.datetime.now()
+
+print(f'     ')
 print(f'GB fit finished in {end_time_gb - start_time_gb}.')
+
+# Optimal hyperparameters
+print(f'The optimal GB learning rate is {gb_cv_det.best_params_.get("learning_rate")}.')
+print(f'The optimal GB maximum depth is {gb_cv_det.best_params_.get("max_depth")}.')
+print(f'The optimal GB minimum sample leaf is {gb_cv_det.best_params_.get("min_samples_leaf")}.')
+print(f'The optimal GB maximum features is {gb_cv_det.best_params_.get("max_features")}.')
+print(f'The optimal GB number of estimators is {gb_cv_det.best_params_.get("n_estimators")}.')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_gb'].transform('sum'),
         label='Predicted (Gradient Boosting)')
@@ -408,7 +505,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_2_gb.png")
@@ -418,7 +514,7 @@ upload(plt, 'Project-based Internship', 'figures/4_2_gb.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_gb'].transform('sum'),
         label='Predicted (Gradient Boosting)')
@@ -426,7 +522,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_2_1_gb.png")
@@ -445,6 +540,12 @@ dfRMSE.loc['Gradient Boosting', 'sMAPE'] = smape_gb
 
 # Add to dfDataPred
 dfDataPred['predicted_gb'] = dfData['predicted_gb']
+
+# Predict WIP
+dfDataWIP['predicted_gb'] = gb_cv_det.predict(
+    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
+dfDataWIP['predicted_gb'] = y_scaler.inverse_transform(dfDataWIP['predicted_gb'].shift(-1).values.reshape(-1, 1))
+
 
 ### XGBoost Regression ###
 # Define XGBoost model
@@ -469,20 +570,51 @@ xgb_cv = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid, n_iter=100, 
 start_time_xgb = datetime.datetime.now()
 xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
+
+# Detailed grid
+xgb_grid_detail = {
+    'learning_rate': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('learning_rate')).round(2)),
+    'n_estimators': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('n_estimators')).astype("int")),
+    'max_depth': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('max_depth')).astype("int")),
+    'min_child_weight': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('min_child_weight')).round(2)),
+    'gamma': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('gamma')).round(2)),
+    'subsample': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('subsample')).round(2)),
+    'colsample_bytree': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('colsample_bytree')).round(2)),
+    'reg_alpha': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('reg_alpha')).round(4)),
+    'reg_lambda': list((np.arange(0.8, 1.2, 0.05)*xgb_cv.best_params_.get('reg_lambda')).round(2))
+}
+
+xgb_cv_det = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid_detail, n_iter=100, scoring=None, cv=3,
+                            verbose=0, refit=True, n_jobs=-1)
+
+xgb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+           dfDataScaledTrain[sDepVar])
+
 # Save model to .MODS/ as pickle
-joblib.dump(xgb_cv, './.MODS/xgb_cv.pickle')
+joblib.dump(xgb_cv_det, './.MODS/xgb_cv.pickle')
 # Predict and rescale using XGB
-dfData['predicted_xgb'] = xgb_cv.predict(
+dfData['predicted_xgb'] = xgb_cv_det.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].shift(-1).values.reshape(-1, 1))
 end_time_xgb = datetime.datetime.now()
 
+print(f'     ')
 print(f'XGB fit finished in {end_time_xgb - start_time_xgb}.')
+# Best hyperparameters
+print(f'Optimal learning rate: {xgb_cv_det.best_params_.get("learning_rate")}')
+print(f'Optimal number of estimators: {xgb_cv_det.best_params_.get("n_estimators")}')
+print(f'Optimal maximum depth: {xgb_cv_det.best_params_.get("max_depth")}')
+print(f'Optimal minimum child weight: {xgb_cv_det.best_params_.get("min_child_weight")}')
+print(f'Optimal gamma: {xgb_cv_det.best_params_.get("gamma")}')
+print(f'Optimal subsample: {xgb_cv_det.best_params_.get("subsample")}')
+print(f'Optimal colsample bytree: {xgb_cv_det.best_params_.get("colsample_bytree")}')
+print(f'Optimal reg alpha: {xgb_cv_det.best_params_.get("reg_alpha")}')
+print(f'Optimal reg lambda: {xgb_cv_det.best_params_.get("reg_lambda")}')
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_xgb'].transform('sum'),
         label='Predicted (XGBoost)')
@@ -490,7 +622,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_3_xgb.png")
@@ -500,7 +631,7 @@ upload(plt, 'Project-based Internship', 'figures/4_3_xgb.png')
 # Plot the sum of predicted and actual sDepVar by date (full sample)
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_xgb'].transform('sum'),
         label='Predicted (XGBoost)')
@@ -508,7 +639,6 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/4_3_1_xgb.png")
@@ -528,9 +658,16 @@ dfRMSE.loc['XGBoost', 'sMAPE'] = smape_xgb
 # Add to dfDataPred
 dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
 
+# Predict WIP
+dfDataWIP['predicted_xgb'] = xgb_cv_det.predict(
+    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
+dfDataWIP['predicted_xgb'] = y_scaler.inverse_transform(dfDataWIP['predicted_xgb'].shift(-1).values.reshape(-1, 1))
+
+
 ### Forecast Combination with Boosting
 dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
 dfData['predicted_boost'] = (dfData['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
+dfDataWIP['predicted_boost'] = (dfDataWIP['predicted_gb'] + dfDataWIP['predicted_xgb']) / 2
 
 # Calculate RMSE of GB_FC
 rmse_gb_fc = np.sqrt(
@@ -546,6 +683,7 @@ dfRMSE.loc['Boosting (FC)', 'sMAPE'] = smape_gb_fc
 # Save dfDataPred to ./dfDataPred.parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
+dfDataWIP.to_parquet("./dfDataWIP_pred.parquet")
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
@@ -575,9 +713,9 @@ dfDataPredSum['job_no'] = dfDataPred['job_no']
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfDataPredSum.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')['predicted_en_sparse'].transform('sum'),
+        dfDataPredSum.groupby('date')['predicted_en'].transform('sum'),
         label='Elastic Net')
 ax.plot(dfDataPredSum['date'],
         dfDataPredSum.groupby('date')['predicted_rf_full'].transform('sum'),

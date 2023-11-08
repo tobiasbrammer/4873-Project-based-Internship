@@ -16,7 +16,6 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
-
 import dropbox
 from pathlib import Path
 from io import BytesIO
@@ -130,10 +129,7 @@ colIndepVarNum = [col for col in colIndepVarNum if
 with open('./.AUX/colIndepVarNum.txt', 'w') as f:
     f.write('\n'.join(colIndepVarNum))
 
-
-
 train_data_X = train_data[colIndepVarNum]
-
 train_data_y = train_data[[sDepVar]]
 
 # Scale the independent variables
@@ -144,7 +140,7 @@ y_scaler = y_scaler.fit(train_data_y)
 dfData['customer_zip'] = dfData['customer_zip'].astype(str)
 dfData['zip'] = dfData['zip'].astype(str)
 
-dfData_reg = dfData.copy() # Unscaled dfData
+dfData_reg = dfData.copy() # unscaled dfData
 
 # For col in colIndepVarNum scale dfData using x_scaler
 dfData[colIndepVarNum] = x_scaler.transform(dfData[colIndepVarNum])
