@@ -175,7 +175,7 @@ start_time_lstm_tune = datetime.datetime.now()
 # Fit model to training data
 tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
              dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-             batch_size=5,
+             batch_size=3,
              validation_split=0.10,
              callbacks=[early_stop],
              use_multiprocessing=True,
@@ -195,12 +195,13 @@ print(f"""The optimal activation function in the output layer is {best_hps.get('
 
 ## Create model from optimal hyperparameters ##
 model = tuner.hypermodel.build(best_hps)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=3)
 # Fit model
 model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
           epochs=best_hps.get('tuner/epochs'),
-          batch_size=5,
-          validation_split=0.10,
+          batch_size=3,
+          validation_split=0.1,
           callbacks=[early_stop],
           use_multiprocessing=True,
           workers=multiprocessing.cpu_count(),
@@ -519,6 +520,7 @@ dfRMSE.to_csv("./Results/Tables/5_1_rmse.csv")
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
+dfDataWIP.to_parquet("./dfDataWIP_pred.parquet")
 
 ########################################################################################################################
 # if ./Results/Figures/Jobs does not exist, create it
