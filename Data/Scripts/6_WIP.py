@@ -171,8 +171,9 @@ for model in os.listdir("./.MODS"):
 # Add LSTM to lModels
 lModels.append("LSTM")
 
-
-
+str = "I'm ready"
+# Print read
+print(str[4:8])
 
 ########################################################################################################################
 # if ./Results/Figures/Jobs does not exist, create it

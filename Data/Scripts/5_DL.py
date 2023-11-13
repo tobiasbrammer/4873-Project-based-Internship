@@ -141,12 +141,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def model_builder(hp):
     model = Sequential()
-    model.add(
-        LSTM(units=hp.Int('input_unit', min_value=32, max_value=1028, step=16), return_sequences=True, input_shape=(
-            dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1],
-            1)))
+    # Tune the number of units in the first LSTM layer according to [2**n for n in range(1, 11)]
+    model.add(LSTM(units=hp.Choice('input_unit', values=[2 ** n for n in range(1, 11)]),
+                   return_sequences=True,
+                   input_shape=(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
     for l in range(hp.Int('n_layers', 1, 5)):
-        model.add(LSTM(units=hp.Int(f'units_{l}', min_value=32, max_value=514, step=8), return_sequences=True))
+        model.add(LSTM(units=hp.Choice('input_unit', values=[2 ** n for n in range(1, 11)]), return_sequences=True))
         model.add(Dropout(hp.Float(f'dropout_{l}', min_value=0.0, max_value=0.5, step=0.05)))
     model.add(Dense(1, activation=hp.Choice('dense_activation', values=['relu',
                                                                         'sigmoid',
@@ -175,7 +175,7 @@ start_time_lstm_tune = datetime.datetime.now()
 # Fit model to training data
 tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
              dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-             batch_size=3,
+             batch_size=5,
              validation_split=0.10,
              callbacks=[early_stop],
              use_multiprocessing=True,
@@ -194,27 +194,54 @@ for i in range(best_hps.get('n_layers')):
 print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
 ## Create model from optimal hyperparameters ##
-model = tuner.hypermodel.build(best_hps)
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=3)
+model_fit = Sequential()
+model_fit.add(
+    LSTM(units=2**10, return_sequences=True, input_shape=(
+        dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1],
+        1)))
+model_fit.add(Dropout(0.3))
+model_fit.add(LSTM(units=2**8, return_sequences=True))
+model_fit.add(Dropout(0.3))
+model_fit.add(Dense(1, activation='exponential'))
+model_fit.compile(optimizer="adam", loss="mse", metrics=['mae'])
+
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=8)
+
 # Fit model
-model.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-          dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-          epochs=best_hps.get('tuner/epochs'),
-          batch_size=3,
+model_fit.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+          dfDataScaledTrain[sDepVar],
+          #epochs=best_hps.get('tuner/epochs'),
+          epochs=1,
+          batch_size=64,
           validation_split=0.1,
           callbacks=[early_stop],
           use_multiprocessing=True,
           workers=multiprocessing.cpu_count(),
           verbose=1)
 
-model.save('./.MODS/LSTM_tune.tf')
+model_fit.save('./.MODS/LSTM_tune.tf')
+model_fit.summary()
 
-model.summary()
+# Create model with batch size 1, and get weights from model_fit.
+
+model = Sequential()
+model.add(
+    LSTM(units=2**10, return_sequences=True,
+         batch_input_shape=(1, dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
+model.add(Dropout(0.3))
+model.add(LSTM(units=2**8, return_sequences=True))
+model.add(Dropout(0.3))
+model.add(Dense(1, activation='exponential'))
+model.compile(optimizer="adam", loss="mse", metrics=['mae'])
+
+# For LSTM layers, ensure that the weight dimensions are compatible
+for i in range(1, len(model.layers)):
+    model.layers[i].set_weights(model_fit.layers[i].get_weights())
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(model.history.history['loss'], label='Train')
-ax.plot(model.history.history['val_loss'], label='Validation')
+ax.plot(model_fit.history.history['loss'], label='Train')
+ax.plot(model_fit.history.history['val_loss'], label='Validation')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
@@ -227,8 +254,7 @@ upload(plt, 'Project-based Internship', 'figures/5_0_loss.png')
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(
     # Ignore index and get the last value of the prediction
-    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1,
-    0].reshape(-1, 1),
+    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1].reshape(-1, 1),
     index=dfDataScaled.index
 )
 
@@ -236,7 +262,7 @@ dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].v
 
 print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 
-# Plot the sum of predicted and actual sDepVar by date
+# Plot the sum of predicted and actual sDepVar by date #
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
@@ -292,6 +318,8 @@ dfDataWIP['predicted_lstm'] = pd.DataFrame(
         -1, 1),
     index=dfDataWIP.index
 )
+
+dfDataWIP['predicted_lstm'] = y_scaler.inverse_transform(dfDataWIP['predicted_lstm'].values.reshape(-1, 1))
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)

@@ -289,6 +289,7 @@ end_time_rf = datetime.datetime.now()
 
 print(f'     ')
 print(f'RF Full fit finished in {end_time_rf - start_time_rf}.')
+print(f'     ')
 # Print hyperparameters
 print(f'The optimal RF number of estimators is {rf_cv.best_params_.get("n_estimators")}.')
 print(f'The optimal RF maximum depth is {rf_cv.best_params_.get("max_depth").astype("int")}.')
@@ -486,7 +487,7 @@ end_time_gb = datetime.datetime.now()
 
 print(f'     ')
 print(f'GB fit finished in {end_time_gb - start_time_gb}.')
-
+print(f'     ')
 # Optimal hyperparameters
 print(f'The optimal GB learning rate is {gb_cv_det.best_params_.get("learning_rate")}.')
 print(f'The optimal GB maximum depth is {gb_cv_det.best_params_.get("max_depth")}.')
@@ -600,6 +601,7 @@ end_time_xgb = datetime.datetime.now()
 
 print(f'     ')
 print(f'XGB fit finished in {end_time_xgb - start_time_xgb}.')
+print(f'     ')
 # Best hyperparameters
 print(f'Optimal learning rate: {xgb_cv_det.best_params_.get("learning_rate")}')
 print(f'Optimal number of estimators: {xgb_cv_det.best_params_.get("n_estimators")}')

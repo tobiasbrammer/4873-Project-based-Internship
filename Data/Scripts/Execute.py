@@ -42,7 +42,7 @@ print("Running 0_GetData.py...")
 
 # Run 1_EDA.py
 print("Running 1_EDA.py...")
-subprocess.run(["python", "./Scripts/1_EDA.py"])
+# subprocess.run(["python", "./Scripts/1_EDA.py"])
 
 # Run 2_PreProcess.py
 print("Running 2_PreProcess.py...")

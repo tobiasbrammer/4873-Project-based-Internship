@@ -242,7 +242,7 @@ corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
 corr = corr.sort_values(by=sDepVar, ascending=False)
 corr = corr[sDepVar]
 # Filter out variables with "contribution", "revenue" or cost in the name
-corr = corr[~corr.index.str.contains('contribution|revenue|costs|cost')]
+corr = corr[~corr.index.str.contains('contribution|revenue|costs|cost|intercept')]
 corr = corr[0:10]
 # Save the 10 most correlated variables in a list
 lIndepVar = corr.index.tolist()
@@ -331,9 +331,8 @@ lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
                              'contribution_lag2', 'revenue_lag2', 'costs_lag2',
                              'contribution_lag3', 'revenue_lag3', 'costs_lag3']
 
-# Correlation between sDepVar and lIndepVar_lag
 fig, ax = plt.subplots(figsize=(20, 10))
-sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag.remove('intercept')].corr(), annot=True, vmin=-1, vmax=1,
+sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag].corr(), annot=True, vmin=-1, vmax=1,
             fmt='.2f',
             cmap=LinearSegmentedColormap.from_list('custom_cmap', [
                 (0, vColors[1]),
@@ -351,16 +350,14 @@ model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIn
 results_ols_lag = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_ols_lag.save('./.MODS/results_ols_lag.pickle')
-# Save results to LaTeX
-ols = results_ols_lag.summary(alpha=0.05).as_latex()
 
 with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
-    f.write(ols)
+    f.write(results_ols_lag.summary().as_latex())
 
-upload(ols, 'Project-based Internship', 'tables/3_2_ols_lag.tex')
+upload(results_ols_lag.summary().as_latex(), 'Project-based Internship', 'tables/3_2_ols_lag.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables
-dfData['predicted_lag'] = results_ols_lag.predict(dfDataScaled[lIndepVar_lag])
+dfData['predicted_lag'] = results_ols_lag.predict(dfDataScaled[lIndepVar_lag + ['intercept']])
 
 dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].values.reshape(-1, 1))
 
@@ -409,7 +406,7 @@ smape_ols_lag = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                       dfData[dfData[trainMethod] == 0]['predicted_lag'].replace(np.nan, 0))
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results_ols_lag.predict(dfDataWIP[lIndepVar_lag]).values.reshape(-1, 1))
+dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results_ols_lag.predict(dfDataWIP[lIndepVar_lag + ['intercept']]).values.reshape(-1, 1))
 
 # Include production_estimate_contribution and sales_estimate_contribution
 lIndepVar_lag_budget = lIndepVar_lag + ['production_estimate_contribution', 'sales_estimate_contribution']
@@ -420,7 +417,7 @@ with open('./.AUX/lIndepVar_lag_budget.txt', 'w') as lVars:
 
 # Correlation between sDepVar and lIndepVar_lag_budget
 fig, ax = plt.subplots(figsize=(20, 10))
-sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget.remove('intercept')].corr(), annot=True, vmin=-1, vmax=1,
+sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget].corr(), annot=True, vmin=-1, vmax=1,
             fmt='.2f',
             cmap=LinearSegmentedColormap.from_list('custom_cmap', [
                 (0, vColors[1]),
@@ -434,7 +431,7 @@ plt.savefig("./Results/Presentation/3_4_2_corr_incl_lag_budget.svg")
 upload(plt, 'Project-based Internship', 'figures/3_4_2_corr_incl_lag_budget.png')
 
 # Run OLS with lagged variables and budget
-model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag_budget]), missing='drop')
+model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag_budget + ['intercept']]), missing='drop')
 results_lag_budget = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_lag_budget.save('./.MODS/results_lag_budget.pickle')
@@ -447,7 +444,7 @@ with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
 upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
-dfData['predicted_lag_budget'] = results_lag_budget.predict(dfDataScaled[lIndepVar_lag_budget])
+dfData['predicted_lag_budget'] = results_lag_budget.predict(dfDataScaled[lIndepVar_lag_budget + ['intercept']])
 
 dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_lag_budget'].values.reshape(-1, 1))
 
@@ -496,14 +493,14 @@ smape_ols_lag_budget = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                              dfData[dfData[trainMethod] == 0]['predicted_lag_budget'].replace(np.nan, 0))
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_lag_budget'] = results_lag_budget.predict(dfDataWIP[lIndepVar_lag_budget])
+dfDataWIP['predicted_lag_budget'] = results_lag_budget.predict(dfDataWIP[lIndepVar_lag_budget + ['intercept']])
 
 dfDataWIP['predicted_lag_budget'] = y_scaler.inverse_transform(
     dfDataWIP['predicted_lag_budget'].values.reshape(-1, 1))
 
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
-dfData['predicted_fc'] = dfData['predicted_dst']*0.1 + dfData['predicted_lag_budget']*0.45 + dfData['predicted_scurve']*0.45
+dfData['predicted_fc'] = dfData['predicted_dst']*1/3 + dfData['predicted_lag_budget']*1/3 + dfData['predicted_scurve']*1/3
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -572,14 +569,14 @@ for iCluster in lCluster:
         # Check if the subset of data has enough observations for OLS
         if data_subset.shape[0] > 1:
             # Run OLS
-            model_cluster = sm.OLS(data_subset[sDepVar], sm.add_constant(data_subset[lIndepVar_lag_budget]))
+            model_cluster = sm.OLS(data_subset[sDepVar], sm.add_constant(data_subset[lIndepVar_lag_budget + ['intercept']]))
             results_cluster = model_cluster.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
             # Save model to .MODS/
             results_cluster.save('./.MODS/results_cluster_' + str(iCluster) + '_' + str(iClusterLabel) + '.pickle')
             # Predict and rescale sDepVar using OLS with lagged variables and budget and add to cluster_{iCluster}
             dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
                 iCluster)] = results_cluster.predict(
-                dfDataScaled[dfDataScaled['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget])
+                dfDataScaled[dfDataScaled['cluster_' + str(iCluster)] == iClusterLabel][lIndepVar_lag_budget + ['intercept']])
             dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
                 iCluster)] = y_scaler.inverse_transform(
                 dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
@@ -600,7 +597,7 @@ for iCluster in lCluster:
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=6).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_6_cluster.png")
@@ -660,7 +657,7 @@ dfRMSE.loc['FC_cluster'] = [rmse_fc_cluster, smape_fc_cluster]
 
 ### Combine Cluster Forecast Combination and DST ###
 
-dfData['predicted_fc_cluster_dst'] = 0.8*dfData['predicted_cluster_fc'] + dfData['predicted_dst']*0.2
+dfData['predicted_fc_cluster_dst'] = 0.5*dfData['predicted_cluster_fc'] + dfData['predicted_dst']*0.5
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))

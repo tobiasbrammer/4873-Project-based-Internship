@@ -8,6 +8,11 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # Turn off RuntimeWarning
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+# Add /Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data/plot_config.py to env
+
+os.environ['PYTHONPATH'] += ":/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data/plot_config.py"
+
+
 # Read data
 if os.name == 'posix':
     sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"

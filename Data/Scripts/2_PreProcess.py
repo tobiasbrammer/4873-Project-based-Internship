@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, PowerTransformer
 from plot_config import *
 import joblib
 
@@ -119,6 +119,9 @@ train_data_desc = dfDataTrain[non_numeric_cols]
 # Scale the data
 y_scaler = MinMaxScaler()
 x_scaler = MinMaxScaler()
+
+# x_scaler = PowerTransformer(method='yeo-johnson')
+# y_scaler = PowerTransformer(method='yeo-johnson')
 
 # omit 'train', 'train_TS', 'cluster_2', 'cluster_4', 'cluster_6', 'cluster_8', 'cluster_10', 'cluster_12', 'cluster_14'
 # from colIndepVarNum
