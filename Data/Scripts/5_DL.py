@@ -144,7 +144,7 @@ def model_builder(hp):
 # Define tuner
 tuner_64 = kt.Hyperband(model_builder,
                      objective='val_loss',
-                     max_epochs=5,
+                     max_epochs=25,
                      factor=3,
                      seed=607,
                      directory='./.MODS',
@@ -153,14 +153,14 @@ tuner_64 = kt.Hyperband(model_builder,
 # Define tuner
 tuner_32 = kt.Hyperband(model_builder,
                      objective='val_loss',
-                     max_epochs=5,
+                     max_epochs=25,
                      factor=3,
                      seed=607,
                      directory='./.MODS',
                      project_name='LSTM_32')
 
 # Define early stopping
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=5)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=15)
 
 # Fit model
 start_time_lstm_tune = datetime.datetime.now()
@@ -195,7 +195,7 @@ model_fit_64 = tuner_64.hypermodel.build(best_hps_64)
 # Fit model
 model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                     dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                    epochs=20,
+                    epochs=100,
                     batch_size=32,
                     validation_split=0.1,
                     use_multiprocessing=True,
@@ -204,7 +204,7 @@ model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                     dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                    epochs=20,
+                    epochs=100,
                     batch_size=64,
                     validation_split=0.1,
                     use_multiprocessing=True,
@@ -246,14 +246,14 @@ for i in range(best_hps.get('additional_layers')):
 print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
 ## Create model from optimal hyperparameters ##
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=25)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=50)
 
 # Fit model
 model_fit = model_builder(best_hps)
 
 model_fit.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar],
-          epochs=10,
+          epochs=250,
           batch_size=32 if val_loss_32 < val_loss_64 else 64,
           validation_split=0.1,
           callbacks=[early_stop],
@@ -288,7 +288,7 @@ dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].v
 
 print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 
-plot_predicted(dfData, 'predicted_lstm', 'LSTM', '5_1_lstm', trainMethod=trainMethod, sDepVar=sDepVar)
+plot_predicted(dfData, 'predicted_lstm', 'LSTM', '5_1_lstm', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of LSTM
 rmse_lstm = np.sqrt(
@@ -330,6 +330,7 @@ dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
                                         'predicted_ols',
                                         'predicted_rf_full',
                                         'predicted_rf_sparse',
+                                        'predicted_et',
                                         'predicted_xgb']].mean(axis=1)
 dfData['predicted_avg'] = dfDataPred['predicted_avg']
 dfDataPred[sDepVar] = dfData[sDepVar]
@@ -343,6 +344,7 @@ dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
                                         'predicted_ols',
                                         'predicted_rf_full',
                                         'predicted_rf_sparse',
+                                        'predicted_et',
                                         'predicted_xgb']].mean(axis=1)
 
 
@@ -380,6 +382,7 @@ dfDataWIP['predicted_bates_granger'] = dfDataWIP[['predicted_boost',
                                         'predicted_ols',
                                         'predicted_rf_full',
                                         'predicted_rf_sparse',
+                                        'predicted_et',
                                         'predicted_xgb']].mul(dfDataPredWeights['weights'],
                                                                                  axis=1).sum(axis=1)
 
@@ -423,6 +426,7 @@ dfDataWIP['predicted_mse'] = dfDataWIP[['predicted_boost',
                                         'predicted_ols',
                                         'predicted_rf_full',
                                         'predicted_rf_sparse',
+                                        'predicted_et',
                                         'predicted_xgb']].mul(dfDataPredWeightsMSE['weights'],
                                                                                  axis=1).sum(axis=1)
 

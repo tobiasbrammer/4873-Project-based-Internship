@@ -142,8 +142,10 @@ corr = corr[sDepVar]
 corr = corr[~corr.index.str.contains('contribution')]
 corr = corr[~corr.index.str.contains('lag')]
 corr = corr[~corr.index.str.contains('cluster')]
+corr = corr[~corr.index.str.contains('revenue')]
 corr = corr[~corr.index.str.contains('estimate')]
 corr = corr[~corr.index.str.contains('budget')]
+corr = corr[~corr.index.str.contains('days')]
 corr = corr[0:10]
 # Save the 5 most correlated variables in a list
 lIndepVar = corr.index.tolist()
@@ -207,9 +209,11 @@ smape_ols = smape(dfData[dfData[trainMethod] == 0][sDepVar],
 dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results_ols.predict(dfDataWIP[['intercept'] + lIndepVar]).values.reshape(-1, 1))
 
 ### Add lagged variables to lIndepVar ###
-lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
-                             'contribution_lag2', 'revenue_lag2', 'costs_lag2',
-                             'contribution_lag3', 'revenue_lag3', 'costs_lag3']
+# lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
+#                              'contribution_lag2', 'revenue_lag2', 'costs_lag2',
+#                              'contribution_lag3', 'revenue_lag3', 'costs_lag3']
+
+lIndepVar_lag = lIndepVar # + ['contribution_lag1', 'revenue_lag1', 'costs_lag1']
 
 # Correlation between sDepVar and lIndepVar_lag
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -285,6 +289,19 @@ results_lag_budget.save('./.MODS/results_lag_budget.pickle')
 
 # Save results to LaTeX
 ols = results_lag_budget.summary(alpha=0.05).as_latex()
+
+# Check for multicollinearity
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+# Create a dataframe that will contain the names of all the feature variables and their respective VIFs
+vif_data = pd.DataFrame()
+vif_data["feature"] = dfDataScaledTrain[lIndepVar_lag_budget].columns
+
+# Calculate VIF for each feature
+vif_data["VIF"] = [variance_inflation_factor(dfDataScaledTrain[lIndepVar_lag_budget].values, i)
+                     for i in range(len(dfDataScaledTrain[lIndepVar_lag_budget].columns))]
+print(vif_data)
+
 
 with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
@@ -417,8 +434,8 @@ ax.set_ylim([-20, 100.00])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/3_6_cluster_fs.png")
-plt.savefig("./Results/Presentation/3_6_cluster_fs.svg")
+plt.savefig("./Results/Figures/FullSample/3_6_cluster_fs.png")
+plt.savefig("./Results/Presentation/FullSample/3_6_cluster_fs.svg")
 plt.close('all')
 
 
@@ -430,7 +447,8 @@ dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])
                                   + dfData['predicted_cluster_' + str(lCluster[3])]) / 4
 
 
-plot_predicted(dfData, 'predicted_cluster_fc', 'Cluster Combination', '3_7_fc_cluster', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+plot_predicted(dfData, 'predicted_cluster_fc', 'Cluster Combination', '3_7_fc_cluster',
+               transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 
 # Calculate RMSE of Forecast Combination
@@ -447,7 +465,8 @@ dfRMSE.loc['Cluster Combination'] = [rmse_fc_cluster, smape_fc_cluster]
 ### Combine Cluster Forecast Combination and DST ###
 dfData['predicted_fc_cluster_dst'] = (dfData['predicted_cluster_fc'] + dfData['predicted_dst']) / 2
 
-plot_predicted(dfData, 'predicted_fc_cluster_dst', 'DST Cluster Combination', '3_8_fc_cluster_dst', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+plot_predicted(dfData, 'predicted_fc_cluster_dst', 'DST Cluster Combination', '3_8_fc_cluster_dst',
+               transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 
 # Calculate RMSE of Forecast Combination

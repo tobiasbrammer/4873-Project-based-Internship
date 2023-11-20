@@ -67,8 +67,8 @@ def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformat
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file_fs}.png")
-    plt.savefig(f"./Results/Presentation/{file_fs}.svg")
+    plt.savefig(f"./Results/Figures/FullSample/{file_fs}.png")
+    plt.savefig(f"./Results/Presentation/FullSample/{file_fs}.svg")
     upload(plt, 'Project-based Internship', f'figures/{file_fs}.png')
 
     plt.close('all')

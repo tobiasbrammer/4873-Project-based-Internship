@@ -58,21 +58,21 @@ subprocess.run(["python", "./Scripts/3_PLS.py"])
 print("Running 4_ML.py...")
 subprocess.run(["python", "./Scripts/4_ML.py"])
 
-notify("Execution finished.")
-
-
 # Run 5_DL.py
 print("Running 5_DL.py...")
-# subprocess.run(["python", "./Scripts/5_DL.py"])
+subprocess.run(["python", "./Scripts/5_DL.py"])
 
 # Total runtime
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
-# Play sound when finished
-if os.name == 'posix':
-    os.system('say "Finished."')
-# If operating system is Windows then
-elif os.name == 'nt':
-    import winsound
-    winsound.Beep(frequency=600, duration=800)
+notify(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
+
+# # Play sound when finished
+# if os.name == 'posix':
+#     os.system('say "Finished."')
+# # If operating system is Windows then
+# elif os.name == 'nt':
+#     import winsound
+#     winsound.Beep(frequency=600, duration=800)
+#
