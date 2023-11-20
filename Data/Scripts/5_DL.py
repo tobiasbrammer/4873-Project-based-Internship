@@ -6,8 +6,11 @@ import pandas as pd
 import datetime
 import joblib
 from plot_config import *
+from plot_predicted import *
+from notify import *
 from sklearn.metrics import mean_squared_error
 import multiprocessing
+from tensorflow.keras.optimizers.legacy import Adam
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
@@ -26,89 +29,11 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
-import dropbox
-from pathlib import Path
-from io import BytesIO
-import matplotlib.pyplot as plt
-import re
-import subprocess
-
-
-def upload(ax, project, path):
-    bs = BytesIO()
-    format = path.split('.')[-1]
-
-    # Check if the file is a .tex file and handle it differently
-    if format == 'tex':
-        # Assuming the 'ax' parameter contains the LaTeX content
-        content = ax
-        format = 'tex'
-    else:
-        ax.savefig(bs, bbox_inches='tight', format=format)
-
-    # token = os.DROPBOX
-    token = subprocess.run(
-        "curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr",
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[
-        1].split('", "token_type":')[0]
-    dbx = dropbox.Dropbox(token)
-
-    # Will throw an UploadError if it fails
-    if format == 'tex':
-        # Handle .tex files by directly uploading their content
-        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-    else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
-
-def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar):
-    # Plot the sum of predicted and actual sDepVar by date
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[sDepVar].transform(transformation), label='Actual',
-            linestyle='dashed')
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.ylim(-1, 15)
-    ax.set_title('Out of Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file}.png")
-    plt.savefig(f"./Results/Presentation/{file}.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file}.png')
-
-    # Split file before the last underscore and add _1 to the end eg. 3_0_dst -> 3_0_1_dst
-    file_fs = file.split('.')[0] + '_fs'
-
-    # Plot the sum of predicted and actual sDepVar by date (full sample)
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(dfData['date'],
-            dfData.groupby('date')[sDepVar].transform(transformation), label='Actual', linestyle='dashed')
-    ax.plot(dfData['date'],
-            dfData.groupby('date')[predicted].transform(transformation), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.ylim(-1, 15)
-    ax.set_title('Full Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file_fs}.png")
-    plt.savefig(f"./Results/Presentation/{file_fs}.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file_fs}.png')
-
-    plt.close('all')
-
-
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
 dfDataPred = pd.read_parquet("./dfDataPred.parquet")
 dfDataWIP = pd.read_parquet("./dfDataWIP_pred.parquet")
-
 
 # Define sMAPE
 def smape(actual, predicted):
@@ -184,7 +109,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 def model_builder(hp):
     model = Sequential()
     # First LSTM layer
-    model.add(LSTM(units=hp.Choice('input_unit_init', values=[2 ** n for n in range(1, 11)]),
+    model.add(LSTM(units=hp.Choice('input_unit_init', values=[2 ** n for n in range(6, 11)]),
                    return_sequences=True,
                    input_shape=(
                        dfDataScaledTrain[lNumericCols][
@@ -259,43 +184,77 @@ tuner_64.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
                 workers=multiprocessing.cpu_count(),
                 verbose=1)
 
-# Compare loss of 32 and 64 batch size
+# Get the optimal hyperparameters
+best_hps_32 = tuner_32.get_best_hyperparameters()[0]
+best_hps_64 = tuner_64.get_best_hyperparameters()[0]
+
+# Fit using models
+model_fit_32 = tuner_32.hypermodel.build(best_hps_32)
+model_fit_64 = tuner_64.hypermodel.build(best_hps_64)
+
+# Fit model
+model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+                    dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                    epochs=20,
+                    batch_size=32,
+                    validation_split=0.1,
+                    use_multiprocessing=True,
+                    workers=multiprocessing.cpu_count(),
+                    verbose=1)
+
+model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+                    dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                    epochs=20,
+                    batch_size=64,
+                    validation_split=0.1,
+                    use_multiprocessing=True,
+                    workers=multiprocessing.cpu_count(),
+                    verbose=1)
+
+# Compare val_loss of best models over epochs
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(tuner_32.oracle.get_best_trials()[0].history.history['loss'], label='Train (batch size 32)')
-ax.plot(tuner_32.oracle.get_best_trials()[0].history.history['val_loss'], label='Validation (batch size 32)')
-ax.plot(tuner_64.oracle.get_best_trials()[0].history.history['loss'], label='Train (batch size 64)')
-ax.plot(tuner_64.oracle.get_best_trials()[0].history.history['val_loss'], label='Validation (batch size 64)')
+ax.plot(model_fit_32.history.history['val_loss'], label='32 batch size')
+ax.plot(model_fit_64.history.history['val_loss'], label='64 batch size')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
-plt.title("Loss of LSTM")
+ax.set_xlim(0, len(model_fit_32.history.history['val_loss']))
+plt.title("Validation Loss of LSTM")
 plt.grid(alpha=0.35)
-plt.savefig("./Results/Figures/5_0_loss_tune.png")
-plt.savefig("./Results/Presentation/5_0_loss_tune.svg")
-upload(plt, 'Project-based Internship', 'figures/5_0_loss_tune.png')
+plt.savefig("./Results/Figures/5_0_lstm_tune.png")
+plt.savefig("./Results/Presentation/5_0_lstm_tune.svg")
+upload(plt, 'Project-based Internship', 'figures/5_0_lstm_tune.png')
 plt.show()
 
-# Get the optimal hyperparameters
-best_hps = tuner.get_best_hyperparameters()[0]
+# Get val_loss of best model
+val_loss_32 = tuner_32.oracle.get_best_trials()[0].score
+val_loss_64 = tuner_64.oracle.get_best_trials()[0].score
+
+# If val_loss_32 < val_loss_64 then use 32 batch size, else use 64 batch size
+if val_loss_32 < val_loss_64:
+    best_hps = best_hps_32
+else:
+    best_hps = best_hps_64
 
 # Print optimal hyperparameters. Account for the fact that the number of layers is not the same as the number of units
-print(f"""The optimal number of units in the first LSTM layer is {best_hps.get('input_unit')}.
-The optimal number of additional layers is {best_hps.get('n_layers')}.""")
-for i in range(best_hps.get('n_layers')):
-    print(f"""The optimal number of units in the {i + 1}. hidden layer is {best_hps.get(f'units_{i}')}.
-    With an optimal dropout of  {round(best_hps.get(f'dropout_{i}'), 2)}. """)
+print(f"The optimal batch size is {32 if val_loss_32 < val_loss_64 else 64}.")
+print(f"""The optimal number of units in the first LSTM layer is {best_hps.get('input_unit_init')}.
+The optimal number of additional layers is {best_hps.get('additional_layers')}.""")
+for i in range(best_hps.get('additional_layers')):
+    print(f"""The optimal number of units in the {i + 1}. hidden layer is {best_hps.get(f'input_unit_{i+1}')}.
+    With an optimal dropout of  {round(best_hps.get(f'dropout_{i+1}'), 2)}. """)
 print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
 ## Create model from optimal hyperparameters ##
-
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=8)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=25)
 
 # Fit model
+model_fit = model_builder(best_hps)
+
 model_fit.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
           dfDataScaledTrain[sDepVar],
-          #epochs=best_hps.get('tuner/epochs'),
-          epochs=1,
-          batch_size=64,
+          epochs=10,
+          batch_size=32 if val_loss_32 < val_loss_64 else 64,
           validation_split=0.1,
           callbacks=[early_stop],
           use_multiprocessing=True,
@@ -304,22 +263,6 @@ model_fit.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].co
 
 model_fit.save('./.MODS/LSTM_tune.tf')
 model_fit.summary()
-
-# Create model with batch size 1, and get weights from model_fit.
-
-model = Sequential()
-model.add(
-    LSTM(units=2**10, return_sequences=True,
-         batch_input_shape=(1, dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
-model.add(Dropout(0.3))
-model.add(LSTM(units=2**8, return_sequences=True))
-model.add(Dropout(0.3))
-model.add(Dense(1, activation='exponential'))
-model.compile(optimizer="adam", loss="mse", metrics=['mae'])
-
-# For LSTM layers, ensure that the weight dimensions are compatible
-for i in range(1, len(model.layers)):
-    model.layers[i].set_weights(model_fit.layers[i].get_weights())
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -337,7 +280,7 @@ upload(plt, 'Project-based Internship', 'figures/5_0_loss.png')
 # Predict and rescale using LSTM
 dfData['predicted_lstm'] = pd.DataFrame(
     # Ignore index and get the last value of the prediction
-    model.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1].reshape(-1, 1),
+    model_fit.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])])[:, -1].reshape(-1, 1),
     index=dfDataScaled.index
 )
 
@@ -345,39 +288,7 @@ dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].v
 
 print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 
-# Plot the sum of predicted and actual sDepVar by date #
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm'].transform('sum'),
-        label='Predicted (LSTM)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/5_1_lstm.png")
-plt.savefig("./Results/Presentation/5_1_lstm.svg")
-upload(plt, 'Project-based Internship', 'figures/5_1_lstm.png')
-
-# Plot the sum of predicted and actual sDepVar by date (full sample)
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_lstm'].transform('sum'),
-        label='Predicted (LSTM)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/5_1_1_lstm.png")
-plt.savefig("./Results/Presentation/5_1_1_lstm.svg")
-upload(plt, 'Project-based Internship', 'figures/5_1_1_lstm.png')
+plot_predicted(dfData, 'predicted_lstm', 'LSTM', '5_1_lstm', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of LSTM
 rmse_lstm = np.sqrt(
@@ -397,7 +308,7 @@ dfDataPred['predicted_lstm'] = dfData['predicted_lstm']
 # Predict WIP
 dfDataWIP['predicted_lstm'] = pd.DataFrame(
     # Ignore index and get the last value of the prediction
-    model.predict(dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])])[:, -1, 0].reshape(
+    model_fit.predict(dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])])[:, -1].reshape(
         -1, 1),
     index=dfDataWIP.index
 )

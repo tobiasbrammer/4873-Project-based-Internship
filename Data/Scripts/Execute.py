@@ -16,6 +16,8 @@ os.chdir(sDir)
 import subprocess
 import datetime
 from plot_config import *
+from plot_predicted import *
+from notify import *
 
 # Add plot_config.py to env variables
 os.environ['PYTHONPATH'] = os.getcwd()
@@ -42,7 +44,7 @@ print("Running 0_GetData.py...")
 
 # Run 1_EDA.py
 print("Running 1_EDA.py...")
-# subprocess.run(["python", "./Scripts/1_EDA.py"])
+subprocess.run(["python", "./Scripts/1_EDA.py"])
 
 # Run 2_PreProcess.py
 print("Running 2_PreProcess.py...")
@@ -56,16 +58,19 @@ subprocess.run(["python", "./Scripts/3_PLS.py"])
 print("Running 4_ML.py...")
 subprocess.run(["python", "./Scripts/4_ML.py"])
 
+notify("Execution finished.")
+
+
 # Run 5_DL.py
 print("Running 5_DL.py...")
-subprocess.run(["python", "./Scripts/5_DL.py"])
+# subprocess.run(["python", "./Scripts/5_DL.py"])
 
 # Total runtime
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
 # Play sound when finished
 if os.name == 'posix':
-    os.system('say "Finished.')
+    os.system('say "Finished."')
 # If operating system is Windows then
 elif os.name == 'nt':
     import winsound

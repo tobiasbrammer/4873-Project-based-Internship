@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, PowerTransformer
 from plot_config import *
+from plot_predicted import *
 import joblib
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -22,31 +23,6 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import re
 import subprocess
-
-def upload(ax, project, path):
-    bs = BytesIO()
-    format = path.split('.')[-1]
-
-    # Check if the file is a .tex file and handle it differently
-    if format == 'tex':
-        # Assuming the 'ax' parameter contains the LaTeX content
-        content = ax
-        format = 'tex'
-    else:
-        ax.savefig(bs, bbox_inches='tight', format=format)
-
-    # token = os.DROPBOX
-    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
-    dbx = dropbox.Dropbox(token)
-
-    # Will throw an UploadError if it fails
-    if format == 'tex':
-        # Handle .tex files by directly uploading their content
-        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-    else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
-
 
 # Read dfData parquet file
 dfData = pd.read_parquet("dfData.parquet")
@@ -159,19 +135,11 @@ for nCluster in lCluster:
     # Create KMeans object
     kmeans = KMeans(n_clusters=nCluster, random_state=607, n_init='auto', max_iter=1000)
     # Fit the model.
-    kmeans.fit(dfData[['sales_estimate_contribution',
-                       'production_estimate_contribution',
-                       'final_estimate_contribution']].replace(np.nan, 0))
+    kmeans.fit(dfData[['final_estimate_contribution']].replace(np.nan, 0))
     # Predict the cluster for each observation
-    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['sales_estimate_contribution',
-                                                           'production_estimate_contribution',
-                                                           'final_estimate_contribution']].replace(np.nan, 0))
-    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['sales_estimate_contribution',
-                                                                    'production_estimate_contribution',
-                                                                    'final_estimate_contribution']].replace(np.nan, 0))
-    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['sales_estimate_contribution',
-                                                                    'production_estimate_contribution',
-                                                                    'final_estimate_contribution']].replace(np.nan, 0))
+    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['final_estimate_contribution']].replace(np.nan, 0))
+    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['final_estimate_contribution']].replace(np.nan, 0))
+    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['final_estimate_contribution']].replace(np.nan, 0))
 
 # Plot number of observations in each cluster in a subplot for each number of clusters
 fig, ax = plt.subplots(2, 2, figsize=(20, 10))

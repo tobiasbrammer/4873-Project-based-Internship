@@ -6,6 +6,7 @@ from matplotlib.colors import LinearSegmentedColormap
 import statsmodels.api as sm
 import joblib
 from plot_config import *
+from plot_predicted import *
 from sklearn.metrics import mean_squared_error
 
 # Load ./dfData.parquet
@@ -16,75 +17,6 @@ elif os.name == 'nt':
     sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 
 os.chdir(sDir)
-
-def upload(ax, project, path):
-    import dropbox
-    from io import BytesIO
-    import subprocess
-
-    bs = BytesIO()
-    format = path.split('.')[-1]
-
-    # Check if the file is a .tex file and handle it differently
-    if format == 'tex':
-        # Assuming the 'ax' parameter contains the LaTeX content
-        content = ax
-        format = 'tex'
-    else:
-        ax.savefig(bs, bbox_inches='tight', format=format)
-
-    # token = os.DROPBOX
-    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
-    dbx = dropbox.Dropbox(token)
-
-    # Will throw an UploadError if it fails
-    if format == 'tex':
-        # Handle .tex files by directly uploading their content
-        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-    else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
-# Define function to plot predicted and actual sDepVar by date.
-def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar):
-    # Plot the sum of predicted and actual sDepVar by date
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[sDepVar].transform(transformation), label='Actual',
-            linestyle='dashed')
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.set_ylim(-1, 15)
-    ax.set_title('Out of Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file}.png")
-    plt.savefig(f"./Results/Presentation/{file}.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file}.png')
-
-    # Split file before .png eg. 3_0_dst.png -> 3_0_dst_fs.png
-    file_fs = file.split('.')[0] + '_fs'
-
-    # Plot the sum of predicted and actual sDepVar by date (full sample)
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(dfData['date'],
-            dfData.groupby('date')[sDepVar].transform(transformation), label='Actual', linestyle='dashed')
-    ax.plot(dfData['date'],
-            dfData.groupby('date')[predicted].transform(transformation), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.set_title('Full Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file_fs}.png")
-    plt.savefig(f"./Results/Presentation/{file_fs}.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file_fs}.png')
-
-    plt.close('all')
-
 
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
@@ -100,71 +32,6 @@ y_scaler = joblib.load("./.AUX/y_scaler.save")
 def smape(actual, predicted):
     return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
 
-
-def upload(ax, project, path):
-    bs = BytesIO()
-    format = path.split('.')[-1]
-
-    # Check if the file is a .tex file and handle it differently
-    if format == 'tex':
-        # Assuming the 'ax' parameter contains the LaTeX content
-        content = ax
-        format = 'tex'
-    else:
-        ax.savefig(bs, bbox_inches='tight', format=format)
-
-    # token = os.DROPBOX
-    token = subprocess.run(
-        "curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr",
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[
-        1].split('", "token_type":')[0]
-    dbx = dropbox.Dropbox(token)
-
-    # Will throw an UploadError if it fails
-    if format == 'tex':
-        # Handle .tex files by directly uploading their content
-        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-    else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
-
-def plot_forecast(df, var, label, file, trainMethod, sDepVar, transform='sum'):
-    # First plot: Out of Sample
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[sDepVar].transform(transform), label='Actual',
-            linestyle='dashed')
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[var].transform(transform), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.set_title('Out of Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file}.png")
-    plt.savefig(f"./Results/Presentation/{file}.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file}.png')
-
-    # Second plot: Full Sample
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(df['date'],
-            df.groupby('date')[sDepVar].transform(transform), label='Actual',
-            linestyle='dashed')
-    ax.plot(df['date'],
-            df.groupby('date')[var].transform(transform), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.set_title('Full Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file}_1.png")
-    plt.savefig(f"./Results/Presentation/{file}_1.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file}_1.png')
-
-    # Close all figures
-    plt.close('all')
 
 # Import sDepVar from ./.AUX/sDepVar.txt
 with open('./.AUX/sDepVar.txt', 'r') as f:
@@ -273,6 +140,10 @@ corr = corr.sort_values(by=sDepVar, ascending=False)
 corr = corr[sDepVar]
 # Filter out variables with "contribution" or "revenue" in the name
 corr = corr[~corr.index.str.contains('contribution')]
+corr = corr[~corr.index.str.contains('lag')]
+corr = corr[~corr.index.str.contains('cluster')]
+corr = corr[~corr.index.str.contains('estimate')]
+corr = corr[~corr.index.str.contains('budget')]
 corr = corr[0:10]
 # Save the 5 most correlated variables in a list
 lIndepVar = corr.index.tolist()
@@ -290,6 +161,23 @@ plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_0_2_corr.png")
 plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
+
+# Plot each variable in lIndepVar against sDepVar over time
+fig, ax = plt.subplots(figsize=(20, 10))
+for var in lIndepVar:
+    ax.plot(dfData['date'],
+            dfData.groupby('date')[var].transform('sum').astype(float),
+            label=var)
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Out of Sample')
+ax.set_aspect('auto')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_0_3_series.png")
+plt.savefig("./Results/Presentation/3_0_3_series.svg")
+upload(plt, 'Project-based Internship', 'figures/3_0_3_series.png')
 
 # Run OLS
 model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar]), missing='drop')
@@ -480,7 +368,7 @@ for iCluster in lCluster:
 # Plot the sum of all predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_2'].transform('sum'),
         label='Predicted (2 clusters)')
@@ -496,12 +384,43 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+ax.set_aspect('auto')
+ax.set_ylim([-5, 20.00])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_6_cluster.png")
 plt.savefig("./Results/Presentation/3_6_cluster.svg")
 plt.close('all')
+
+# Full sample
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_cluster_2'].transform('sum'),
+        label='Predicted (2 clusters)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_cluster_3'].transform('sum'),
+        label='Predicted (3 clusters)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_cluster_4'].transform('sum'),
+        label='Predicted (4 clusters)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_cluster_5'].transform('sum'),
+        label='Predicted (5 clusters)')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution')
+ax.set_title('Full Sample')
+ax.set_aspect('auto')
+ax.set_ylim([-20, 100.00])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_6_cluster_fs.png")
+plt.savefig("./Results/Presentation/3_6_cluster_fs.svg")
+plt.close('all')
+
 
 # Use Forecast Combination to combine the predictions of each cluster
 # For each cluster in cluster_{lCluster} do

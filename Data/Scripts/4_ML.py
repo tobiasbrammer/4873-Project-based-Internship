@@ -6,6 +6,7 @@ import pandas as pd
 import datetime
 import joblib
 from plot_config import *
+from plot_predicted import *
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestRegressor
@@ -21,78 +22,6 @@ elif os.name == 'nt':
     sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
 
 os.chdir(sDir)
-
-
-import dropbox
-from pathlib import Path
-from io import BytesIO
-import matplotlib.pyplot as plt
-import re
-import subprocess
-
-def upload(ax, project, path):
-    bs = BytesIO()
-    format = path.split('.')[-1]
-
-    # Check if the file is a .tex file and handle it differently
-    if format == 'tex':
-        # Assuming the 'ax' parameter contains the LaTeX content
-        content = ax
-        format = 'tex'
-    else:
-        ax.savefig(bs, bbox_inches='tight', format=format)
-
-    # token = os.DROPBOX
-    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
-    dbx = dropbox.Dropbox(token)
-
-    # Will throw an UploadError if it fails
-    if format == 'tex':
-        # Handle .tex files by directly uploading their content
-        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-    else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
-
-def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar):
-    # Plot the sum of predicted and actual sDepVar by date
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[sDepVar].transform(transformation), label='Actual',
-            linestyle='dashed')
-    ax.plot(df[df[trainMethod] == 0]['date'],
-            df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.set_title('Out of Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file}.png")
-    plt.savefig(f"./Results/Presentation/{file}.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file}.png')
-
-    # Split file before the last underscore and add _1 to the end eg. 3_0_dst -> 3_0_1_dst
-    file_fs = file.split('.')[0] + '_fs'
-
-    # Plot the sum of predicted and actual sDepVar by date (full sample)
-    fig, ax = plt.subplots(figsize=(20, 10))
-    ax.plot(dfData['date'],
-            dfData.groupby('date')[sDepVar].transform(transformation), label='Actual', linestyle='dashed')
-    ax.plot(dfData['date'],
-            dfData.groupby('date')[predicted].transform(transformation), label=label)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
-    ax.set_title('Full Sample')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-    plt.savefig(f"./Results/Figures/{file_fs}.png")
-    plt.savefig(f"./Results/Presentation/{file_fs}.svg")
-    upload(plt, 'Project-based Internship', f'figures/{file_fs}.png')
-
-    plt.close('all')
-
 
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
@@ -334,7 +263,9 @@ dfVarImp.sort_values(by='importance', ascending=False, inplace=True)
 dfVarImp['cumsum'] = dfVarImp['importance'].cumsum()
 dfVarImp['cumsum'] = dfVarImp['cumsum'] / dfVarImp['cumsum'].max()
 
-dfVarImp
+print(f'     ')
+print(f'Variable importance of Random Forest:')
+print(dfVarImp)
 
 
 # Random Forest using only lIndepVar
