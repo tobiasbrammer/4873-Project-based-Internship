@@ -172,6 +172,7 @@ early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=
 
 # Fit model
 start_time_lstm_tune = datetime.datetime.now()
+
 # Fit model to training data
 tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
              dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
@@ -194,16 +195,6 @@ for i in range(best_hps.get('n_layers')):
 print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
 ## Create model from optimal hyperparameters ##
-model_fit = Sequential()
-model_fit.add(
-    LSTM(units=2**10, return_sequences=True, input_shape=(
-        dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1],
-        1)))
-model_fit.add(Dropout(0.3))
-model_fit.add(LSTM(units=2**8, return_sequences=True))
-model_fit.add(Dropout(0.3))
-model_fit.add(Dense(1, activation='exponential'))
-model_fit.compile(optimizer="adam", loss="mse", metrics=['mae'])
 
 early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=8)
 
