@@ -322,7 +322,7 @@ dfRMSE = dfRMSE.round(4)
 
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
 dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
-                                        'predicted_en_sparse',
+                                        'predicted_en',
                                         'predicted_gb',
                                         'predicted_lag',
                                         'predicted_lag_budget',
@@ -336,7 +336,7 @@ dfData['predicted_avg'] = dfDataPred['predicted_avg']
 dfDataPred[sDepVar] = dfData[sDepVar]
 
 dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
-                                        'predicted_en_sparse',
+                                        'predicted_en',
                                         'predicted_gb',
                                         'predicted_lag',
                                         'predicted_lag_budget',
@@ -374,7 +374,7 @@ dfDataPred['predicted_bates_granger'] = dfDataPred[
 dfData['predicted_bates_granger'] = dfDataPred['predicted_bates_granger']
 
 dfDataWIP['predicted_bates_granger'] = dfDataWIP[['predicted_boost',
-                                        'predicted_en_sparse',
+                                        'predicted_en',
                                         'predicted_gb',
                                         'predicted_lag',
                                         'predicted_lag_budget',
@@ -418,7 +418,7 @@ dfDataPred['predicted_mse'] = dfDataPred[dfDataPred.columns.difference(
 dfData['predicted_mse'] = dfDataPred['predicted_mse']
 
 dfDataWIP['predicted_mse'] = dfDataWIP[['predicted_boost',
-                                        'predicted_en_sparse',
+                                        'predicted_en',
                                         'predicted_gb',
                                         'predicted_lag',
                                         'predicted_lag_budget',
@@ -610,7 +610,7 @@ for job_no in dfDataWIP['job_no'].unique():
     # Plot the cumsum of actual and predicted contribution of sJobNo
     fig, ax = plt.subplots(figsize=(20, 10))
     for col in ['contribution_cumsum',
-                'predicted_en_sparse',
+                'predicted_en',
                 'final_estimate_contribution',
                 'LSTM',
                 'risk']:

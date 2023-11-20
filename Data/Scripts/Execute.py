@@ -64,7 +64,6 @@ subprocess.run(["python", "./Scripts/5_DL.py"])
 
 # Total runtime
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')
-
 notify(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
 
