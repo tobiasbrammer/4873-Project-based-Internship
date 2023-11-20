@@ -1,9 +1,9 @@
 ,RMSE,sMAPE
-DST,0.3797,28.0646
-S-curve,3.1763,38.7027
-OLS,0.7792,37.8889
-OLS with lagged variables,0.7792,37.8889
-OLS with lags and budget,0.7908,36.5113
-OLS Forecast Combination,0.5033,25.7547
-Cluster Combination,1.1503,36.2798
-DST Cluster Combination,0.6555,30.2971
+DST,0.2435,18.3727
+S-curve,0.6856,21.0235
+OLS,0.4839,41.5691
+OLS with lagged variables,0.4839,41.5691
+OLS with lags and budget,0.4596,39.6396
+OLS Forecast Combination,0.2888,20.2164
+Cluster Combination,0.4474,33.051
+DST Cluster Combination,0.2703,18.0937

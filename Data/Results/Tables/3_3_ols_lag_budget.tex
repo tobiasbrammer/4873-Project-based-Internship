@@ -1,13 +1,13 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                     & total\_contribution & \textbf{  R-squared:         } &     0.255   \\
-\textbf{Model:}                             &         OLS         & \textbf{  Adj. R-squared:    } &     0.253   \\
-\textbf{Method:}                            &    Least Squares    & \textbf{  F-statistic:       } &     102.8   \\
-\textbf{Date:}                              &   Mon, 20 Nov 2023  & \textbf{  Prob (F-statistic):} & 1.07e-220   \\
-\textbf{Time:}                              &       19:30:08      & \textbf{  Log-Likelihood:    } &    3259.1   \\
-\textbf{No. Observations:}                  &          3710       & \textbf{  AIC:               } &    -6492.   \\
-\textbf{Df Residuals:}                      &          3697       & \textbf{  BIC:               } &    -6411.   \\
+\textbf{Dep. Variable:}                     & total\_contribution & \textbf{  R-squared:         } &     0.230   \\
+\textbf{Model:}                             &         OLS         & \textbf{  Adj. R-squared:    } &     0.227   \\
+\textbf{Method:}                            &    Least Squares    & \textbf{  F-statistic:       } &     166.3   \\
+\textbf{Date:}                              &   Mon, 20 Nov 2023  & \textbf{  Prob (F-statistic):} &     0.00    \\
+\textbf{Time:}                              &       19:40:53      & \textbf{  Log-Likelihood:    } &    3052.7   \\
+\textbf{No. Observations:}                  &          3625       & \textbf{  AIC:               } &    -6079.   \\
+\textbf{Df Residuals:}                      &          3612       & \textbf{  BIC:               } &    -5999.   \\
 \textbf{Df Model:}                          &            12       & \textbf{                     } &             \\
 \textbf{Covariance Type:}                   &         HAC         & \textbf{                     } &             \\
 \bottomrule
@@ -15,26 +15,26 @@
 \begin{tabular}{lcccccc}
                                             & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P$> |$z$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{const}                              &       0.1873  &        0.028     &     6.698  &         0.000        &        0.133    &        0.242     \\
-\textbf{billable\_hours\_qty\_cumsum}       &       0.2397  &        0.035     &     6.824  &         0.000        &        0.171    &        0.309     \\
-\textbf{contract\_work}                     &      -0.2954  &        0.140     &    -2.110  &         0.035        &       -0.570    &       -0.021     \\
-\textbf{contract\_work\_cumsum}             &      -0.0894  &        0.059     &    -1.521  &         0.128        &       -0.205    &        0.026     \\
-\textbf{tilbuds\_og\_entreprisekontrakt}    &       0.0296  &        0.006     &     5.207  &         0.000        &        0.018    &        0.041     \\
-\textbf{billable\_hours\_qty}               &       0.0589  &        0.050     &     1.172  &         0.241        &       -0.040    &        0.158     \\
-\textbf{costs\_scurve\_diff}                &      -0.1670  &        0.036     &    -4.650  &         0.000        &       -0.237    &       -0.097     \\
-\textbf{material\_cost\_share}              &       0.1462  &        0.016     &     9.039  &         0.000        &        0.115    &        0.178     \\
-\textbf{ombygning}                          &       0.0160  &        0.005     &     3.443  &         0.001        &        0.007    &        0.025     \\
-\textbf{billable\_rate\_dep}                &       0.0814  &        0.013     &     6.397  &         0.000        &        0.056    &        0.106     \\
-\textbf{kbyg33\_no\_limitations}            &       0.1125  &        0.023     &     4.993  &         0.000        &        0.068    &        0.157     \\
-\textbf{production\_estimate\_contribution} &       0.3734  &        0.125     &     2.997  &         0.003        &        0.129    &        0.618     \\
-\textbf{sales\_estimate\_contribution}      &       0.4840  &        0.062     &     7.775  &         0.000        &        0.362    &        0.606     \\
+\textbf{const}                              &       0.2349  &        0.030     &     7.798  &         0.000        &        0.176    &        0.294     \\
+\textbf{contract\_work}                     &       0.0307  &        0.151     &     0.203  &         0.839        &       -0.266    &        0.327     \\
+\textbf{contract\_work\_cumsum}             &       0.2324  &        0.061     &     3.789  &         0.000        &        0.112    &        0.353     \\
+\textbf{tilbuds\_og\_entreprisekontrakt}    &       0.0539  &        0.007     &     7.390  &         0.000        &        0.040    &        0.068     \\
+\textbf{costs\_scurve\_diff}                &       0.2161  &        0.061     &     3.549  &         0.000        &        0.097    &        0.335     \\
+\textbf{billable\_hours\_qty\_cumsum}       &      -0.0875  &        0.051     &    -1.727  &         0.084        &       -0.187    &        0.012     \\
+\textbf{ombygning}                          &       0.0398  &        0.005     &     7.475  &         0.000        &        0.029    &        0.050     \\
+\textbf{material\_cost\_share}              &       0.0410  &        0.018     &     2.259  &         0.024        &        0.005    &        0.076     \\
+\textbf{kbyg33\_no\_limitations}            &       0.0923  &        0.021     &     4.378  &         0.000        &        0.051    &        0.134     \\
+\textbf{extra\_work\_cumsum}                &      -0.0051  &        0.030     &    -0.169  &         0.866        &       -0.065    &        0.054     \\
+\textbf{scurve}                             &       0.0093  &        0.006     &     1.553  &         0.120        &       -0.002    &        0.021     \\
+\textbf{production\_estimate\_contribution} &       0.0154  &        0.134     &     0.115  &         0.908        &       -0.247    &        0.277     \\
+\textbf{sales\_estimate\_contribution}      &       0.3365  &        0.063     &     5.373  &         0.000        &        0.214    &        0.459     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 645.891 & \textbf{  Durbin-Watson:     } &     1.814  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 13733.457  \\
-\textbf{Skew:}          &   0.138 & \textbf{  Prob(JB):          } &      0.00  \\
-\textbf{Kurtosis:}      &  12.422 & \textbf{  Cond. No.          } &      130.  \\
+\textbf{Omnibus:}       & 566.024 & \textbf{  Durbin-Watson:     } &    1.777  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 9144.616  \\
+\textbf{Skew:}          &   0.155 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &  10.775 & \textbf{  Cond. No.          } &     114.  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
