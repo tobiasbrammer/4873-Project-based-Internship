@@ -16,31 +16,19 @@ Includes macro economic KPI's such as interest rate and inflation rate.
 ## Model Selection
 
 ### Statistical
-
-- PLS
+- OLS
 
 ### Bagging
-
-- Bagging
 - Random Forest
 - Extremely Randomized Trees
 
 ### Boosting
-
 - AdaBoost
-
 - Gradient Boost
-
 - XGBoost
 
-### Naive Bayes
-
-- Bernoulli
-
-- Multinomial
-
-- Gaussian
-  
-### Stacking
-
-- Ensemble of Ensembles
+### Deep Learning
+- RNN
+- CNN
+- LSTM
+- MES-LSTM
