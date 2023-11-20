@@ -17,8 +17,6 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
-<<<<<<< Updated upstream
-=======
 def upload(ax, project, path):
     bs = BytesIO()
     format = path.split('.')[-1]
@@ -85,7 +83,6 @@ def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=
     plt.close('all')
 
 
->>>>>>> Stashed changes
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
