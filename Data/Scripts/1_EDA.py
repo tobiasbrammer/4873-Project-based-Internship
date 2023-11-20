@@ -189,7 +189,7 @@ summary_data = dfData.select_dtypes(exclude=['datetime']).describe().transpose()
 summary_data_date = dfData.select_dtypes(include=['datetime']).describe().transpose()
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
-formatted_df_eda_1_date = summary_data_date[['first', 'last']]
+formatted_df_eda_1_date = summary_data_date[['min', 'max']]
 # Rename first = min and last = max
 formatted_df_eda_1_date = formatted_df_eda_1_date.rename(columns={'first': 'min', 'last': 'max'})
 # Format as dd-mm-yyyy
