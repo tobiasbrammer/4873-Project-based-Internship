@@ -1,6 +1,7 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
+<<<<<<< Updated upstream
 \textbf{Dep. Variable:}                & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.932   \\
 \textbf{Model:}                        &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.932   \\
 \textbf{Method:}                       &    Least Squares    & \textbf{  F-statistic:       }          & 1.367e+04   \\
@@ -10,11 +11,23 @@
 \textbf{Df Residuals:}                 &          4013       & \textbf{  BIC:               }          &    -4979.   \\
 \textbf{Df Model:}                     &             4       & \textbf{                     }          &             \\
 \textbf{Covariance Type:}              &      nonrobust      & \textbf{                     }          &             \\
+=======
+\textbf{Dep. Variable:}                      & total\_contribution & \textbf{  R-squared:         } &     0.030   \\
+\textbf{Model:}                              &         OLS         & \textbf{  Adj. R-squared:    } &     0.027   \\
+\textbf{Method:}                             &    Least Squares    & \textbf{  F-statistic:       } &     9.889   \\
+\textbf{Date:}                               &   Mon, 20 Nov 2023  & \textbf{  Prob (F-statistic):} &  2.50e-19   \\
+\textbf{Time:}                               &       10:53:03      & \textbf{  Log-Likelihood:    } &    2500.1   \\
+\textbf{No. Observations:}                   &          3697       & \textbf{  AIC:               } &    -4974.   \\
+\textbf{Df Residuals:}                       &          3684       & \textbf{  BIC:               } &    -4893.   \\
+\textbf{Df Model:}                           &            12       & \textbf{                     } &             \\
+\textbf{Covariance Type:}                    &         HAC         & \textbf{                     } &             \\
+>>>>>>> Stashed changes
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
                                        & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
+<<<<<<< Updated upstream
 \textbf{kbyg11}                        &       0.1284  &        0.017     &     7.673  &         0.000        &        0.096    &        0.161     \\
 \textbf{kbyg22}                        &       0.0763  &        0.018     &     4.261  &         0.000        &        0.041    &        0.111     \\
 \textbf{kbyg33\_no\_limitations}       &       0.2706  &        0.012     &    22.737  &         0.000        &        0.247    &        0.294     \\
@@ -26,6 +39,28 @@
 \textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 3541.027  \\
 \textbf{Skew:}          &   1.053 & \textbf{  Prob(JB):          } &     0.00  \\
 \textbf{Kurtosis:}      &   7.089 & \textbf{  Cond. No.          } &     16.6  \\
+=======
+\textbf{intercept}                           &       0.4672  &        0.061     &     7.602  &         0.000        &        0.347    &        0.588     \\
+\textbf{kbyg11}                              &       0.0285  &        0.023     &     1.258  &         0.208        &       -0.016    &        0.073     \\
+\textbf{kbyg22}                              &      -0.0267  &        0.029     &    -0.908  &         0.364        &       -0.084    &        0.031     \\
+\textbf{kbyg33\_bad\_weather}                &      -0.0039  &        0.013     &    -0.292  &         0.770        &       -0.030    &        0.022     \\
+\textbf{kbyg33\_financial\_contraints}       &       0.0238  &        0.014     &     1.677  &         0.093        &       -0.004    &        0.052     \\
+\textbf{kbyg33\_insufficient\_demand}        &       0.0056  &        0.029     &     0.195  &         0.845        &       -0.051    &        0.062     \\
+\textbf{kbyg33\_no\_limitations}             &      -0.0118  &        0.047     &    -0.251  &         0.802        &       -0.104    &        0.081     \\
+\textbf{kbyg33\_other\_factors}              &      -0.0032  &        0.025     &    -0.128  &         0.898        &       -0.052    &        0.046     \\
+\textbf{kbyg33\_shortage\_of\_labour\_force} &      -0.0097  &        0.030     &    -0.322  &         0.747        &       -0.069    &        0.049     \\
+\textbf{kbyg33\_shortage\_of\_materials}     &      -0.0370  &        0.017     &    -2.117  &         0.034        &       -0.071    &       -0.003     \\
+\textbf{kbyg44\_confidence\_indicator}       &       0.4700  &        0.394     &     1.194  &         0.232        &       -0.302    &        1.242     \\
+\textbf{kbyg44\_employment\_expectations}    &      -0.2246  &        0.252     &    -0.890  &         0.373        &       -0.719    &        0.270     \\
+\textbf{kbyg44\_stocks\_of\_orders}          &      -0.2532  &        0.159     &    -1.595  &         0.111        &       -0.564    &        0.058     \\
+\bottomrule
+\end{tabular}
+\begin{tabular}{lclc}
+\textbf{Omnibus:}       & 648.293 & \textbf{  Durbin-Watson:     } &    1.822  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 5662.347  \\
+\textbf{Skew:}          &   0.577 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &   8.952 & \textbf{  Cond. No.          } &     488.  \\
+>>>>>>> Stashed changes
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}

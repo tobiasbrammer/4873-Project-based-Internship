@@ -161,7 +161,7 @@ factor_cols = ['month', 'year', 'job_posting_group', 'department', 'status', 're
 dfData[factor_cols] = dfData[factor_cols].astype('category')
 
 # Order by date
-dfData.sort_values('date', inplace=True)
+dfData.sort_values('date', inplace=True) 
 
 ### Explore numeric variables ###
 # Identify numeric columns based on conditions
@@ -182,9 +182,9 @@ dfData['days_until_end'] = (dfData['end_date'] - dfData['date']).dt.days
 dfData.loc[dfData['days_until_end'] < 0, 'days_until_end'] = 0
 
 # Calculate share of budget costs and budget revenue
-dfData['budget_costs_share'] = (dfData['revenue'].replace(np.nan, 0) / dfData['budget_revenue']).replace(
+dfData['budget_costs_share'] = (dfData['revenue'].fillna(0) / dfData['budget_revenue']).replace(
     [np.inf, -np.inf], 0)
-dfData['budget_revenue_share'] = (dfData['costs'].replace(np.nan, 0) / dfData['budget_costs']).replace(
+dfData['budget_revenue_share'] = (dfData['costs'].fillna(0) / dfData['budget_costs']).replace(
     [np.inf, -np.inf], 0)
 
 ##### Feature engineering #####
@@ -244,7 +244,7 @@ dfDebitorer = dfDebitorer[['date', 'cvr', 'overdue']]
 dfDebitorer['date'] = pd.to_datetime(dfDebitorer['date'])
 # Join on dfData by cvr and date
 dfData = pd.merge(dfData, dfDebitorer, on=['cvr', 'date'], how='left')
-# If overdue is NA, then set to 0
+# If overdue is NA, then set to 0. Reason: If there is no overdue, then the debtor is not in the list.
 dfData['overdue'] = dfData['overdue'].fillna(0)
 # Divide overdue by 1,000,000
 dfData['overdue'] = dfData['overdue'] / 1000000
@@ -260,8 +260,8 @@ def calculate_risk(group):
         X = group[
             ['revenue_scurve_diff', 'costs_scurve_diff', 'billable_rate_dep']]
         y = group['contribution_scurve_diff']
-        model = LinearRegression().fit(X.replace(np.nan, 0), y.replace(np.nan, 0))
-        residuals = y - model.predict(X.replace(np.nan, 0))
+        model = LinearRegression().fit(X.fillna(0), y.fillna(0))
+        residuals = y - model.predict(X.fillna(0))
         group['risk'] = residuals * group['production_estimate_costs']
     return group
 
@@ -298,10 +298,10 @@ dfData['total_margin'] = dfData['total_contribution'] / dfData['total_costs']
 
 # Calculate share of labor cost, material cost and other cost cumsum
 
-dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].replace(np.nan, 0) / dfData['costs_cumsum']).replace(
+dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].fillna(0) / dfData['costs_cumsum']).replace(
     [np.inf, -np.inf], 0)
 dfData['material_cost_share'] = (
-            (dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']).replace(np.nan, 0) / dfData[
+            (dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']).fillna(0) / dfData[
         'costs_cumsum']).replace([np.inf, -np.inf], 0)
 
 # Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
@@ -530,22 +530,27 @@ dst_df.rename(columns={'kbyg44_construction_industry_total_employment_expectatio
 dfData = pd.merge(dfData, dst_df, on='date', how='left')
 
 # Plot kbyg11, kbyg22, kbyg33_no_limitation and kbyg44_confidence_indicator_total by date
+
+dst_df_plot = dst_df[['date', 'kbyg11', 'kbyg22', 'kbyg33_no_limitations', 'kbyg44_confidence_indicator']]
+# Limit to 2015-01-01 to ...
+dst_df_plot = dst_df_plot[dst_df_plot['date'] >= '2014-01-01']
+
 fig, ax = plt.subplots(2, 2, figsize=(20, 10))
-ax[0, 0].plot(dst_df['date'], dst_df['kbyg11'])
+ax[0, 0].plot(dst_df_plot['date'], dst_df_plot['kbyg11'])
 ax[0, 0].set_title('Change in Industry Revenue')
-ax[0, 1].plot(dst_df['date'], dst_df['kbyg22'])
+ax[0, 1].plot(dst_df_plot['date'], dst_df_plot['kbyg22'])
 ax[0, 1].set_title('Assessment of Order Backlog')
-ax[1, 0].plot(dst_df['date'], dst_df['kbyg33_no_limitations'])
+ax[1, 0].plot(dst_df_plot['date'], dst_df_plot['kbyg33_no_limitations'])
 ax[1, 0].set_title('Share with No Production Limitations')
-ax[1, 1].plot(dst_df['date'], dst_df['kbyg44_confidence_indicator'])
-ax[1, 1].set_title('Confidence indicator')
-fig.suptitle('DST data')
+ax[1, 1].plot(dst_df_plot['date'], dst_df_plot['kbyg44_confidence_indicator'])
+ax[1, 1].set_title('Confidence Indicator')
+fig.suptitle('DST Data')
 plt.tight_layout()
 plt.savefig("./Results/Figures/1_8_dst_data.png")
 plt.savefig("./Results/Presentation/1_8_dst_data.svg")
 upload(plt, 'Project-based Internship', 'figures/1_8_dst_data.png')
 
-del dst_df
+del dst_df, dst_df_plot
 
 # Make column with concatenated date and job_no
 dfData['id'] = dfData['date'].astype(str) + '_' + dfData['job_no'].astype(str)

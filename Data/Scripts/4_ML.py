@@ -54,6 +54,48 @@ def upload(ax, project, path):
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
 
 
+def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar):
+    # Plot the sum of predicted and actual sDepVar by date
+    fig, ax = plt.subplots(figsize=(20, 10))
+    ax.plot(df[df[trainMethod] == 0]['date'],
+            df[df[trainMethod] == 0].groupby('date')[sDepVar].transform(transformation), label='Actual',
+            linestyle='dashed')
+    ax.plot(df[df[trainMethod] == 0]['date'],
+            df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation), label=label)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Total Contribution')
+    ax.ylim(-1, 15)
+    ax.set_title('Out of Sample')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/{file}.png")
+    plt.savefig(f"./Results/Presentation/{file}.svg")
+    upload(plt, 'Project-based Internship', f'figures/{file}.png')
+
+    # Split file before the last underscore and add _1 to the end eg. 3_0_dst -> 3_0_1_dst
+    file_fs = file.split('.')[0] + '_fs'
+
+    # Plot the sum of predicted and actual sDepVar by date (full sample)
+    fig, ax = plt.subplots(figsize=(20, 10))
+    ax.plot(dfData['date'],
+            dfData.groupby('date')[sDepVar].transform(transformation), label='Actual', linestyle='dashed')
+    ax.plot(dfData['date'],
+            dfData.groupby('date')[predicted].transform(transformation), label=label)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Total Contribution')
+    ax.ylim(-1, 15)
+    ax.set_title('Full Sample')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/{file_fs}.png")
+    plt.savefig(f"./Results/Presentation/{file_fs}.svg")
+    upload(plt, 'Project-based Internship', f'figures/{file_fs}.png')
+
+    plt.close('all')
+
+
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
@@ -135,8 +177,6 @@ lIndepVar_lag_budget = lIndepVar_lag_budget.split('\n')
 dfRMSE = pd.read_csv("./Results/Tables/3_4_rmse.csv", index_col=0)
 
 ### Elastic Net Regression ###
-# Define Elastic Net model
-
 # Define hyperparameter grid
 param_grid_en = {
     'alpha': np.arange(0.1, 10, 0.01),
@@ -146,7 +186,8 @@ param_grid_en = {
 # Define randomized search
 elastic_net = ElasticNet(tol=1e-4, random_state=0)
 elastic_net_cv = RandomizedSearchCV(elastic_net, param_grid_en, n_iter=1000, scoring=None, cv=3, verbose=0,
-                                           refit=True, n_jobs=-1)
+                                           refit=True, n_jobs=-1, random_state=0,
+                                           return_train_score=True)
 
 # get unique entries in lIndepVar_lag_budget + lDST
 lIndepVar = list(set(lIndepVar_lag_budget)) + list(set(lDST))
@@ -183,44 +224,11 @@ print(f'The optimal EN tol is {elastic_net_cv.best_params_.get("tol")}.')
 joblib.dump(elastic_net_cv, './.MODS/elastic_net_cv.pickle')
 
 dfData['predicted_en'] = elastic_net_cv.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
-dfData['predicted_en'] = y_scaler.inverse_transform(dfData['predicted_en'].shift(-1).values.reshape(-1, 1))
+dfData['predicted_en'] = y_scaler.inverse_transform(dfData['predicted_en'].values.reshape(-1, 1))
 end_time_en_sparse = datetime.datetime.now()
 print(f'ElasticNet finished in {end_time_en_sparse - start_time_en_sparse}.')
 
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_en'].transform('sum'),
-        label='Predicted (Elastic Net)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_0_en.png")
-plt.savefig("./Results/Presentation/4_0_en.svg")
-upload(plt, 'Project-based Internship', 'figures/4_0_en.png')
-
-# Plot the sum of predicted and actual sDepVar by date (full sample)
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_en'].transform('sum'),
-        label='Predicted (Elastic Net)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_0_1_en.png")
-plt.savefig("./Results/Presentation/4_0_1_en.svg")
-upload(plt, 'Project-based Internship', 'figures/4_0_1_en.png')
-plt.close('all')
+plot_predicted(dfData, 'predicted_en', 'Elastic Net', '4_0_en', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of EN
 rmse_en_sparse = np.sqrt(
@@ -239,7 +247,7 @@ dfDataPred['predicted_en'] = dfData['predicted_en']
 
 # Predict WIP
 dfDataWIP['predicted_en'] = elastic_net_cv.predict(dfDataWIP[lIndepVar].replace(np.nan, 0))
-dfDataWIP['predicted_en'] = y_scaler.inverse_transform(dfDataWIP['predicted_en'].shift(-1).values.reshape(-1, 1))
+dfDataWIP['predicted_en'] = y_scaler.inverse_transform(dfDataWIP['predicted_en'].values.reshape(-1, 1))
 
 ### Random Forest Regression ###
 # Define Random Forest model
@@ -268,7 +276,7 @@ rf_grid_detail = {
     "max_depth": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('max_depth')).astype('int')),
     "min_samples_split": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('min_samples_split')).astype('int')),
     "min_samples_leaf": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('min_samples_leaf')).astype('int')),
-    "max_features": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('max_features')).round(2)),
+    "max_features": rf_grid.get('max_features'),
     "max_samples": list((np.arange(0.8, 1.2, 0.05)*rf_cv.best_params_.get('max_samples')).astype('int'))
 }
 
@@ -283,7 +291,7 @@ joblib.dump(rf_cv, './.MODS/rf_cv.pickle')
 # Predict and rescale using RF
 dfData['predicted_rf_full'] = rf_cv.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_rf_full'] = y_scaler.inverse_transform(dfData['predicted_rf_full'].shift(-1).values.reshape(-1, 1))
+dfData['predicted_rf_full'] = y_scaler.inverse_transform(dfData['predicted_rf_full'].values.reshape(-1, 1))
 
 end_time_rf = datetime.datetime.now()
 
@@ -299,39 +307,7 @@ print(f'The optimal RF maximum features is {rf_cv.best_params_.get("max_features
 print(f'The optimal RF maximum samples is {rf_cv.best_params_.get("max_samples").astype("int")}.')
 print(f'The optimal RF RMSE is {np.sqrt(-rf_cv.best_score_).round(4)}.')
 
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_full'].transform('sum'),
-        label='Predicted (Full Random Forest)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_1_rf_full.png")
-plt.savefig("./Results/Presentation/4_1_rf_full.svg")
-upload(plt, 'Project-based Internship', 'figures/4_1_rf_full.png')
-
-# Plot the sum of predicted and actual sDepVar by date (full sample)
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_rf_full'].transform('sum'),
-        label='Predicted (Full Random Forest)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_1_1_rf_full.png")
-plt.savefig("./Results/Presentation/4_1_1_rf_full.svg")
-upload(plt, 'Project-based Internship', 'figures/4_1_1_rf_full.png')
+plot_predicted(dfData, 'predicted_rf_full', 'Random Forest', '4_1_rf_full', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of RF
 rmse_rf_full = np.sqrt(
@@ -350,7 +326,7 @@ dfDataPred['predicted_rf_full'] = dfData['predicted_rf_full']
 # Predict WIP
 dfDataWIP['predicted_rf_full'] = rf_cv.predict(
     dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_rf_full'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_full'].shift(-1).values.reshape(-1, 1))
+dfDataWIP['predicted_rf_full'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_full'].values.reshape(-1, 1))
 
 # Variable importance
 dfVarImp = pd.DataFrame(rf_cv.best_estimator_.feature_importances_, index=[dfDataWIP[lNumericCols].columns.difference([sDepVar])], columns=['importance'])
@@ -376,43 +352,12 @@ joblib.dump(rf_cv, './.MODS/rf_cv_sparse.pickle')
 # Predict and rescale using RF
 dfData['predicted_rf_sparse'] = rf_cv.predict(
     dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_rf_sparse'] = y_scaler.inverse_transform(dfData['predicted_rf_sparse'].shift(-1).values.reshape(-1, 1))
+dfData['predicted_rf_sparse'] = y_scaler.inverse_transform(dfData['predicted_rf_sparse'].values.reshape(-1, 1))
 end_time_rf = datetime.datetime.now()
 print(f'     ')
 print(f'RF Sparse fit finished in {end_time_rf - start_time_rf}.')
 
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_sparse'].transform('sum'),
-        label='Predicted (Sparse Random Forest)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_1_rf_sparse.png")
-plt.savefig("./Results/Presentation/4_1_rf_sparse.svg")
-upload(plt, 'Project-based Internship', 'figures/4_1_rf_sparse.png')
-
-# Plot the sum of predicted and actual sDepVar by date (full sample)
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_rf_sparse'].transform('sum'),
-        label='Predicted (Sparse Random Forest)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_1_1_rf_sparse.png")
-plt.savefig("./Results/Presentation/4_1_1_rf_sparse.svg")
-upload(plt, 'Project-based Internship', 'figures/4_1_1_rf_sparse.png')
+plot_predicted(dfData, 'predicted_rf_sparse', 'Random Forest', '4_2_rf_sparse', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of RF
 rmse_rf_sparse = np.sqrt(
@@ -432,9 +377,93 @@ dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
 # Predict WIP
 dfDataWIP['predicted_rf_sparse'] = rf_cv.predict(
     dfDataWIP[lIndepVar][dfDataWIP[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_rf_sparse'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_sparse'].shift(-1).values.reshape(-1, 1))
+dfDataWIP['predicted_rf_sparse'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_sparse'].values.reshape(-1, 1))
+
+## Extremely Randomized Trees ##
+# Define Extremely Randomized Trees model
+from sklearn.ensemble import ExtraTreesRegressor
+
+# Define grid for et
+et_grid = {
+    "n_estimators": np.arange(10, 300, 5),  # Number of trees
+    "max_depth": [1, 3, 5, 10, 15, 20, 25, 50, 75, 100],  # Depth of each tree
+    "min_samples_split": np.arange(1, 60, 1),  # Minimum samples required to split an internal node
+    "min_samples_leaf": np.arange(1, 60, 1),  # Minimum samples required to be at a leaf node
+    "max_features": [1 / 3, 0.5, 1, "sqrt", "log2"],  # Number of features to consider for split
+    "bootstrap": [True, True, True, True, True], # Whether bootstrap samples are used when building trees.
+    "max_samples": [50, 100, 150, 250, 500, 750, 1000, 1500]  # Number of samples to train each tree
+}
+
+# Define randomized search
+et_cv = RandomizedSearchCV(ExtraTreesRegressor(random_state=0), et_grid, n_iter=100, n_jobs=-1,
+                            scoring="neg_mean_squared_error", cv=3, verbose=False, refit=True,
+                           )
+# Fit to the training data
+start_time_et = datetime.datetime.now()
 
 
+# Detailed grid
+et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+            dfDataScaledTrain[sDepVar])
+
+et_grid_detail = {
+    "n_estimators": list((np.arange(0.8, 1.2, 0.05)*et_cv.best_params_.get('n_estimators')).astype('int')),
+    "max_depth": list((np.arange(0.8, 1.2, 0.05)*et_cv.best_params_.get('max_depth')).astype('int')),
+    "min_samples_split": list((np.arange(0.8, 1.2, 0.05)*et_cv.best_params_.get('min_samples_split')).astype('int')),
+    "min_samples_leaf": list((np.arange(0.8, 1.2, 0.05)*et_cv.best_params_.get('min_samples_leaf')).astype('int')),
+    "max_features": et_grid.get('max_features'),
+    "bootstrap": et_grid.get('bootstrap'),
+    "max_samples": list((np.arange(0.8, 1.2, 0.05)*et_cv.best_params_.get('max_samples')).astype('int'))
+}
+
+et_cv = RandomizedSearchCV(ExtraTreesRegressor(random_state=0), et_grid_detail, n_iter=100, n_jobs=-1,
+                            scoring="neg_mean_squared_error", cv=3, verbose=False, refit=True,
+                           )
+
+et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+            dfDataScaledTrain[sDepVar])
+
+
+
+# Save model to .MODS/ as pickle
+joblib.dump(et_cv, './.MODS/et_cv.pickle')
+# Predict and rescale using ET
+dfData['predicted_et'] = et_cv.predict(
+    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
+dfData['predicted_et'] = y_scaler.inverse_transform(dfData['predicted_et'].values.reshape(-1, 1))
+
+print(f'     ')
+print(f'ET fit finished in {datetime.datetime.now() - start_time_et}.')
+print(f'     ')
+# Print hyperparameters
+print(f'The optimal ET number of estimators is {et_cv.best_params_.get("n_estimators")}.')
+print(f'The optimal ET maximum depth is {et_cv.best_params_.get("max_depth")}.')
+print(f'The optimal ET minimum sample split is {et_cv.best_params_.get("min_samples_split").astype("int")}.')
+print(f'The optimal ET minimum sample leaf is {et_cv.best_params_.get("min_samples_leaf").astype("int")}.')
+print(f'The optimal ET maximum features is {et_cv.best_params_.get("max_features")}.')
+print(f'The optimal ET maximum samples is {et_cv.best_params_.get("max_samples")}.')
+print(f'The optimal ET RMSE is {np.sqrt(-et_cv.best_score_).round(4)}.')
+
+plot_predicted(dfData, 'predicted_et', 'Extra Trees', '4_3_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
+# Calculate RMSE of ET
+rmse_et = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                          dfData[dfData[trainMethod] == 0]['predicted_et'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_et = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                        dfData[dfData[trainMethod] == 0]['predicted_et'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['Extra Trees', 'RMSE'] = rmse_et
+dfRMSE.loc['Extra Trees', 'sMAPE'] = smape_et
+
+# Add to dfDataPred
+dfDataPred['predicted_et'] = dfData['predicted_et']
+
+# Predict WIP
+dfDataWIP['predicted_et'] = et_cv.predict(
+    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 
 
 ### Boosted Regression Trees ###
@@ -461,10 +490,10 @@ gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 
 # Generate of sequence of numbers based on gb_cv.best_params_ to get more appropriate parameters in the defined range.
 gb_grid_detail = {
-    'learning_rate': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('learning_rate')).round(2)),
+    'learning_rate': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('learning_rate')).round(4)),
     'max_depth': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('max_depth')).astype("int")),
     'min_samples_leaf': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('min_samples_leaf')).astype("int")),
-    'max_features': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('max_features')).round(2)),
+    'max_features': gb_grid.get('max_features'),
     'n_estimators': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('n_estimators')).astype("int")),
 }
 
@@ -481,7 +510,7 @@ joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
 # Predict and rescale using GB
 dfData['predicted_gb'] = gb_cv_det.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_gb'] = y_scaler.inverse_transform(dfData['predicted_gb'].shift(-1).values.reshape(-1, 1))
+dfData['predicted_gb'] = y_scaler.inverse_transform(dfData['predicted_gb'].values.reshape(-1, 1))
 
 end_time_gb = datetime.datetime.now()
 
@@ -495,39 +524,7 @@ print(f'The optimal GB minimum sample leaf is {gb_cv_det.best_params_.get("min_s
 print(f'The optimal GB maximum features is {gb_cv_det.best_params_.get("max_features")}.')
 print(f'The optimal GB number of estimators is {gb_cv_det.best_params_.get("n_estimators")}.')
 
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_gb'].transform('sum'),
-        label='Predicted (Gradient Boosting)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_2_gb.png")
-plt.savefig("./Results/Presentation/4_2_gb.svg")
-upload(plt, 'Project-based Internship', 'figures/4_2_gb.png')
-
-# Plot the sum of predicted and actual sDepVar by date (full sample)
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_gb'].transform('sum'),
-        label='Predicted (Gradient Boosting)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_2_1_gb.png")
-plt.savefig("./Results/Presentation/4_2_1_gb.svg")
-upload(plt, 'Project-based Internship', 'figures/4_2_1_gb.png')
+plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of GB
 rmse_gb = np.sqrt(
@@ -545,7 +542,7 @@ dfDataPred['predicted_gb'] = dfData['predicted_gb']
 # Predict WIP
 dfDataWIP['predicted_gb'] = gb_cv_det.predict(
     dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_gb'] = y_scaler.inverse_transform(dfDataWIP['predicted_gb'].shift(-1).values.reshape(-1, 1))
+dfDataWIP['predicted_gb'] = y_scaler.inverse_transform(dfDataWIP['predicted_gb'].values.reshape(-1, 1))
 
 
 ### XGBoost Regression ###
@@ -596,7 +593,7 @@ joblib.dump(xgb_cv_det, './.MODS/xgb_cv.pickle')
 # Predict and rescale using XGB
 dfData['predicted_xgb'] = xgb_cv_det.predict(
     dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].shift(-1).values.reshape(-1, 1))
+dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].values.reshape(-1, 1))
 end_time_xgb = datetime.datetime.now()
 
 print(f'     ')
@@ -613,39 +610,8 @@ print(f'Optimal colsample bytree: {xgb_cv_det.best_params_.get("colsample_bytree
 print(f'Optimal reg alpha: {xgb_cv_det.best_params_.get("reg_alpha")}')
 print(f'Optimal reg lambda: {xgb_cv_det.best_params_.get("reg_lambda")}')
 
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_xgb'].transform('sum'),
-        label='Predicted (XGBoost)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_3_xgb.png")
-plt.savefig("./Results/Presentation/4_3_xgb.svg")
-upload(plt, 'Project-based Internship', 'figures/4_3_xgb.png')
+plot_predicted(dfData, 'predicted_xgb', 'XGBoost', '4_5_xgb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
-# Plot the sum of predicted and actual sDepVar by date (full sample)
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_xgb'].transform('sum'),
-        label='Predicted (XGBoost)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_3_1_xgb.png")
-plt.savefig("./Results/Presentation/4_3_1_xgb.svg")
-upload(plt, 'Project-based Internship', 'figures/4_3_1_xgb.png')
 
 # Calculate RMSE of XGB
 rmse_xgb = np.sqrt(
@@ -663,13 +629,16 @@ dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
 # Predict WIP
 dfDataWIP['predicted_xgb'] = xgb_cv_det.predict(
     dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_xgb'] = y_scaler.inverse_transform(dfDataWIP['predicted_xgb'].shift(-1).values.reshape(-1, 1))
+dfDataWIP['predicted_xgb'] = y_scaler.inverse_transform(dfDataWIP['predicted_xgb'].values.reshape(-1, 1))
 
 
 ### Forecast Combination with Boosting
 dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
 dfData['predicted_boost'] = (dfData['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
 dfDataWIP['predicted_boost'] = (dfDataWIP['predicted_gb'] + dfDataWIP['predicted_xgb']) / 2
+
+plot_predicted(dfData, 'predicted_boost', 'Combined Boosting', '4_6_boost', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
 
 # Calculate RMSE of GB_FC
 rmse_gb_fc = np.sqrt(
@@ -679,8 +648,27 @@ rmse_gb_fc = np.sqrt(
 smape_gb_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfDataPred[dfData[trainMethod] == 0]['predicted_boost'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Boosting (FC)', 'RMSE'] = rmse_gb_fc
-dfRMSE.loc['Boosting (FC)', 'sMAPE'] = smape_gb_fc
+dfRMSE.loc['Combined Boosting', 'RMSE'] = rmse_gb_fc
+dfRMSE.loc['Combined Boosting', 'sMAPE'] = smape_gb_fc
+
+### Forecast Combination with RF and ET
+dfDataPred['predicted_rf_et'] = (dfDataPred['predicted_rf_full'] + dfDataPred['predicted_et']) / 2
+dfData['predicted_rf_et'] = (dfData['predicted_rf_full'] + dfDataPred['predicted_et']) / 2
+dfDataWIP['predicted_rf_et'] = (dfDataWIP['predicted_rf_full'] + dfDataWIP['predicted_et']) / 2
+
+plot_predicted(dfData, 'predicted_rf_et', 'Ensemble of Ensembles', '4_7_rf_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
+# Calculate RMSE of GB_FC
+rmse_rf_et = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfDataPred[dfData[trainMethod] == 0]['predicted_rf_et'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_rf_et = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfDataPred[dfData[trainMethod] == 0]['predicted_rf_et'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['Ensemble of Ensembles', 'RMSE'] = rmse_rf_et
+dfRMSE.loc['Ensemble of Ensembles', 'sMAPE'] = smape_rf_et
+
 
 # Save dfDataPred to ./dfDataPred.parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
@@ -696,50 +684,6 @@ dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 plt.close('all')
 
 ########################################################################################################################
-
-# For each col in dfDataPred other than date and job_no calculate the running sum.
-# Then, for each col in dfDataPred other than date and job_no, calculate the correlation between the running sum and
-# the actual sDepVar.
-
-# Create dfDataPredSum
-dfDataPredSum = dfDataPred.copy()
-# Omit date
-dfDataPredSum.sort_values(by=['date'], inplace=True)
-dfDataPredSum = dfDataPredSum.drop(columns=['date'])
-# Group by job_no and calculate cumulative sum of each column
-dfDataPredSum = dfDataPredSum.groupby('job_no').cumsum()
-# Add date and job_no
-dfDataPredSum['date'] = dfDataPred['date']
-dfDataPredSum['job_no'] = dfDataPred['job_no']
-
-# Plot the sum of predicted and actual sDepVar by date
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')['predicted_en'].transform('sum'),
-        label='Elastic Net')
-ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')['predicted_rf_full'].transform('sum'),
-        label='Full Random Forest')
-ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')['predicted_rf_sparse'].transform('sum'),
-        label='Sparse Random Forest')
-ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')['predicted_gb'].transform('sum'),
-        label='Gradient Boosting')
-ax.plot(dfDataPredSum['date'],
-        dfDataPredSum.groupby('date')['predicted_boost'].transform('sum'),
-        label='XGBoost')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/4_9_sum.png")
-plt.savefig("./Results/Presentation/4_9_sum.svg")
-upload(plt, 'Project-based Internship', 'figures/4_9_sum.png')
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")

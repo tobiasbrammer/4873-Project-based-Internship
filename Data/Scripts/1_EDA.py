@@ -10,9 +10,6 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Add /Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data/plot_config.py to env
 
-os.environ['PYTHONPATH'] += ":/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data/plot_config.py"
-
-
 # Read data
 if os.name == 'posix':
     sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
@@ -51,8 +48,6 @@ def upload(ax, project, path):
         dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
     else:
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
-
 
 # Read dfData parquet file
 dfData = pd.read_parquet("dfData_org.parquet")
@@ -99,9 +94,11 @@ upload(plt, 'Project-based Internship', 'figures/1_1_revenue.png')
 # Select random job
 job_no = 'S309436'
 dfJob = dfData[dfData['job_no'] == job_no]
+
 # Order by date
 pd.options.mode.chained_assignment = None  # default='warn'
 dfJob.sort_values('date', inplace=True)
+
 fig, ax = plt.subplots(2, 1, figsize=(20, 10))
 sns.lineplot(x='date', y='revenue_cumsum', data=dfJob, ax=ax[0], color=vColors[0], label='revenue')
 sns.lineplot(x='date', y='revenue_scurve', data=dfJob, ax=ax[0], color=vColors[0], label='revenue_scurve', linestyle='--')
@@ -181,7 +178,6 @@ plt.xlabel("Share")
 plt.ylabel("Density")
 plt.xlim(0, 1)
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_5_cost_share.png")
 plt.savefig("./Results/Presentation/1_5_cost_share.svg")
@@ -193,9 +189,12 @@ summary_data = dfData.select_dtypes(exclude=['datetime']).describe().transpose()
 summary_data_date = dfData.select_dtypes(include=['datetime']).describe().transpose()
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
-formatted_df_eda_1_date = summary_data_date[['mean', 'min', 'max']]
+formatted_df_eda_1_date = summary_data_date[['first', 'last']]
+# Rename first = min and last = max
+formatted_df_eda_1_date = formatted_df_eda_1_date.rename(columns={'first': 'min', 'last': 'max'})
 # Format as dd-mm-yyyy
 formatted_df_eda_1_date = formatted_df_eda_1_date.applymap(lambda x: x.strftime('%d-%m-%Y'))
+formatted_df_eda_1_date.insert(0, 'mean', np.nan)
 formatted_df_eda_1_date.insert(1, 'std', np.nan)
 # Count number of missing values for each variable
 missing_values = dfData.isnull().sum().to_frame()
@@ -203,7 +202,7 @@ missing_values = dfData.isnull().sum().to_frame()
 missing_values = missing_values.rename(columns={0: 'missing'})
 # Percentage of missing values
 missing_values['% missing'] = missing_values['missing'] / len(dfData) * 100
-formatted_df_eda_1 = formatted_df_eda_1.select_dtypes(include=[np.number]).map('{:,.2f}'.format)
+# formatted_df_eda_1 = formatted_df_eda_1.select_dtypes(include=[np.number]).map('{:,.2f}'.format)
 # Add mean and std to formatted_df_eda_1_date (set to NA)
 formatted_df_eda_1_date['mean'] = np.nan
 formatted_df_eda_1_date['std'] = np.nan
@@ -227,7 +226,6 @@ eda_1 = eda_1.replace('\\end{longtable}', '\\end{longtable}\\end{landscape}')
 # Output to LaTeX with encoding
 with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
     f.write(eda_1)
-
 upload(eda_1, 'Project-based Internship', 'tables/2_eda_1.tex')
 
 plt.close('all')

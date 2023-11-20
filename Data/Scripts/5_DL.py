@@ -61,6 +61,48 @@ def upload(ax, project, path):
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
 
 
+def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar):
+    # Plot the sum of predicted and actual sDepVar by date
+    fig, ax = plt.subplots(figsize=(20, 10))
+    ax.plot(df[df[trainMethod] == 0]['date'],
+            df[df[trainMethod] == 0].groupby('date')[sDepVar].transform(transformation), label='Actual',
+            linestyle='dashed')
+    ax.plot(df[df[trainMethod] == 0]['date'],
+            df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation), label=label)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Total Contribution')
+    ax.ylim(-1, 15)
+    ax.set_title('Out of Sample')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/{file}.png")
+    plt.savefig(f"./Results/Presentation/{file}.svg")
+    upload(plt, 'Project-based Internship', f'figures/{file}.png')
+
+    # Split file before the last underscore and add _1 to the end eg. 3_0_dst -> 3_0_1_dst
+    file_fs = file.split('.')[0] + '_fs'
+
+    # Plot the sum of predicted and actual sDepVar by date (full sample)
+    fig, ax = plt.subplots(figsize=(20, 10))
+    ax.plot(dfData['date'],
+            dfData.groupby('date')[sDepVar].transform(transformation), label='Actual', linestyle='dashed')
+    ax.plot(dfData['date'],
+            dfData.groupby('date')[predicted].transform(transformation), label=label)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Total Contribution')
+    ax.ylim(-1, 15)
+    ax.set_title('Full Sample')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+    plt.savefig(f"./Results/Figures/{file_fs}.png")
+    plt.savefig(f"./Results/Presentation/{file_fs}.svg")
+    upload(plt, 'Project-based Internship', f'figures/{file_fs}.png')
+
+    plt.close('all')
+
+
 # Load data
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
@@ -141,47 +183,97 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def model_builder(hp):
     model = Sequential()
-    # Tune the number of units in the first LSTM layer according to [2**n for n in range(1, 11)]
-    model.add(LSTM(units=hp.Choice('input_unit', values=[2 ** n for n in range(1, 11)]),
+    # First LSTM layer
+    model.add(LSTM(units=hp.Choice('input_unit_init', values=[2 ** n for n in range(1, 11)]),
                    return_sequences=True,
-                   input_shape=(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[1], 1)))
-    for l in range(hp.Int('n_layers', 1, 5)):
-        model.add(LSTM(units=hp.Choice('input_unit', values=[2 ** n for n in range(1, 11)]), return_sequences=True))
-        model.add(Dropout(hp.Float(f'dropout_{l}', min_value=0.0, max_value=0.5, step=0.05)))
-    model.add(Dense(1, activation=hp.Choice('dense_activation', values=['relu',
-                                                                        'sigmoid',
-                                                                        'linear',
-                                                                        'tanh',
-                                                                        'exponential'
-                                                                        ], default='relu')))
-    model.compile(optimizer="adam", loss="mse", metrics=['mae'])
+                   input_shape=(
+                       dfDataScaledTrain[lNumericCols][
+                           dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].shape[
+                           1], 1)))
+    # Subsequent LSTM layers
+    for l in range(hp.Int('additional_layers', 0, 4)):
+        # Check if l == 0
+        if l == 0:  # Add nothing
+            pass
+        # Check if it's the last LSTM layer
+        if l == hp.Int('additional_layers', 1, 4) - 1:
+            # Last LSTM layer
+            model.add(
+                LSTM(units=hp.Choice(f'input_unit_{l + 1}', values=[2 ** n for n in range(1, 10)]),
+                     return_sequences=False))
+        else:
+            # Not the last LSTM layer
+            model.add(
+                LSTM(units=hp.Choice(f'input_unit_{l + 1}', values=[2 ** n for n in range(1, 10)]),
+                     return_sequences=True))
+        # Add dropout
+        model.add(Dropout(hp.Float(f'dropout_{l + 1}', min_value=0.0, max_value=0.5, step=0.01)))
+    model.add(Dense(1, activation=hp.Choice('dense_activation',
+                                            values=['relu', 'sigmoid', 'linear', 'tanh', 'exponential'],
+                                            default='relu')))
+    optimizer = Adam(learning_rate=hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4]))
+    model.compile(optimizer=optimizer, loss="mse", metrics=['mae'])
     return model
 
 
 # Define tuner
-tuner = kt.Hyperband(model_builder,
+tuner_64 = kt.Hyperband(model_builder,
                      objective='val_loss',
                      max_epochs=5,
                      factor=3,
                      seed=607,
                      directory='./.MODS',
-                     project_name='LSTM')
+                     project_name='LSTM_64')
+
+# Define tuner
+tuner_32 = kt.Hyperband(model_builder,
+                     objective='val_loss',
+                     max_epochs=5,
+                     factor=3,
+                     seed=607,
+                     directory='./.MODS',
+                     project_name='LSTM_32')
 
 # Define early stopping
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=3)
+early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=5)
 
 # Fit model
 start_time_lstm_tune = datetime.datetime.now()
 
 # Fit model to training data
-tuner.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+tuner_32.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
              dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-             batch_size=5,
+             batch_size=32,
              validation_split=0.10,
              callbacks=[early_stop],
              use_multiprocessing=True,
              workers=multiprocessing.cpu_count(),
              verbose=1)
+
+tuner_64.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                batch_size=64,
+                validation_split=0.10,
+                callbacks=[early_stop],
+                use_multiprocessing=True,
+                workers=multiprocessing.cpu_count(),
+                verbose=1)
+
+# Compare loss of 32 and 64 batch size
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(tuner_32.oracle.get_best_trials()[0].history.history['loss'], label='Train (batch size 32)')
+ax.plot(tuner_32.oracle.get_best_trials()[0].history.history['val_loss'], label='Validation (batch size 32)')
+ax.plot(tuner_64.oracle.get_best_trials()[0].history.history['loss'], label='Train (batch size 64)')
+ax.plot(tuner_64.oracle.get_best_trials()[0].history.history['val_loss'], label='Validation (batch size 64)')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title("Loss of LSTM")
+plt.grid(alpha=0.35)
+plt.savefig("./Results/Figures/5_0_loss_tune.png")
+plt.savefig("./Results/Presentation/5_0_loss_tune.svg")
+upload(plt, 'Project-based Internship', 'figures/5_0_loss_tune.png')
+plt.show()
 
 # Get the optimal hyperparameters
 best_hps = tuner.get_best_hyperparameters()[0]
