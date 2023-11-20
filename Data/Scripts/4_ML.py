@@ -64,7 +64,6 @@ def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=
             df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation), label=label)
     ax.set_xlabel('Date')
     ax.set_ylabel('Total Contribution')
-    ax.ylim(-1, 15)
     ax.set_title('Out of Sample')
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
@@ -84,7 +83,6 @@ def plot_predicted(df, predicted, label, file,transformation='sum', trainMethod=
             dfData.groupby('date')[predicted].transform(transformation), label=label)
     ax.set_xlabel('Date')
     ax.set_ylabel('Total Contribution')
-    ax.ylim(-1, 15)
     ax.set_title('Full Sample')
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
@@ -422,8 +420,6 @@ et_cv = RandomizedSearchCV(ExtraTreesRegressor(random_state=0), et_grid_detail, 
 
 et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
             dfDataScaledTrain[sDepVar])
-
-
 
 # Save model to .MODS/ as pickle
 joblib.dump(et_cv, './.MODS/et_cv.pickle')
