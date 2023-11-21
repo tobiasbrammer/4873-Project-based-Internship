@@ -7,6 +7,7 @@ import datetime
 import joblib
 from plot_config import *
 from plot_predicted import *
+from smape import *
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestRegressor
@@ -32,11 +33,6 @@ dfDataPred = pd.read_parquet("./dfDataPred.parquet")
 
 # Load dfDataWIP from ./dfDataWIP_pred.parquet
 dfDataWIP = pd.read_parquet("./dfDataWIP_pred.parquet")
-
-
-# Define sMAPE
-def smape(actual, predicted):
-    return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
 
 
 # Load trainMethod from ./.AUX/trainMethod.txt
