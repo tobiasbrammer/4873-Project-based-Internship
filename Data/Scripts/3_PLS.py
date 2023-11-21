@@ -597,4 +597,3 @@ for i, sJobNo in enumerate(lJob):
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/Jobs/ols.png")
-# Save figure
