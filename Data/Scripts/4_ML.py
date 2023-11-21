@@ -674,5 +674,5 @@ for i, sJobNo in enumerate(lJob):
     ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/Jobs/ols.png")
+plt.savefig("./Results/Figures/Jobs/ml.png")
 # Save figure
