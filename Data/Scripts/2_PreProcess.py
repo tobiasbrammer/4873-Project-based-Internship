@@ -97,12 +97,12 @@ def identity_function(X):
 
 
 # Scale the data
-y_scaler = MinMaxScaler()
-x_scaler = MinMaxScaler()
+# y_scaler = MinMaxScaler()
+# x_scaler = MinMaxScaler()
 
 # Dummy
-# y_scaler = FunctionTransformer(identity_function)
-# x_scaler = FunctionTransformer(identity_function)
+y_scaler = FunctionTransformer(identity_function)
+x_scaler = FunctionTransformer(identity_function)
 
 
 # x_scaler = PowerTransformer(method='yeo-johnson')
@@ -136,18 +136,18 @@ dfDataWIP[colIndepVarNum] = x_scaler.transform(dfDataWIP[colIndepVarNum])
 dfDataWIP[sDepVar] = y_scaler.transform(dfDataWIP[[sDepVar]])
 
 from sklearn.cluster import KMeans
-# Run the process for five different numbers of clusters.
+# Run the process for different numbers of clusters.
 lCluster = [2, 3, 4, 5]
 # Assign cluster to each job
 for nCluster in lCluster:
     # Create KMeans object
     kmeans = KMeans(n_clusters=nCluster, random_state=607, n_init='auto', max_iter=1000)
     # Fit the model based on mean sales_estimate_contribution for each job
-    kmeans.fit(dfData[['sales_estimate_contribution']].replace(np.nan, 0))
+    kmeans.fit(dfData[['sales_estimate_margin']].replace(np.nan, 0))
     # Predict the cluster for each observation
-    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['sales_estimate_contribution']].replace(np.nan, 0))
-    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['sales_estimate_contribution']].replace(np.nan, 0))
-    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['sales_estimate_contribution']].replace(np.nan, 0))
+    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['sales_estimate_margin']].replace(np.nan, 0))
+    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['sales_estimate_margin']].replace(np.nan, 0))
+    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['sales_estimate_margin']].replace(np.nan, 0))
 
 # Plot number of observations in each cluster in a subplot for each number of clusters
 fig, ax = plt.subplots(2, 2, figsize=(20, 10))

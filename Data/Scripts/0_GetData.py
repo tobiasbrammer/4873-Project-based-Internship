@@ -119,6 +119,10 @@ dfData.loc[dfData['final_estimate_revenue'] == 0, 'final_estimate_revenue'] = df
 dfData.loc[dfData['final_estimate_costs'] == 0, 'final_estimate_costs'] = dfData.loc[
     dfData['final_estimate_costs'] == 0, 'budget_costs']
 
+dfData['sales_estimate_margin'] = (dfData['sales_estimate_revenue'] - dfData['sales_estimate_costs'])/dfData['sales_estimate_revenue']
+dfData['production_estimate_margin'] = (dfData['production_estimate_revenue'] - dfData['production_estimate_costs'])/dfData['production_estimate_revenue']
+dfData['final_estimate_margin'] = (dfData['final_estimate_revenue'] - dfData['final_estimate_costs'])/dfData['final_estimate_revenue']
+
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns
 numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" not in col and "_rate" not in col]

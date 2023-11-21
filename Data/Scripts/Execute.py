@@ -74,4 +74,4 @@ notify(f'Execution finished in {datetime.datetime.now() - start_time}.')
 # elif os.name == 'nt':
 #     import winsound
 #     winsound.Beep(frequency=600, duration=800)
-#
+

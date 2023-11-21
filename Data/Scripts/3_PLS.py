@@ -167,23 +167,6 @@ plt.savefig("./Results/Figures/3_0_2_corr.png")
 plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
 
-# Plot each variable in lIndepVar against sDepVar over time
-fig, ax = plt.subplots(figsize=(20, 10))
-for var in lIndepVar:
-    ax.plot(dfData['date'],
-            dfData.groupby('date')[var].transform('sum').astype(float),
-            label=var)
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
-ax.set_aspect('auto')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
-plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/3_0_3_series.png")
-plt.savefig("./Results/Presentation/3_0_3_series.svg")
-upload(plt, 'Project-based Internship', 'figures/3_0_3_series.png')
-
 # Run OLS
 model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar]), missing='drop')
 results_ols = model.fit()
@@ -432,6 +415,7 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/3_6_cluster.png")
 plt.savefig("./Results/Presentation/3_6_cluster.svg")
+upload(plt, 'Project-based Internship', 'figures/3_6_cluster.png')
 plt.close('all')
 
 # Full sample
@@ -460,15 +444,16 @@ plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/FullSample/3_6_cluster_fs.png")
 plt.savefig("./Results/Presentation/FullSample/3_6_cluster_fs.svg")
+upload(plt, 'Project-based Internship', 'figures/FullSample/3_6_cluster_fs.png')
 plt.close('all')
 
 
 # Use Forecast Combination to combine the predictions of each cluster
 # For each cluster in cluster_{lCluster} do
-dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])]
-                                  + dfData['predicted_cluster_' + str(lCluster[1])]
-                                  + dfData['predicted_cluster_' + str(lCluster[2])]
-                                  + dfData['predicted_cluster_' + str(lCluster[3])]) / 4
+dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])].replace(np.nan, 0)
+                                  + dfData['predicted_cluster_' + str(lCluster[1])].replace(np.nan, 0)
+                                  + dfData['predicted_cluster_' + str(lCluster[2])].replace(np.nan, 0)
+                                  + dfData['predicted_cluster_' + str(lCluster[3])].replace(np.nan, 0)) / 4
 
 dfDataPred['predicted_cluster_fc'] = dfData['predicted_cluster_fc']
 
@@ -491,10 +476,6 @@ dfRMSE.loc['Cluster Combination'] = [rmse_fc_cluster, smape_fc_cluster]
 dfData['predicted_fc_cluster_dst'] = (dfData['predicted_cluster_fc'] + dfData['predicted_dst']) / 2
 dfDataPred['predicted_fc_cluster_dst'] = dfData['predicted_fc_cluster_dst']
 
-plot_predicted(dfData, 'predicted_fc_cluster_dst', 'DST Cluster Combination', '3_8_fc_cluster_dst',
-               transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
-
-
 # Calculate RMSE of Forecast Combination
 rmse_fc_cluster_dst = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
@@ -512,9 +493,61 @@ dfRMSE = dfRMSE.round(4)
 dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 
 print(dfRMSE)
+########################################################################################################################
 
-### Create new dataframe with date, job_no, sDepVar, and predicted values ###
 
+# Plot the sum of all predicted and actual sDepVar by date
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['sales_estimate_contribution'].transform('sum'),
+        label='Sales Estimate')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['production_estimate_contribution'].transform('sum'),
+        label='Production Estimate')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['final_estimate_contribution'].transform('sum'),
+        label='Final Estimate')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution (mDKK)')
+ax.set_title('Out of Sample')
+ax.set_aspect('auto')
+ax.set_ylim([-5, 20.00])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/3_0_budget.png")
+plt.savefig("./Results/Presentation/3_0_budget.svg")
+upload(plt, 'Project-based Internship', 'figures/3_0_budget.png')
+plt.close('all')
+
+# Full sample budgets
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['sales_estimate_contribution'].transform('sum'),
+        label='Sales Estimate')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['production_estimate_contribution'].transform('sum'),
+        label='Production Estimate')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['final_estimate_contribution'].transform('sum'),
+        label='Final Estimate')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution (mDKK)')
+ax.set_title('Full Sample')
+ax.set_aspect('auto')
+ax.set_ylim([-20, 100.00])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.5)
+plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/FullSample/3_0_budget_fs.png")
+plt.savefig("./Results/Presentation/FullSample/3_0_budget_fs.svg")
+upload(plt, 'Project-based Internship', 'figures/FullSample/3_0_budget_fs.png')
+
+########################################################################################################################
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
