@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler, PowerTransformer
+from sklearn.preprocessing import MinMaxScaler, PowerTransformer, FunctionTransformer
 from plot_config import *
 from plot_predicted import *
 import joblib
@@ -92,9 +92,18 @@ print(f"The number of rows in train is {len(dfDataTrain)}.")
 train_data = dfDataTrain[numeric_cols]
 train_data_desc = dfDataTrain[non_numeric_cols]
 
+def identity_function(X):
+    return X
+
+
 # Scale the data
 y_scaler = MinMaxScaler()
 x_scaler = MinMaxScaler()
+
+# Dummy
+# y_scaler = FunctionTransformer(identity_function)
+# x_scaler = FunctionTransformer(identity_function)
+
 
 # x_scaler = PowerTransformer(method='yeo-johnson')
 # y_scaler = PowerTransformer(method='yeo-johnson')
