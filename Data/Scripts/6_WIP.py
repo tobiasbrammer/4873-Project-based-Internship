@@ -9,6 +9,8 @@ import pandas as pd
 import datetime
 import joblib
 from plot_config import *
+from plot_predicted import *
+from notify import *
 from sklearn.metrics import mean_squared_error
 import multiprocessing
 from keras.models import Sequential
@@ -37,31 +39,27 @@ import matplotlib.pyplot as plt
 import re
 import subprocess
 
-def upload(ax, project, path):
-    bs = BytesIO()
-    format = path.split('.')[-1]
-
-    # Check if the file is a .tex file and handle it differently
-    if format == 'tex':
-        # Assuming the 'ax' parameter contains the LaTeX content
-        content = ax
-        format = 'tex'
-    else:
-        ax.savefig(bs, bbox_inches='tight', format=format)
-
-    # token = os.DROPBOX
-    token = subprocess.run("curl https://api.dropbox.com/oauth2/token -d grant_type=refresh_token -d refresh_token=eztXuoP098wAAAAAAAAAAV4Ef4mnx_QpRaiqNX-9ijTuBKnX9LATsIZDPxLQu9Nh -u a415dzggdnkro3n:00ocfqin8hlcorr", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.split('{"access_token": "')[1].split('", "token_type":')[0]
-    dbx = dropbox.Dropbox(token)
-
-    # Will throw an UploadError if it fails
-    if format == 'tex':
-        # Handle .tex files by directly uploading their content
-        dbx.files_upload(content.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-    else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
-
 # Load data
 dfDataWIP = pd.read_parquet("./dfData_reg_scaled_wip.parquet")
+dfDataPred = pd.read_parquet("./dfDataPred.parquet")
+
+
+sJobNo = 'S898024'
+sJobNo = 'S283193'
+sJobNo = 'S283191'
+
+# Get the data of job_no
+dfDataJob = dfDataPred[dfDataPred['job_no'] == sJobNo]
+
+
+
+
+
+
+
+
+########################################################################################################################
+
 
 # Import lNumericCols from ./.AUX/lNumericCols.txt
 with open('./.AUX/lNumericCols.txt', 'r') as f:

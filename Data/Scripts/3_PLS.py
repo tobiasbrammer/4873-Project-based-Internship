@@ -89,6 +89,8 @@ upload(ols, 'Project-based Internship', 'tables/3_0_dst.tex')
 # Predict and rescale sDepVar using OLS
 dfData['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataScaled[['intercept'] + lDST]).values.reshape(-1, 1))
 
+dfDataPred = dfData[['date', 'job_no', sDepVar, 'predicted_dst']]
+
 plot_predicted(dfData, 'predicted_dst', 'Statistics Denmark', '3_0_dst', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate out-of-sample RMSE of DST
@@ -119,6 +121,7 @@ upload(ols, 'Project-based Internship', 'tables/3_9_scurve.tex')
 
 # Predict and rescale sDepVar using OLS
 dfData['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predict(dfDataScaled[['intercept'] + lSCurve]).values.reshape(-1, 1))
+dfDataPred['predicted_scurve'] = dfData['predicted_scurve']
 
 plot_predicted(dfData, 'predicted_scurve', 'S-curve', '3_9_scurve', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -194,6 +197,7 @@ upload(ols, 'Project-based Internship', 'tables/3_1_ols.tex')
 # Predict and rescale sDepVar using OLS
 dfData['predicted_ols'] = results_ols.predict(dfDataScaled[['intercept'] + lIndepVar])
 dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].values.reshape(-1, 1))
+dfDataPred['predicted_ols'] = dfData['predicted_ols']
 
 plot_predicted(dfData, 'predicted_ols', 'OLS', '3_1_ols', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -244,6 +248,7 @@ upload(results_ols_lag.summary().as_latex(), 'Project-based Internship', 'tables
 dfData['predicted_lag'] = results_ols_lag.predict(dfDataScaled[['intercept'] + lIndepVar_lag])
 
 dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].values.reshape(-1, 1))
+dfDataPred['predicted_lag'] = dfData['predicted_lag']
 
 plot_predicted(dfData, 'predicted_lag', 'OLS with lag', '3_2_ols_lag', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -311,6 +316,7 @@ upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 dfData['predicted_lag_budget'] = results_lag_budget.predict(dfDataScaled[['intercept'] + lIndepVar_lag_budget])
 
 dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_lag_budget'].values.reshape(-1, 1))
+dfDataPred['predicted_lag_budget'] = dfData['predicted_lag_budget']
 
 plot_predicted(dfData, 'predicted_lag_budget', 'OLS with lag and budget', '3_3_ols_lag_budget', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -331,6 +337,7 @@ dfDataWIP['predicted_lag_budget'] = y_scaler.inverse_transform(
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
 dfData['predicted_fc'] = (dfData['predicted_dst'] + dfData['predicted_lag_budget']) / 2
+dfDataPred['predicted_fc'] = dfData['predicted_fc']
 
 plot_predicted(dfData, 'predicted_fc', 'OLS Forecast Combination', '3_5_fc', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -446,6 +453,7 @@ dfData['predicted_cluster_fc'] = (dfData['predicted_cluster_' + str(lCluster[0])
                                   + dfData['predicted_cluster_' + str(lCluster[2])]
                                   + dfData['predicted_cluster_' + str(lCluster[3])]) / 4
 
+dfDataPred['predicted_cluster_fc'] = dfData['predicted_cluster_fc']
 
 plot_predicted(dfData, 'predicted_cluster_fc', 'Cluster Combination', '3_7_fc_cluster',
                transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
@@ -464,6 +472,7 @@ dfRMSE.loc['Cluster Combination'] = [rmse_fc_cluster, smape_fc_cluster]
 
 ### Combine Cluster Forecast Combination and DST ###
 dfData['predicted_fc_cluster_dst'] = (dfData['predicted_cluster_fc'] + dfData['predicted_dst']) / 2
+dfDataPred['predicted_fc_cluster_dst'] = dfData['predicted_fc_cluster_dst']
 
 plot_predicted(dfData, 'predicted_fc_cluster_dst', 'DST Cluster Combination', '3_8_fc_cluster_dst',
                transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
@@ -488,9 +497,7 @@ dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 print(dfRMSE)
 
 ### Create new dataframe with date, job_no, sDepVar, and predicted values ###
-dfDataPred = dfData[
-    ['date', 'job_no', sDepVar, 'predicted_ols', 'predicted_lag', 'predicted_lag_budget', 'predicted_fc',
-     'predicted_cluster_fc']]
+
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
@@ -499,3 +506,44 @@ dfData.to_parquet("./dfData_reg.parquet")
 ########################################################################################################################
 
 plt.close('all')
+
+########################################################################################################################
+
+dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
+
+lJob = ['S218705', 'S100762', 'S289834', 'S102941']
+
+plt.close('all')
+
+# Create a subplot for each job_no in lJob
+fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
+# Loop through each job_no in lJob
+for i, sJobNo in enumerate(lJob):
+    # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               y_scaler.inverse_transform(dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_dst'].values.reshape(-1, 1)),
+               label='predicted (dst)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               y_scaler.inverse_transform(
+                   dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_scurve'].values.reshape(-1, 1)),
+               label='predicted (s-curve)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               y_scaler.inverse_transform(
+                   dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_fc_cluster_dst'].values.reshape(-1, 1)),
+               label='predicted (cluster)', linestyle='dashed')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               y_scaler.inverse_transform(dfData[dfData['job_no'] == sJobNo]['contribution_cumsum'].values.reshape(-1, 1)),
+               label='cumulative contribution')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               y_scaler.inverse_transform(dfData[dfData['job_no'] == sJobNo]['final_estimate_contribution'].values.reshape(-1, 1)),
+               label='slutvurdering')
+    ax[i].axhline(y=0, color='black', linestyle='-')
+    ax[i].set_xlabel('Date')
+    ax[i].set_ylabel('Contribution')
+    ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
+    ax[i].legend(loc='upper center', bbox_to_anchor
+    =(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/Jobs/ols.png")
+# Save figure

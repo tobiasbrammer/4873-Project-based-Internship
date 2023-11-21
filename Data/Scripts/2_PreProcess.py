@@ -102,8 +102,7 @@ x_scaler = MinMaxScaler()
 # omit 'train', 'train_TS', 'cluster_2', 'cluster_4', 'cluster_6', 'cluster_8', 'cluster_10', 'cluster_12', 'cluster_14'
 # from colIndepVarNum
 colIndepVarNum = [col for col in colIndepVarNum if
-                    col not in ['train', 'train_TS', 'cluster_2', 'cluster_4', 'cluster_6', 'cluster_8', 'cluster_10',
-                                'cluster_12', 'cluster_14']]
+                    col not in ['train', 'train_TS', 'cluster_2', 'cluster_3', 'cluster_4', 'cluster_5']]
 # colIndepVarNum value to file
 with open('./.AUX/colIndepVarNum.txt', 'w') as f:
     f.write('\n'.join(colIndepVarNum))
@@ -160,9 +159,33 @@ dfData.to_parquet('./dfData_reg_scaled.parquet')
 dfDataWIP.to_parquet('./dfData_reg_scaled_wip.parquet')
 dfData.to_parquet('./dfData_reg.parquet')
 
+dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
+
+lJob = ['S218705', 'S100762', 'S289834', 'S102941']
+
+plt.close('all')
+
+# Create a subplot for each job_no in lJob
+fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
+# Loop through each job_no in lJob
+for i, sJobNo in enumerate(lJob):
+    # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['contribution'], label='contribution', linestyle='dashed')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['revenue'], label='revenue',  linestyle='dashed')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['contribution_cumsum'], label='cumulative contribution')
+    ax[i].axhline(y=0, color='black', linestyle='-')
+    ax[i].set_xlabel('Date')
+    ax[i].set_ylabel('Contribution')
+    ax[i].set_title(f'Total Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
+    ax[i].legend(loc='upper center', bbox_to_anchor
+    =(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+plt.show()
+
 # Rescale dfData
-# dfData[colIndepVarNum] = x_scaler.inverse_transform(dfData[colIndepVarNum])
-# dfData[sDepVar] = y_scaler.inverse_transform(dfData[[sDepVar]])
+dfData[colIndepVarNum] = x_scaler.inverse_transform(dfData[colIndepVarNum])
+dfData[sDepVar] = y_scaler.inverse_transform(dfData[[sDepVar]])
 
 # Save the scales to .AUX/
 joblib.dump(x_scaler, "./.AUX/x_scaler.save")

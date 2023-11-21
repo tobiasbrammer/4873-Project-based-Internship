@@ -1,38 +1,38 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                  & total\_contribution & \textbf{  R-squared:         } &     0.212   \\
-\textbf{Model:}                          &         OLS         & \textbf{  Adj. R-squared:    } &     0.209   \\
-\textbf{Method:}                         &    Least Squares    & \textbf{  F-statistic:       } &     97.01   \\
-\textbf{Date:}                           &   Mon, 20 Nov 2023  & \textbf{  Prob (F-statistic):} & 2.22e-178   \\
-\textbf{Time:}                           &       19:48:01      & \textbf{  Log-Likelihood:    } &    3010.5   \\
-\textbf{No. Observations:}               &          3625       & \textbf{  AIC:               } &    -5999.   \\
-\textbf{Df Residuals:}                   &          3614       & \textbf{  BIC:               } &    -5931.   \\
-\textbf{Df Model:}                       &            10       & \textbf{                     } &             \\
-\textbf{Covariance Type:}                &      nonrobust      & \textbf{                     } &             \\
+\textbf{Dep. Variable:}                   & total\_contribution & \textbf{  R-squared:         } &     0.235   \\
+\textbf{Model:}                           &         OLS         & \textbf{  Adj. R-squared:    } &     0.233   \\
+\textbf{Method:}                          &    Least Squares    & \textbf{  F-statistic:       } &     111.8   \\
+\textbf{Date:}                            &   Tue, 21 Nov 2023  & \textbf{  Prob (F-statistic):} & 2.58e-203   \\
+\textbf{Time:}                            &       13:01:59      & \textbf{  Log-Likelihood:    } &    3276.7   \\
+\textbf{No. Observations:}                &          3645       & \textbf{  AIC:               } &    -6531.   \\
+\textbf{Df Residuals:}                    &          3634       & \textbf{  BIC:               } &    -6463.   \\
+\textbf{Df Model:}                        &            10       & \textbf{                     } &             \\
+\textbf{Covariance Type:}                 &      nonrobust      & \textbf{                     } &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
-                                         & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+                                          & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{const}                           &       0.2369  &        0.026     &     9.006  &         0.000        &        0.185    &        0.288     \\
-\textbf{contract\_work}                  &       0.3444  &        0.042     &     8.231  &         0.000        &        0.262    &        0.426     \\
-\textbf{contract\_work\_cumsum}          &       0.3402  &        0.049     &     6.886  &         0.000        &        0.243    &        0.437     \\
-\textbf{tilbuds\_og\_entreprisekontrakt} &       0.0566  &        0.006     &     9.853  &         0.000        &        0.045    &        0.068     \\
-\textbf{costs\_scurve\_diff}             &       0.2346  &        0.027     &     8.640  &         0.000        &        0.181    &        0.288     \\
-\textbf{billable\_hours\_qty\_cumsum}    &      -0.0895  &        0.019     &    -4.796  &         0.000        &       -0.126    &       -0.053     \\
-\textbf{ombygning}                       &       0.0443  &        0.007     &     6.793  &         0.000        &        0.031    &        0.057     \\
-\textbf{material\_cost\_share}           &       0.0385  &        0.022     &     1.733  &         0.083        &       -0.005    &        0.082     \\
-\textbf{kbyg33\_no\_limitations}         &       0.0883  &        0.021     &     4.223  &         0.000        &        0.047    &        0.129     \\
-\textbf{extra\_work\_cumsum}             &      -0.0104  &        0.020     &    -0.507  &         0.612        &       -0.051    &        0.030     \\
-\textbf{scurve}                          &       0.0103  &        0.006     &     1.730  &         0.084        &       -0.001    &        0.022     \\
+\textbf{const}                            &       0.1848  &        0.026     &     7.125  &         0.000        &        0.134    &        0.236     \\
+\textbf{contract\_work}                   &       0.2886  &        0.039     &     7.428  &         0.000        &        0.212    &        0.365     \\
+\textbf{contract\_work\_cumsum}           &       0.2336  &        0.046     &     5.129  &         0.000        &        0.144    &        0.323     \\
+\textbf{costs\_scurve\_diff}              &       0.3026  &        0.026     &    11.777  &         0.000        &        0.252    &        0.353     \\
+\textbf{billable\_hours\_qty\_cumsum}     &       0.0482  &        0.017     &     2.803  &         0.005        &        0.014    &        0.082     \\
+\textbf{tilbuds\_og\_entreprisekontrakt}  &       0.0397  &        0.005     &     7.781  &         0.000        &        0.030    &        0.050     \\
+\textbf{ombygning}                        &       0.0329  &        0.007     &     4.746  &         0.000        &        0.019    &        0.046     \\
+\textbf{billable\_rate\_dep}              &       0.0724  &        0.012     &     6.243  &         0.000        &        0.050    &        0.095     \\
+\textbf{kbyg33\_no\_limitations}          &       0.0419  &        0.021     &     1.997  &         0.046        &        0.001    &        0.083     \\
+\textbf{material\_cost\_share}            &       0.0043  &        0.021     &     0.209  &         0.834        &       -0.036    &        0.045     \\
+\textbf{kbyg44\_employment\_expectations} &       0.0389  &        0.012     &     3.190  &         0.001        &        0.015    &        0.063     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 526.146 & \textbf{  Durbin-Watson:     } &    1.778  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 7510.190  \\
-\textbf{Skew:}          &   0.119 & \textbf{  Prob(JB):          } &     0.00  \\
-\textbf{Kurtosis:}      &  10.047 & \textbf{  Cond. No.          } &     57.9  \\
+\textbf{Omnibus:}       & 431.421 & \textbf{  Durbin-Watson:     } &    1.872  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 4414.581  \\
+\textbf{Skew:}          &   0.031 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &   8.391 & \textbf{  Cond. No.          } &     67.1  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}

@@ -263,13 +263,14 @@ for col in ['revenue', 'costs', 'contribution']:
     for i in range(1, 6):
         dfData[f'{col}_lag{i}'] = dfData[f'{col}_lag{i}'].fillna(0)
 
+# Order by date
+dfData.sort_values('date', inplace=True)
 # Calculate total costs at the end of the job
 dfData['total_costs'] = dfData.groupby('job_no')['costs_cumsum'].transform('last')
 dfData['total_contribution'] = dfData.groupby('job_no')['contribution_cumsum'].transform('last')
 dfData['total_margin'] = dfData['total_contribution'] / dfData['total_costs']
 
 # Calculate share of labor cost, material cost and other cost cumsum
-
 dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].fillna(0) / dfData['costs_cumsum']).replace(
     [np.inf, -np.inf], 0)
 dfData['material_cost_share'] = (
@@ -279,7 +280,6 @@ dfData['material_cost_share'] = (
 # Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
 dfData.drop(columns=['costs_of_labor_cumsum', 'costs_of_materials_cumsum', 'other_costs_cumsum'], inplace=True)
 
-
 # Function to set to NA if NaN, inf or -inf
 def set_na(x):
     if np.isnan(x) or np.isinf(x) or x == -np.inf:
@@ -287,10 +287,9 @@ def set_na(x):
     else:
         return x
 
-
 # Set total_margin, contribution_margin and progress to NA if NaN, inf or -inf
 dfData['total_margin'] = dfData['total_margin'].apply(set_na)
-dfData['contribution_margin'] = dfData['contribution_margin'].apply(set_na)
+# dfData['contribution_margin'] = dfData['contribution_margin'].apply(set_na)
 dfData['progress'] = dfData['progress'].apply(set_na)
 
 ### Encode categorical variables ###
@@ -310,6 +309,10 @@ dfDesc = dfData.sort_values('date').groupby('job_no').last().reset_index()
 # Replace ø with oe, æ with ae and å with aa
 dfDesc = dfDesc[['job_no', 'description']]
 dfDesc = dfDesc[dfDesc['description'] != ""]
+
+# Save dfDesc to ./.AUX/dfDesc.parquet
+dfDesc.to_parquet('./.AUX/dfDesc.parquet')
+
 
 # Step 2: Preprocess text
 stemmer = DanishStemmer()
@@ -558,3 +561,33 @@ pq.write_table(pa.table(dfData), "dfData_org.parquet")
 engine.dispose()
 
 plt.close('all')
+
+
+########################################################################################################################
+
+# Import dfDesc from .AUX/dfDesc.parquet
+dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
+
+lJob = ['S218705', 'S100762', 'S289834', 'S102941']
+
+# Create a subplot for each job_no in lJob
+fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
+# Loop through each job_no in lJob
+for i, sJobNo in enumerate(lJob):
+    # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['total_contribution'], label='total contribution')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['contribution'], label='contribution', linestyle='dashed')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['revenue'], label='revenue',  linestyle='dashed')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['contribution_cumsum'], label='cumulative contribution')
+    ax[i].axhline(y=0, color='black', linestyle='-')
+    ax[i].set_xlabel('Date')
+    ax[i].set_ylabel('Contribution')
+    ax[i].set_title(f'Total Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
+    ax[i].legend(loc='upper center', bbox_to_anchor
+    =(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+plt.show()
+
+
+
