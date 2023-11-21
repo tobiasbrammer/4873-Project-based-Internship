@@ -596,6 +596,23 @@ smape_rf_et = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0)
 dfRMSE.loc['Ensemble of Ensembles', 'RMSE'] = rmse_rf_et
 dfRMSE.loc['Ensemble of Ensembles', 'sMAPE'] = smape_rf_et
 
+## Average of rf, et, gb and xgb
+dfDataPred['predicted_avg_ml'] = (dfDataPred['predicted_rf_sparse'] + dfDataPred['predicted_et'] + dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 4
+dfData['predicted_avg_ml'] = (dfData['predicted_rf_sparse'] + dfDataPred['predicted_et'] + dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 4
+
+plot_predicted(dfData, 'predicted_avg_ml', 'Average of Ensembles', '4_8_ml_avg', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
+# Calculate RMSE of GB_FC
+rmse_avg = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                          dfDataPred[dfData[trainMethod] == 0]['predicted_avg_ml'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_avg = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfDataPred[dfData[trainMethod] == 0]['predicted_avg_ml'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['Average of ML', 'RMSE'] = rmse_avg
+dfRMSE.loc['Average of ML', 'sMAPE'] = smape_avg
+
 
 # Save dfDataPred to ./dfDataPred.parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
@@ -617,3 +634,45 @@ dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
 
 plt.close('all')
+
+########################################################################################################################
+
+dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
+dfData_org = pd.read_parquet('./dfData_org.parquet')
+
+lJob = ['S218705', 'S100762', 'S289834', 'S102941']
+
+plt.close('all')
+
+# Create a subplot for each job_no in lJob
+fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
+# Loop through each job_no in lJob
+for i, sJobNo in enumerate(lJob):
+    # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_rf_et'],
+               label='predicted (ensemble)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_avg_ml'],
+               label='predicted (ml)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_en'],
+               label='predicted (elastic net)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_boost'],
+               label='predicted (boost)', linestyle='dashed')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
+               label='cumulative contribution')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
+               label='slutvurdering')
+    ax[i].axhline(y=0, color='black', linestyle='-')
+    ax[i].set_xlabel('Date')
+    ax[i].set_ylabel('Contribution')
+    ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
+    ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/Jobs/ols.png")
+# Save figure
