@@ -510,6 +510,7 @@ plt.close('all')
 ########################################################################################################################
 
 dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
+dfData_org = pd.read_parquet('./dfData_org.parquet')
 
 lJob = ['S218705', 'S100762', 'S289834', 'S102941']
 
@@ -521,28 +522,28 @@ fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
 for i, sJobNo in enumerate(lJob):
     # Plot total contribution, contribution, revenue and cumulative contribution
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               y_scaler.inverse_transform(dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_dst'].values.reshape(-1, 1)),
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_dst'],
                label='predicted (dst)', linestyle='dashed')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               y_scaler.inverse_transform(
-                   dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_scurve'].values.reshape(-1, 1)),
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_scurve'],
                label='predicted (s-curve)', linestyle='dashed')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               y_scaler.inverse_transform(
-                   dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_fc_cluster_dst'].values.reshape(-1, 1)),
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_ols'],
+               label='predicted (ols)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_fc_cluster_dst'],
                label='predicted (cluster)', linestyle='dashed')
     ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               y_scaler.inverse_transform(dfData[dfData['job_no'] == sJobNo]['contribution_cumsum'].values.reshape(-1, 1)),
+               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
                label='cumulative contribution')
     ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               y_scaler.inverse_transform(dfData[dfData['job_no'] == sJobNo]['final_estimate_contribution'].values.reshape(-1, 1)),
+               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
                label='slutvurdering')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
     ax[i].set_ylabel('Contribution')
     ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
-    ax[i].legend(loc='upper center', bbox_to_anchor
-    =(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+    ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/Jobs/ols.png")

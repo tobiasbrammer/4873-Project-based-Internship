@@ -205,5 +205,3 @@ with open('Results/Tables/2_eda_1.tex', 'w', encoding='utf-8') as f:
 upload(eda_1, 'Project-based Internship', 'tables/2_eda_1.tex')
 
 plt.close('all')
-
-## Upgrade all packages

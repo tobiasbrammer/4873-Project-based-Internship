@@ -565,29 +565,6 @@ plt.close('all')
 
 ########################################################################################################################
 
-# Import dfDesc from .AUX/dfDesc.parquet
-dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
-
-lJob = ['S218705', 'S100762', 'S289834', 'S102941']
-
-# Create a subplot for each job_no in lJob
-fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
-# Loop through each job_no in lJob
-for i, sJobNo in enumerate(lJob):
-    # Plot total contribution, contribution, revenue and cumulative contribution
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['total_contribution'], label='total contribution')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['contribution'], label='contribution', linestyle='dashed')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['revenue'], label='revenue',  linestyle='dashed')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'], dfData[dfData['job_no'] == sJobNo]['contribution_cumsum'], label='cumulative contribution')
-    ax[i].axhline(y=0, color='black', linestyle='-')
-    ax[i].set_xlabel('Date')
-    ax[i].set_ylabel('Contribution')
-    ax[i].set_title(f'Total Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
-    ax[i].legend(loc='upper center', bbox_to_anchor
-    =(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
-    plt.rcParams['axes.axisbelow'] = True
-plt.show()
 
 
 
