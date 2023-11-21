@@ -40,7 +40,7 @@ print(f"Dependent variable: {sDepVar}")
 print('Preparing to run sequence of scripts...')
 # Run 0_GetData.py
 print("Running 0_GetData.py...")
-subprocess.run(["python", "./Scripts/0_GetData.py"])
+# subprocess.run(["python", "./Scripts/0_GetData.py"])
 
 # Run 1_EDA.py
 print("Running 1_EDA.py...")
@@ -56,11 +56,11 @@ subprocess.run(["python", "./Scripts/3_PLS.py"])
 
 # Run 4_ML.py
 print("Running 4_ML.py...")
-# subprocess.run(["python", "./Scripts/4_ML.py"])
+subprocess.run(["python", "./Scripts/4_ML.py"])
 
 # Run 5_DL.py
 print("Running 5_DL.py...")
-# subprocess.run(["python", "./Scripts/5_DL.py"])
+subprocess.run(["python", "./Scripts/5_DL.py"])
 
 # Total runtime
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')

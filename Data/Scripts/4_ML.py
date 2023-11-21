@@ -247,8 +247,7 @@ dfRMSE.loc['Random Forest (Full)', 'sMAPE'] = smape_rf_full
 dfDataPred['predicted_rf_full'] = dfData['predicted_rf_full']
 
 # Predict WIP
-dfDataWIP['predicted_rf_full'] = rf_cv.predict(
-    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
+dfDataWIP['predicted_rf_full'] = rf_cv.predict(dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
 dfDataWIP['predicted_rf_full'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_full'].values.reshape(-1, 1))
 
 # Variable importance

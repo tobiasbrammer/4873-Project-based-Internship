@@ -109,7 +109,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 def model_builder(hp):
     model = Sequential()
     # First LSTM layer
-    model.add(LSTM(units=hp.Choice('input_unit_init', values=[2 ** n for n in range(6, 11)]),
+    model.add(LSTM(units=hp.Choice('input_unit_init', values=[2 ** n for n in range(3, 11)]),
                    return_sequences=True,
                    input_shape=(
                        dfDataScaledTrain[lNumericCols][
@@ -124,12 +124,12 @@ def model_builder(hp):
         if l == hp.Int('additional_layers', 1, 4) - 1:
             # Last LSTM layer
             model.add(
-                LSTM(units=hp.Choice(f'input_unit_{l + 1}', values=[2 ** n for n in range(1, 10)]),
+                LSTM(units=hp.Choice(f'input_unit_{l + 1}', values=[2 ** n for n in range(2, 9)]),
                      return_sequences=False))
         else:
             # Not the last LSTM layer
             model.add(
-                LSTM(units=hp.Choice(f'input_unit_{l + 1}', values=[2 ** n for n in range(1, 10)]),
+                LSTM(units=hp.Choice(f'input_unit_{l + 1}', values=[2 ** n for n in range(2, 9)]),
                      return_sequences=True))
         # Add dropout
         model.add(Dropout(hp.Float(f'dropout_{l + 1}', min_value=0.0, max_value=0.5, step=0.01)))
@@ -358,9 +358,9 @@ dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
 # Calculate covariance matrix of the forecast errors. The forecast errors are the difference between the actual and
 # predicted values of sDepVar.
 dfDataPredError = pd.DataFrame()
-for col in dfDataPred.columns:
-    if col not in ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution',
-                   trainMethod]:
+for col in ['predicted_en', 'predicted_gb', 'predicted_lag', 'predicted_lag_budget',
+            'predicted_lstm', 'predicted_ols', 'predicted_rf_full', 'predicted_rf_sparse',
+            'predicted_et', 'predicted_xgb']:
         dfDataPredError[f'{col}'] = pd.DataFrame(dfDataPred[col] - dfDataPred[sDepVar]).mean(axis=0)
 
 # Calculate the weights as dfDataPredError.transpose() / sum(dfDataPredError.transpose())

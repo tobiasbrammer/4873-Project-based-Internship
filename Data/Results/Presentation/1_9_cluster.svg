@@ -6,15 +6,11 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-<<<<<<< Updated upstream
-    <dc:date>2023-11-21T15:41:15.974069</dc:date>
-=======
-    <dc:date>2023-11-20T21:46:04.858577</dc:date>
->>>>>>> Stashed changes
+    <dc:date>2023-11-21T17:21:32.100758</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
-      <dc:title>Matplotlib v3.6.3, https://matplotlib.org/</dc:title>
+      <dc:title>Matplotlib v3.8.0, https://matplotlib.org/</dc:title>
      </cc:Agent>
     </dc:creator>
    </cc:Work>
@@ -416,11 +412,7 @@ z
      <g id="line2d_1">
       <path d="M 64.765252 313.474739 
 L 712.8 313.474739 
-<<<<<<< Updated upstream
-" clip-path="url(#p5fb375e11a)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-" clip-path="url(#p9c38a1ff84)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p90b80eae17)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_4">
       <!-- $\mathdefault{0}$ -->
@@ -431,15 +423,9 @@ L 712.8 313.474739
     </g>
     <g id="ytick_2">
      <g id="line2d_2">
-<<<<<<< Updated upstream
       <path d="M 64.765252 248.616218 
 L 712.8 248.616218 
-" clip-path="url(#p5fb375e11a)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 64.765252 247.998654 
-L 712.8 247.998654 
-" clip-path="url(#p9c38a1ff84)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p90b80eae17)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_5">
       <!-- $\mathdefault{1000}$ -->
@@ -453,15 +439,9 @@ L 712.8 247.998654
     </g>
     <g id="ytick_3">
      <g id="line2d_3">
-<<<<<<< Updated upstream
       <path d="M 64.765252 183.757696 
 L 712.8 183.757696 
-" clip-path="url(#p5fb375e11a)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 64.765252 182.52257 
-L 712.8 182.52257 
-" clip-path="url(#p9c38a1ff84)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p90b80eae17)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_6">
       <!-- $\mathdefault{2000}$ -->
@@ -475,15 +455,9 @@ L 712.8 182.52257
     </g>
     <g id="ytick_4">
      <g id="line2d_4">
-<<<<<<< Updated upstream
       <path d="M 64.765252 118.899175 
 L 712.8 118.899175 
-" clip-path="url(#p5fb375e11a)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 64.765252 117.046485 
-L 712.8 117.046485 
-" clip-path="url(#p9c38a1ff84)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p90b80eae17)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_7">
       <!-- $\mathdefault{3000}$ -->
@@ -527,15 +501,9 @@ z
     </g>
     <g id="ytick_5">
      <g id="line2d_5">
-<<<<<<< Updated upstream
       <path d="M 64.765252 54.040653 
 L 712.8 54.040653 
-" clip-path="url(#p5fb375e11a)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 64.765252 51.5704 
-L 712.8 51.5704 
-" clip-path="url(#p9c38a1ff84)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p90b80eae17)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_8">
       <!-- $\mathdefault{4000}$ -->
@@ -757,11 +725,7 @@ L 356.380889 313.474739
 L 356.380889 17.78474 
 L 97.166989 17.78474 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p5fb375e11a)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p9c38a1ff84)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p90b80eae17)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_4">
     <path d="M 421.184363 313.474739 
@@ -769,11 +733,7 @@ L 680.398263 313.474739
 L 680.398263 312.56672 
 L 421.184363 312.56672 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p5fb375e11a)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p9c38a1ff84)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p90b80eae17)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_5">
     <path d="M 64.765252 313.474739 
@@ -857,11 +817,7 @@ z
      <g id="line2d_6">
       <path d="M 788.965012 313.474739 
 L 1436.99976 313.474739 
-<<<<<<< Updated upstream
-" clip-path="url(#pda263739ca)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-" clip-path="url(#pc197925b8c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_14">
       <!-- $\mathdefault{0}$ -->
@@ -872,15 +828,9 @@ L 1436.99976 313.474739
     </g>
     <g id="ytick_7">
      <g id="line2d_7">
-<<<<<<< Updated upstream
       <path d="M 788.965012 248.616218 
 L 1436.99976 248.616218 
-" clip-path="url(#pda263739ca)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 788.965012 243.835079 
-L 1436.99976 243.835079 
-" clip-path="url(#pc197925b8c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_15">
       <!-- $\mathdefault{1000}$ -->
@@ -894,15 +844,9 @@ L 1436.99976 243.835079
     </g>
     <g id="ytick_8">
      <g id="line2d_8">
-<<<<<<< Updated upstream
       <path d="M 788.965012 183.757696 
 L 1436.99976 183.757696 
-" clip-path="url(#pda263739ca)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 788.965012 174.195418 
-L 1436.99976 174.195418 
-" clip-path="url(#pc197925b8c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_16">
       <!-- $\mathdefault{2000}$ -->
@@ -916,15 +860,9 @@ L 1436.99976 174.195418
     </g>
     <g id="ytick_9">
      <g id="line2d_9">
-<<<<<<< Updated upstream
       <path d="M 788.965012 118.899175 
 L 1436.99976 118.899175 
-" clip-path="url(#pda263739ca)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 788.965012 104.555757 
-L 1436.99976 104.555757 
-" clip-path="url(#pc197925b8c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_17">
       <!-- $\mathdefault{3000}$ -->
@@ -938,15 +876,9 @@ L 1436.99976 104.555757
     </g>
     <g id="ytick_10">
      <g id="line2d_10">
-<<<<<<< Updated upstream
       <path d="M 788.965012 54.040653 
 L 1436.99976 54.040653 
-" clip-path="url(#pda263739ca)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 788.965012 34.916096 
-L 1436.99976 34.916096 
-" clip-path="url(#pc197925b8c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_18">
       <!-- $\mathdefault{4000}$ -->
@@ -990,11 +922,7 @@ L 983.375436 313.474739
 L 983.375436 17.78474 
 L 810.56617 17.78474 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#pda263739ca)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#pc197925b8c)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_9">
     <path d="M 1026.577753 313.474739 
@@ -1002,11 +930,7 @@ L 1199.387019 313.474739
 L 1199.387019 312.955871 
 L 1026.577753 312.955871 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#pda263739ca)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#pc197925b8c)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_10">
     <path d="M 1242.589336 313.474739 
@@ -1014,11 +938,7 @@ L 1415.398602 313.474739
 L 1415.398602 313.085588 
 L 1242.589336 313.085588 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#pda263739ca)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#pc197925b8c)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p2771ae127e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_11">
     <path d="M 788.965012 313.474739 
@@ -1110,11 +1030,7 @@ z
      <g id="line2d_11">
       <path d="M 64.765252 674.074499 
 L 712.8 674.074499 
-<<<<<<< Updated upstream
-" clip-path="url(#p8d347a275f)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-" clip-path="url(#p77eb457a4c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p6b9c9df95e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_25">
       <!-- $\mathdefault{0}$ -->
@@ -1125,19 +1041,13 @@ L 712.8 674.074499
     </g>
     <g id="ytick_12">
      <g id="line2d_12">
-<<<<<<< Updated upstream
-      <path d="M 64.765252 588.367253 
-L 712.8 588.367253 
-" clip-path="url(#p8d347a275f)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 64.765252 590.616978 
-L 712.8 590.616978 
-" clip-path="url(#p77eb457a4c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+      <path d="M 64.765252 608.248587 
+L 712.8 608.248587 
+" clip-path="url(#p6b9c9df95e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_26">
       <!-- $\mathdefault{1000}$ -->
-      <g transform="translate(24.71287 595.285751) scale(0.2 -0.2)">
+      <g transform="translate(24.71287 615.167085) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-31" transform="scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
@@ -1147,19 +1057,13 @@ L 712.8 590.616978
     </g>
     <g id="ytick_13">
      <g id="line2d_13">
-<<<<<<< Updated upstream
-      <path d="M 64.765252 502.660007 
-L 712.8 502.660007 
-" clip-path="url(#p8d347a275f)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 64.765252 507.159456 
-L 712.8 507.159456 
-" clip-path="url(#p77eb457a4c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+      <path d="M 64.765252 542.422674 
+L 712.8 542.422674 
+" clip-path="url(#p6b9c9df95e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_27">
       <!-- $\mathdefault{2000}$ -->
-      <g transform="translate(24.71287 509.578505) scale(0.2 -0.2)">
+      <g transform="translate(24.71287 549.341172) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-32" transform="scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
@@ -1169,19 +1073,13 @@ L 712.8 507.159456
     </g>
     <g id="ytick_14">
      <g id="line2d_14">
-<<<<<<< Updated upstream
-      <path d="M 64.765252 416.952761 
-L 712.8 416.952761 
-" clip-path="url(#p8d347a275f)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 64.765252 423.701934 
-L 712.8 423.701934 
-" clip-path="url(#p77eb457a4c)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+      <path d="M 64.765252 476.596762 
+L 712.8 476.596762 
+" clip-path="url(#p6b9c9df95e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_28">
       <!-- $\mathdefault{3000}$ -->
-      <g transform="translate(24.71287 423.871259) scale(0.2 -0.2)">
+      <g transform="translate(24.71287 483.51526) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-33" transform="scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
@@ -1189,7 +1087,23 @@ L 712.8 423.701934
       </g>
      </g>
     </g>
-    <g id="text_29">
+    <g id="ytick_15">
+     <g id="line2d_15">
+      <path d="M 64.765252 410.770849 
+L 712.8 410.770849 
+" clip-path="url(#p6b9c9df95e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
+     </g>
+     <g id="text_29">
+      <!-- $\mathdefault{4000}$ -->
+      <g transform="translate(24.71287 417.689347) scale(0.2 -0.2)">
+       <use xlink:href="#CMR17-34" transform="scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(137.071431 0) scale(0.996264)"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_30">
      <!-- Number of observations -->
      <g style="fill: #696969" transform="translate(16.837237 613.47083) rotate(-90) scale(0.2 -0.2)">
       <use xlink:href="#CMR17-4e" transform="scale(0.996264)"/>
@@ -1218,50 +1132,34 @@ L 712.8 423.701934
    <g id="patch_14">
     <path d="M 80.966121 674.074499 
 L 210.57307 674.074499 
-L 210.57307 579.025163 
-L 80.966121 579.025163 
+L 210.57307 378.3845 
+L 80.966121 378.3845 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p8d347a275f)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p77eb457a4c)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p6b9c9df95e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_15">
     <path d="M 242.974808 674.074499 
 L 372.581757 674.074499 
-L 372.581757 673.388841 
-L 242.974808 673.388841 
+L 372.581757 673.547892 
+L 242.974808 673.547892 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p8d347a275f)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p77eb457a4c)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p6b9c9df95e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_16">
     <path d="M 404.983495 674.074499 
 L 534.590444 674.074499 
-L 534.590444 673.560256 
-L 404.983495 673.560256 
+L 534.590444 673.679544 
+L 404.983495 673.679544 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p8d347a275f)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p77eb457a4c)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p6b9c9df95e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_17">
     <path d="M 566.992182 674.074499 
 L 696.599131 674.074499 
-L 696.599131 378.3845 
-L 566.992182 378.3845 
+L 696.599131 669.664163 
+L 566.992182 669.664163 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p8d347a275f)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p77eb457a4c)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p6b9c9df95e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_18">
     <path d="M 64.765252 674.074499 
@@ -1285,7 +1183,7 @@ z
    </g>
    <g id="matplotlib.axis_7">
     <g id="xtick_10">
-     <g id="text_30">
+     <g id="text_31">
       <!-- 0 -->
       <g transform="translate(849.199439 691.411496) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-30" transform="scale(0.996264)"/>
@@ -1293,7 +1191,7 @@ z
      </g>
     </g>
     <g id="xtick_11">
-     <g id="text_31">
+     <g id="text_32">
       <!-- 1 -->
       <g transform="translate(978.806389 691.411496) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-31" transform="scale(0.996264)"/>
@@ -1301,7 +1199,7 @@ z
      </g>
     </g>
     <g id="xtick_12">
-     <g id="text_32">
+     <g id="text_33">
       <!-- 2 -->
       <g transform="translate(1108.413338 691.411496) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-32" transform="scale(0.996264)"/>
@@ -1309,7 +1207,7 @@ z
      </g>
     </g>
     <g id="xtick_13">
-     <g id="text_33">
+     <g id="text_34">
       <!-- 3 -->
       <g transform="translate(1238.020288 691.411496) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-33" transform="scale(0.996264)"/>
@@ -1317,14 +1215,14 @@ z
      </g>
     </g>
     <g id="xtick_14">
-     <g id="text_34">
+     <g id="text_35">
       <!-- 4 -->
       <g transform="translate(1367.627237 691.411496) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-34" transform="scale(0.996264)"/>
       </g>
      </g>
     </g>
-    <g id="text_35">
+    <g id="text_36">
      <!-- Cluster for 5 cluster solution -->
      <g style="fill: #696969" transform="translate(998.91639 713.124126) scale(0.2 -0.2)">
       <defs>
@@ -1387,61 +1285,29 @@ z
     </g>
    </g>
    <g id="matplotlib.axis_8">
-    <g id="ytick_15">
-     <g id="line2d_15">
+    <g id="ytick_16">
+     <g id="line2d_16">
       <path d="M 788.965012 674.074499 
 L 1436.99976 674.074499 
-<<<<<<< Updated upstream
-" clip-path="url(#p5b01bc867e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-" clip-path="url(#p09df29a7de)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+" clip-path="url(#p0a61962a79)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
-     <g id="text_36">
+     <g id="text_37">
       <!-- $\mathdefault{0}$ -->
       <g transform="translate(776.326917 680.992998) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-30" transform="scale(0.996264)"/>
       </g>
      </g>
     </g>
-    <g id="ytick_16">
-     <g id="line2d_16">
-<<<<<<< Updated upstream
-      <path d="M 788.965012 594.779782 
-L 1436.99976 594.779782 
-" clip-path="url(#p5b01bc867e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 788.965012 591.015511 
-L 1436.99976 591.015511 
-" clip-path="url(#p09df29a7de)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
-     </g>
-     <g id="text_37">
-      <!-- $\mathdefault{1000}$ -->
-      <g transform="translate(748.91263 601.698281) scale(0.2 -0.2)">
-       <use xlink:href="#CMR17-31" transform="scale(0.996264)"/>
-       <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
-       <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
-       <use xlink:href="#CMR17-30" transform="translate(137.071431 0) scale(0.996264)"/>
-      </g>
-     </g>
-    </g>
     <g id="ytick_17">
      <g id="line2d_17">
-<<<<<<< Updated upstream
-      <path d="M 788.965012 515.485065 
-L 1436.99976 515.485065 
-" clip-path="url(#p5b01bc867e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 788.965012 507.956522 
-L 1436.99976 507.956522 
-" clip-path="url(#p09df29a7de)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+      <path d="M 788.965012 606.97897 
+L 1436.99976 606.97897 
+" clip-path="url(#p0a61962a79)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_38">
-      <!-- $\mathdefault{2000}$ -->
-      <g transform="translate(748.91263 522.403564) scale(0.2 -0.2)">
-       <use xlink:href="#CMR17-32" transform="scale(0.996264)"/>
+      <!-- $\mathdefault{1000}$ -->
+      <g transform="translate(748.91263 613.897468) scale(0.2 -0.2)">
+       <use xlink:href="#CMR17-31" transform="scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(137.071431 0) scale(0.996264)"/>
@@ -1450,19 +1316,29 @@ L 1436.99976 507.956522
     </g>
     <g id="ytick_18">
      <g id="line2d_18">
-<<<<<<< Updated upstream
-      <path d="M 788.965012 436.190349 
-L 1436.99976 436.190349 
-" clip-path="url(#p5b01bc867e)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
-=======
-      <path d="M 788.965012 424.897534 
-L 1436.99976 424.897534 
-" clip-path="url(#p09df29a7de)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
->>>>>>> Stashed changes
+      <path d="M 788.965012 539.88344 
+L 1436.99976 539.88344 
+" clip-path="url(#p0a61962a79)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
      </g>
      <g id="text_39">
+      <!-- $\mathdefault{2000}$ -->
+      <g transform="translate(748.91263 546.801938) scale(0.2 -0.2)">
+       <use xlink:href="#CMR17-32" transform="scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(137.071431 0) scale(0.996264)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_19">
+     <g id="line2d_19">
+      <path d="M 788.965012 472.78791 
+L 1436.99976 472.78791 
+" clip-path="url(#p0a61962a79)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
+     </g>
+     <g id="text_40">
       <!-- $\mathdefault{3000}$ -->
-      <g transform="translate(748.91263 443.108847) scale(0.2 -0.2)">
+      <g transform="translate(748.91263 479.706409) scale(0.2 -0.2)">
        <use xlink:href="#CMR17-33" transform="scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
        <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
@@ -1470,7 +1346,23 @@ L 1436.99976 424.897534
       </g>
      </g>
     </g>
-    <g id="text_40">
+    <g id="ytick_20">
+     <g id="line2d_20">
+      <path d="M 788.965012 405.692381 
+L 1436.99976 405.692381 
+" clip-path="url(#p0a61962a79)" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linecap: round"/>
+     </g>
+     <g id="text_41">
+      <!-- $\mathdefault{4000}$ -->
+      <g transform="translate(748.91263 412.610879) scale(0.2 -0.2)">
+       <use xlink:href="#CMR17-34" transform="scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(45.690477 0) scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(91.380954 0) scale(0.996264)"/>
+       <use xlink:href="#CMR17-30" transform="translate(137.071431 0) scale(0.996264)"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_42">
      <!-- Number of observations -->
      <g style="fill: #696969" transform="translate(741.036997 613.47083) rotate(-90) scale(0.2 -0.2)">
       <use xlink:href="#CMR17-4e" transform="scale(0.996264)"/>
@@ -1499,62 +1391,42 @@ L 1436.99976 424.897534
    <g id="patch_21">
     <path d="M 801.925707 674.074499 
 L 905.611267 674.074499 
-L 905.611267 613.57263 
-L 801.925707 613.57263 
+L 905.611267 378.3845 
+L 801.925707 378.3845 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p5b01bc867e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p09df29a7de)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p0a61962a79)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_22">
     <path d="M 931.532657 674.074499 
 L 1035.218216 674.074499 
-L 1035.218216 673.440142 
-L 931.532657 673.440142 
+L 1035.218216 673.537735 
+L 931.532657 673.537735 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p5b01bc867e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p09df29a7de)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p0a61962a79)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_23">
     <path d="M 1061.139606 674.074499 
 L 1164.825166 674.074499 
-L 1164.825166 673.598731 
-L 1061.139606 673.598731 
+L 1164.825166 673.671926 
+L 1061.139606 673.671926 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p5b01bc867e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p09df29a7de)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p0a61962a79)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_24">
     <path d="M 1190.746556 674.074499 
 L 1294.432115 674.074499 
-L 1294.432115 378.3845 
-L 1190.746556 378.3845 
+L 1294.432115 669.579099 
+L 1190.746556 669.579099 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p5b01bc867e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p09df29a7de)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p0a61962a79)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_25">
     <path d="M 1320.353505 674.074499 
 L 1424.039065 674.074499 
-L 1424.039065 668.761753 
-L 1320.353505 668.761753 
+L 1424.039065 668.371379 
+L 1320.353505 668.371379 
 z
-<<<<<<< Updated upstream
-" clip-path="url(#p5b01bc867e)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
-=======
-" clip-path="url(#p09df29a7de)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
->>>>>>> Stashed changes
+" clip-path="url(#p0a61962a79)" style="fill: #0e6059; stroke: #ffffff; stroke-linejoin: miter"/>
    </g>
    <g id="patch_26">
     <path d="M 788.965012 674.074499 
@@ -1569,29 +1441,16 @@ L 1436.99976 674.074499
   </g>
  </g>
  <defs>
-<<<<<<< Updated upstream
-  <clipPath id="p5fb375e11a">
+  <clipPath id="p90b80eae17">
    <rect x="64.765252" y="3.00024" width="648.034748" height="310.474499"/>
   </clipPath>
-  <clipPath id="pda263739ca">
+  <clipPath id="p2771ae127e">
    <rect x="788.965012" y="3.00024" width="648.034748" height="310.474499"/>
   </clipPath>
-  <clipPath id="p8d347a275f">
+  <clipPath id="p6b9c9df95e">
    <rect x="64.765252" y="363.6" width="648.034748" height="310.474499"/>
   </clipPath>
-  <clipPath id="p5b01bc867e">
-=======
-  <clipPath id="p9c38a1ff84">
-   <rect x="64.765252" y="3.00024" width="648.034748" height="310.474499"/>
-  </clipPath>
-  <clipPath id="pc197925b8c">
-   <rect x="788.965012" y="3.00024" width="648.034748" height="310.474499"/>
-  </clipPath>
-  <clipPath id="p77eb457a4c">
-   <rect x="64.765252" y="363.6" width="648.034748" height="310.474499"/>
-  </clipPath>
-  <clipPath id="p09df29a7de">
->>>>>>> Stashed changes
+  <clipPath id="p0a61962a79">
    <rect x="788.965012" y="363.6" width="648.034748" height="310.474499"/>
   </clipPath>
  </defs>

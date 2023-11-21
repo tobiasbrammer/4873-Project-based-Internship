@@ -1,56 +1,42 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-<<<<<<< Updated upstream
 \textbf{Dep. Variable:}                   & total\_contribution & \textbf{  R-squared:         } &     0.172   \\
 \textbf{Model:}                           &         OLS         & \textbf{  Adj. R-squared:    } &     0.170   \\
 \textbf{Method:}                          &    Least Squares    & \textbf{  F-statistic:       } &     77.59   \\
 \textbf{Date:}                            &   Tue, 21 Nov 2023  & \textbf{  Prob (F-statistic):} & 3.72e-145   \\
-\textbf{Time:}                            &       15:41:38      & \textbf{  Log-Likelihood:    } &   -7119.3   \\
-\textbf{No. Observations:}                &          3748       & \textbf{  AIC:               } & 1.426e+04   \\
-\textbf{Df Residuals:}                    &          3737       & \textbf{  BIC:               } & 1.433e+04   \\
+\textbf{Time:}                            &       17:23:46      & \textbf{  Log-Likelihood:    } &    2982.0   \\
+\textbf{No. Observations:}                &          3748       & \textbf{  AIC:               } &    -5942.   \\
+\textbf{Df Residuals:}                    &          3737       & \textbf{  BIC:               } &    -5873.   \\
 \textbf{Df Model:}                        &            10       & \textbf{                     } &             \\
 \textbf{Covariance Type:}                 &      nonrobust      & \textbf{                     } &             \\
-=======
-\textbf{Dep. Variable:}                  & total\_contribution & \textbf{  R-squared:         } &     0.212   \\
-\textbf{Model:}                          &         OLS         & \textbf{  Adj. R-squared:    } &     0.209   \\
-\textbf{Method:}                         &    Least Squares    & \textbf{  F-statistic:       } &     97.01   \\
-\textbf{Date:}                           &   Mon, 20 Nov 2023  & \textbf{  Prob (F-statistic):} & 2.22e-178   \\
-\textbf{Time:}                           &       22:03:55      & \textbf{  Log-Likelihood:    } &    3010.5   \\
-\textbf{No. Observations:}               &          3625       & \textbf{  AIC:               } &    -5999.   \\
-\textbf{Df Residuals:}                   &          3614       & \textbf{  BIC:               } &    -5931.   \\
-\textbf{Df Model:}                       &            10       & \textbf{                     } &             \\
-\textbf{Covariance Type:}                &      nonrobust      & \textbf{                     } &             \\
->>>>>>> Stashed changes
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
                                           & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{const}                            &      -6.1121  &        0.783     &    -7.802  &         0.000        &       -7.648    &       -4.576     \\
-\textbf{contract\_work}                   &       0.0275  &        0.003     &     8.106  &         0.000        &        0.021    &        0.034     \\
-\textbf{contract\_work\_cumsum}           &       0.0009  &        0.000     &     2.983  &         0.003        &        0.000    &        0.002     \\
-\textbf{tilbuds\_og\_entreprisekontrakt}  &       0.7777  &        0.083     &     9.413  &         0.000        &        0.616    &        0.940     \\
-\textbf{costs\_scurve\_diff}              &       0.0835  &        0.011     &     7.517  &         0.000        &        0.062    &        0.105     \\
-\textbf{billable\_hours\_qty\_cumsum}     &   -1.346e-05  &     5.97e-06     &    -2.256  &         0.024        &    -2.52e-05    &    -1.76e-06     \\
-\textbf{ombygning}                        &       0.6164  &        0.099     &     6.253  &         0.000        &        0.423    &        0.810     \\
-\textbf{billable\_rate\_dep}              &       5.7943  &        0.856     &     6.768  &         0.000        &        4.116    &        7.473     \\
-\textbf{kbyg33\_no\_limitations}          &       1.2747  &        0.471     &     2.707  &         0.007        &        0.351    &        2.198     \\
-\textbf{kbyg44\_employment\_expectations} &       1.2332  &        0.376     &     3.277  &         0.001        &        0.495    &        1.971     \\
-\textbf{progress}                         &       0.4351  &        0.102     &     4.266  &         0.000        &        0.235    &        0.635     \\
+\textbf{const}                            &       0.2374  &        0.020     &    11.623  &         0.000        &        0.197    &        0.277     \\
+\textbf{contract\_work}                   &       0.3553  &        0.044     &     8.106  &         0.000        &        0.269    &        0.441     \\
+\textbf{contract\_work\_cumsum}           &       0.1551  &        0.052     &     2.983  &         0.003        &        0.053    &        0.257     \\
+\textbf{tilbuds\_og\_entreprisekontrakt}  &       0.0525  &        0.006     &     9.413  &         0.000        &        0.042    &        0.063     \\
+\textbf{costs\_scurve\_diff}              &       0.1719  &        0.023     &     7.517  &         0.000        &        0.127    &        0.217     \\
+\textbf{billable\_hours\_qty\_cumsum}     &      -0.0440  &        0.020     &    -2.256  &         0.024        &       -0.082    &       -0.006     \\
+\textbf{ombygning}                        &       0.0416  &        0.007     &     6.253  &         0.000        &        0.029    &        0.055     \\
+\textbf{billable\_rate\_dep}              &       0.0905  &        0.013     &     6.768  &         0.000        &        0.064    &        0.117     \\
+\textbf{kbyg33\_no\_limitations}          &       0.0620  &        0.023     &     2.707  &         0.007        &        0.017    &        0.107     \\
+\textbf{kbyg44\_employment\_expectations} &       0.0433  &        0.013     &     3.277  &         0.001        &        0.017    &        0.069     \\
+\textbf{progress}                         &       0.0458  &        0.011     &     4.266  &         0.000        &        0.025    &        0.067     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
 \textbf{Omnibus:}       & 499.578 & \textbf{  Durbin-Watson:     } &    1.952  \\
 \textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 6234.931  \\
 \textbf{Skew:}          &   0.071 & \textbf{  Prob(JB):          } &     0.00  \\
-\textbf{Kurtosis:}      &   9.317 & \textbf{  Cond. No.          } & 2.97e+05  \\
+\textbf{Kurtosis:}      &   9.317 & \textbf{  Cond. No.          } &     62.4  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
 \end{center}
 
 Notes: \newline
- [1] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
- [2] The condition number is large, 2.97e+05. This might indicate that there are \newline
- strong multicollinearity or other numerical problems.
+ [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
