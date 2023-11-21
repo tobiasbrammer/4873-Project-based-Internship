@@ -142,12 +142,12 @@ lCluster = [2, 3, 4, 5]
 for nCluster in lCluster:
     # Create KMeans object
     kmeans = KMeans(n_clusters=nCluster, random_state=607, n_init='auto', max_iter=1000)
-    # Fit the model.
-    kmeans.fit(dfData[['final_estimate_contribution']].replace(np.nan, 0))
+    # Fit the model based on mean sales_estimate_contribution for each job
+    kmeans.fit(dfData[['sales_estimate_contribution']].replace(np.nan, 0))
     # Predict the cluster for each observation
-    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['final_estimate_contribution']].replace(np.nan, 0))
-    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['final_estimate_contribution']].replace(np.nan, 0))
-    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['final_estimate_contribution']].replace(np.nan, 0))
+    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['sales_estimate_contribution']].replace(np.nan, 0))
+    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['sales_estimate_contribution']].replace(np.nan, 0))
+    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['sales_estimate_contribution']].replace(np.nan, 0))
 
 # Plot number of observations in each cluster in a subplot for each number of clusters
 fig, ax = plt.subplots(2, 2, figsize=(20, 10))
@@ -162,11 +162,12 @@ upload(plt, 'Project-based Internship', 'figures/1_9_cluster.png')
 # Add intercept to dfData
 dfData['intercept'] = 1
 dfDataWIP['intercept'] = 1
+dfData_reg['intercept'] = 1
 
 # Save dfData to parquet as dfData_scaled
 dfData.to_parquet('./dfData_reg_scaled.parquet')
 dfDataWIP.to_parquet('./dfData_reg_scaled_wip.parquet')
-dfData.to_parquet('./dfData_reg.parquet')
+dfData_reg.to_parquet('./dfData_reg.parquet')
 
 # Save the scales to .AUX/
 joblib.dump(x_scaler, "./.AUX/x_scaler.save")

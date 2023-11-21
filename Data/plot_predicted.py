@@ -39,10 +39,10 @@ def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformat
     ax.plot(df[df[trainMethod] == 0]['date'],
             df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation).astype(float), label=label)
     ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
+    ax.set_ylabel('Total Contribution (mDKK)')
     ax.set_title('Out of Sample')
     ax.set_aspect('auto')
-    ax.set_ylim([-5, 20.00])
+    ax.set_ylim([-5, 15.00])
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True
@@ -60,7 +60,7 @@ def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformat
     ax.plot(df['date'],
             df.groupby('date')[predicted].transform(transformation).astype(float), label=label)
     ax.set_xlabel('Date')
-    ax.set_ylabel('Total Contribution')
+    ax.set_ylabel('Total Contribution (mDKK)')
     ax.set_title('Full Sample')
     ax.set_aspect('auto')
     ax.set_ylim([-20, 100.00])

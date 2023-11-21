@@ -442,31 +442,6 @@ smape_mse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
 dfRMSE.loc['MSE', 'RMSE'] = rmse_mse
 dfRMSE.loc['MSE', 'sMAPE'] = smape_mse
 
-# Calculate RMSE of final_estimate_contribution
-rmse_final_estimate = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
-                          dfData[dfData[trainMethod] == 0]['final_estimate_contribution'].replace(np.nan, 0)))
-# Calculate sMAPE
-smape_final_estimate = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
-                                dfData[dfData[trainMethod] == 0]['final_estimate_contribution'].replace(np.nan, 0))
-
-# Add to dfRMSE
-dfRMSE.loc['Final Estimate', 'RMSE'] = rmse_final_estimate
-dfRMSE.loc['Final Estimate', 'sMAPE'] = smape_final_estimate
-
-# Calculate RMSE of production_estimate_contribution
-rmse_production_estimate = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
-                            dfData[dfData[trainMethod] == 0]['production_estimate_contribution'].replace(np.nan, 0)))
-# Calculate sMAPE
-smape_production_estimate = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
-                                        dfData[dfData[trainMethod] == 0]['production_estimate_contribution'].replace(np.nan, 0))
-
-# Add to dfRMSE
-dfRMSE.loc['Production Estimate', 'RMSE'] = rmse_production_estimate
-dfRMSE.loc['Production Estimate', 'sMAPE'] = smape_production_estimate
-
-
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
@@ -534,12 +509,7 @@ upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex
 
 plt.close('all')
 
-# Add production_estimate_contribution to dfDataPred
-dfDataPred['production_estimate_contribution'] = dfData['production_estimate_contribution']
-# Add final_estimate_contribution to dfDataPred
-dfDataPred['final_estimate_contribution'] = dfData['final_estimate_contribution']
 
-dfDataPred['risk'] = dfData['risk']
 
 dfRMSE.to_csv("./Results/Tables/5_1_rmse.csv")
 

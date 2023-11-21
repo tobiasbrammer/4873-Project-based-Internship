@@ -10,6 +10,9 @@ from plot_predicted import *
 from smape import *
 from sklearn.metrics import mean_squared_error
 
+pd.options.mode.chained_assignment = None  # default='warn'
+
+
 # Load ./dfData.parquet
 if os.name == 'posix':
     sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
@@ -23,13 +26,11 @@ os.chdir(sDir)
 dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
 dfDataWIP = pd.read_parquet("./dfData_reg_scaled_wip.parquet")
+dfDataOrg = pd.read_parquet("./dfData_org.parquet")
 
 # Import scales
 x_scaler = joblib.load("./.AUX/x_scaler.save")
 y_scaler = joblib.load("./.AUX/y_scaler.save")
-
-
-
 
 # Import sDepVar from ./.AUX/sDepVar.txt
 with open('./.AUX/sDepVar.txt', 'r') as f:
@@ -119,6 +120,7 @@ upload(ols, 'Project-based Internship', 'tables/3_9_scurve.tex')
 
 # Predict and rescale sDepVar using OLS
 dfData['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predict(dfDataScaled[['intercept'] + lSCurve]).values.reshape(-1, 1))
+
 dfDataPred['predicted_scurve'] = dfData['predicted_scurve']
 
 plot_predicted(dfData, 'predicted_scurve', 'S-curve', '3_9_scurve', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
@@ -197,6 +199,12 @@ dfData['predicted_ols'] = results_ols.predict(dfDataScaled[['intercept'] + lInde
 dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].values.reshape(-1, 1))
 dfDataPred['predicted_ols'] = dfData['predicted_ols']
 
+# Add production_estimate_contribution to dfDataPred
+dfDataPred['production_estimate_contribution'] = dfData['production_estimate_contribution']
+# Add final_estimate_contribution to dfDataPred
+dfDataPred['final_estimate_contribution'] = dfData['final_estimate_contribution']
+dfDataPred['risk'] = dfData['risk']
+
 plot_predicted(dfData, 'predicted_ols', 'OLS', '3_1_ols', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate out-of-sample RMSE of OLS
@@ -215,7 +223,7 @@ dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results_ols.predict(dfDa
 #                              'contribution_lag2', 'revenue_lag2', 'costs_lag2',
 #                              'contribution_lag3', 'revenue_lag3', 'costs_lag3']
 
-lIndepVar_lag = lIndepVar # + ['contribution_lag1', 'revenue_lag1', 'costs_lag1']
+lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1']
 
 # Correlation between sDepVar and lIndepVar_lag
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -347,10 +355,21 @@ rmse_fc = np.sqrt(
 smape_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_fc'])
 
 # Compare RMSE and sMAPE of the different models in a table
+rmse_final = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['final_estimate_contribution'].replace(np.nan, 0)))
+# symmetric Mean Absolute Error (sMAPE)
+smape_final = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['final_estimate_contribution'])
 
-dfRMSE = pd.DataFrame({'RMSE': [rmse_dst, rmse_scurve, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
-                       'sMAPE': [smape_dst, smape_scurve, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
-                      index=['DST', 'S-curve', 'OLS', 'OLS with lagged variables', 'OLS with lags and budget', 'OLS Forecast Combination'])
+rmse_prod = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution'].replace(np.nan, 0)))
+# symmetric Mean Absolute Error (sMAPE)
+smape_prod = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution'])
+
+
+
+dfRMSE = pd.DataFrame({'RMSE': [rmse_final, rmse_prod, rmse_dst, rmse_scurve, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
+                       'sMAPE': [smape_final, smape_prod, smape_dst, smape_scurve, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
+                      index=['Final Estimate', 'Production Estimate', 'DST', 'S-curve', 'OLS', 'OLS with lagged variables', 'OLS with lags and budget', 'OLS Forecast Combination'])
 
 
 # Round to 4 decimals
@@ -524,10 +543,10 @@ for i, sJobNo in enumerate(lJob):
                label='predicted (dst)', linestyle='dashed')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_scurve'],
-               label='predicted (s-curve)', linestyle='dashed')
+               label='predicted (s-curve)', linestyle='dotted')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_ols'],
-               label='predicted (ols)', linestyle='dashed')
+               label='predicted (ols)', linestyle='dashdot')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_fc_cluster_dst'],
                label='predicted (cluster)', linestyle='dashed')

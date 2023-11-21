@@ -175,7 +175,7 @@ dfData['completion_rate'] = (dfData['costs_cumsum'] / dfData['production_estimat
 
 # Calculate scurve basad on \Phi(x;\mu,\nu)=\left[1+\left(\frac{x\cdot(1-\mu)}{\mu\cdot(1-x)}\right)^{-\nu}\right]^{-1}
 # where \mu is 0.5 and \nu is 1.5
-dfData['scurve'] = 1 / (1 + (dfData['progress'] * (1 - 0.5) / (0.5 * (1 - dfData['progress']))) ** (-1.5))
+dfData['scurve'] = 1 / (1 + (dfData['progress'] * (1 - 0.6) / (0.6 * (1 - dfData['progress']))) ** (-2))
 
 dfData['revenue_scurve'] = dfData['scurve'] * dfData['budget_revenue']
 dfData['costs_scurve'] = dfData['scurve'] * dfData['budget_costs']
