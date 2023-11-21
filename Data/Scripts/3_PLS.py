@@ -7,6 +7,7 @@ import statsmodels.api as sm
 import joblib
 from plot_config import *
 from plot_predicted import *
+from smape import *
 from sklearn.metrics import mean_squared_error
 
 # Load ./dfData.parquet
@@ -28,9 +29,6 @@ x_scaler = joblib.load("./.AUX/x_scaler.save")
 y_scaler = joblib.load("./.AUX/y_scaler.save")
 
 
-# Define sMAPE
-def smape(actual, predicted):
-    return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
 
 
 # Import sDepVar from ./.AUX/sDepVar.txt
