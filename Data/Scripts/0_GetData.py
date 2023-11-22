@@ -119,9 +119,9 @@ dfData.loc[dfData['final_estimate_revenue'] == 0, 'final_estimate_revenue'] = df
 dfData.loc[dfData['final_estimate_costs'] == 0, 'final_estimate_costs'] = dfData.loc[
     dfData['final_estimate_costs'] == 0, 'budget_costs']
 
-dfData['sales_estimate_margin'] = (dfData['sales_estimate_revenue'] - dfData['sales_estimate_costs'])/dfData['sales_estimate_revenue']
-dfData['production_estimate_margin'] = (dfData['production_estimate_revenue'] - dfData['production_estimate_costs'])/dfData['production_estimate_revenue']
-dfData['final_estimate_margin'] = (dfData['final_estimate_revenue'] - dfData['final_estimate_costs'])/dfData['final_estimate_revenue']
+dfData['sales_estimate_margin'] = dfData['sales_estimate_contribution']/dfData['sales_estimate_revenue']
+dfData['production_estimate_margin'] = dfData['production_estimate_contribution']/dfData['production_estimate_revenue']
+dfData['final_estimate_margin'] = dfData['final_estimate_contribution']/dfData['final_estimate_revenue']
 
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns

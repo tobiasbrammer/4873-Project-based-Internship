@@ -571,7 +571,7 @@ for job_no in dfDataWIP['job_no'].unique():
 
     dfDataJob['LSTM'] = pd.DataFrame(
         # Ignore index and get the last value of the prediction
-        model.predict(dfDataJob[lNumericCols])[:, -1, 0].reshape(-1, 1),
+        model_fit.predict(dfDataJob[lNumericCols])[:, -1].reshape(-1, 1),
         index=dfDataJob.index
     )
     # Rescale

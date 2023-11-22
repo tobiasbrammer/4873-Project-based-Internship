@@ -1,13 +1,13 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                   & total\_contribution & \textbf{  R-squared:         } &     0.172   \\
-\textbf{Model:}                           &         OLS         & \textbf{  Adj. R-squared:    } &     0.170   \\
-\textbf{Method:}                          &    Least Squares    & \textbf{  F-statistic:       } &     77.59   \\
-\textbf{Date:}                            &   Tue, 21 Nov 2023  & \textbf{  Prob (F-statistic):} & 3.72e-145   \\
-\textbf{Time:}                            &       17:56:12      & \textbf{  Log-Likelihood:    } &    2982.0   \\
-\textbf{No. Observations:}                &          3748       & \textbf{  AIC:               } &    -5942.   \\
-\textbf{Df Residuals:}                    &          3737       & \textbf{  BIC:               } &    -5873.   \\
+\textbf{Dep. Variable:}                   & total\_contribution & \textbf{  R-squared:         } &     0.183   \\
+\textbf{Model:}                           &         OLS         & \textbf{  Adj. R-squared:    } &     0.181   \\
+\textbf{Method:}                          &    Least Squares    & \textbf{  F-statistic:       } &     82.75   \\
+\textbf{Date:}                            &   Tue, 21 Nov 2023  & \textbf{  Prob (F-statistic):} & 4.14e-154   \\
+\textbf{Time:}                            &       19:27:51      & \textbf{  Log-Likelihood:    } &    2854.4   \\
+\textbf{No. Observations:}                &          3703       & \textbf{  AIC:               } &    -5687.   \\
+\textbf{Df Residuals:}                    &          3692       & \textbf{  BIC:               } &    -5618.   \\
 \textbf{Df Model:}                        &            10       & \textbf{                     } &             \\
 \textbf{Covariance Type:}                 &      nonrobust      & \textbf{                     } &             \\
 \bottomrule
@@ -15,24 +15,24 @@
 \begin{tabular}{lcccccc}
                                           & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{const}                            &       0.2374  &        0.020     &    11.623  &         0.000        &        0.197    &        0.277     \\
-\textbf{contract\_work}                   &       0.3553  &        0.044     &     8.106  &         0.000        &        0.269    &        0.441     \\
-\textbf{contract\_work\_cumsum}           &       0.1551  &        0.052     &     2.983  &         0.003        &        0.053    &        0.257     \\
-\textbf{tilbuds\_og\_entreprisekontrakt}  &       0.0525  &        0.006     &     9.413  &         0.000        &        0.042    &        0.063     \\
-\textbf{costs\_scurve\_diff}              &       0.1719  &        0.023     &     7.517  &         0.000        &        0.127    &        0.217     \\
-\textbf{billable\_hours\_qty\_cumsum}     &      -0.0440  &        0.020     &    -2.256  &         0.024        &       -0.082    &       -0.006     \\
-\textbf{ombygning}                        &       0.0416  &        0.007     &     6.253  &         0.000        &        0.029    &        0.055     \\
-\textbf{billable\_rate\_dep}              &       0.0905  &        0.013     &     6.768  &         0.000        &        0.064    &        0.117     \\
-\textbf{kbyg33\_no\_limitations}          &       0.0620  &        0.023     &     2.707  &         0.007        &        0.017    &        0.107     \\
-\textbf{kbyg44\_employment\_expectations} &       0.0433  &        0.013     &     3.277  &         0.001        &        0.017    &        0.069     \\
-\textbf{progress}                         &       0.0458  &        0.011     &     4.266  &         0.000        &        0.025    &        0.067     \\
+\textbf{const}                            &       0.1812  &        0.029     &     6.339  &         0.000        &        0.125    &        0.237     \\
+\textbf{contract\_work}                   &       0.2701  &        0.045     &     6.051  &         0.000        &        0.183    &        0.358     \\
+\textbf{contract\_work\_cumsum}           &       0.3287  &        0.053     &     6.201  &         0.000        &        0.225    &        0.433     \\
+\textbf{costs\_scurve\_diff}              &       0.2387  &        0.026     &     9.341  &         0.000        &        0.189    &        0.289     \\
+\textbf{tilbuds\_og\_entreprisekontrakt}  &       0.0389  &        0.006     &     6.947  &         0.000        &        0.028    &        0.050     \\
+\textbf{billable\_hours\_qty\_cumsum}     &      -0.0418  &        0.019     &    -2.177  &         0.030        &       -0.079    &       -0.004     \\
+\textbf{ombygning}                        &       0.0400  &        0.007     &     5.669  &         0.000        &        0.026    &        0.054     \\
+\textbf{kbyg33\_no\_limitations}          &       0.1075  &        0.024     &     4.513  &         0.000        &        0.061    &        0.154     \\
+\textbf{billable\_rate\_dep}              &       0.0717  &        0.013     &     5.434  &         0.000        &        0.046    &        0.098     \\
+\textbf{kbyg44\_employment\_expectations} &       0.0374  &        0.014     &     2.712  &         0.007        &        0.010    &        0.064     \\
+\textbf{material\_cost\_share}            &       0.0341  &        0.024     &     1.440  &         0.150        &       -0.012    &        0.081     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 499.578 & \textbf{  Durbin-Watson:     } &    1.952  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 6234.931  \\
-\textbf{Skew:}          &   0.071 & \textbf{  Prob(JB):          } &     0.00  \\
-\textbf{Kurtosis:}      &   9.317 & \textbf{  Cond. No.          } &     62.4  \\
+\textbf{Omnibus:}       & 464.340 & \textbf{  Durbin-Watson:     } &    1.868  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 5147.965  \\
+\textbf{Skew:}          &  -0.081 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &   8.774 & \textbf{  Cond. No.          } &     68.1  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}

@@ -12,7 +12,6 @@ from sklearn.metrics import mean_squared_error
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-
 # Load ./dfData.parquet
 if os.name == 'posix':
     sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
@@ -552,6 +551,7 @@ upload(plt, 'Project-based Internship', 'figures/FullSample/3_0_budget_fs.png')
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
+dfDataWIP.to_parquet("./dfDataWIP_pred.parquet")
 
 ########################################################################################################################
 

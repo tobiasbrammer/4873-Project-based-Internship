@@ -44,6 +44,9 @@ with open('./.AUX/lNumericCols.txt', 'r') as f:
     lNumericCols = f.read()
 lNumericCols = lNumericCols.split('\n')
 
+# Omit columns that contain 'cluster_'
+lNumericCols = [col for col in lNumericCols if not col.startswith('cluster_')]
+
 # Replace infinite values with NaN
 dfDataScaled.replace([np.inf, -np.inf], np.nan, inplace=True)
 dfData.replace([np.inf, -np.inf], np.nan, inplace=True)

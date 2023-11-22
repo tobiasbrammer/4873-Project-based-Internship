@@ -30,6 +30,14 @@ dfData = pd.read_parquet("dfData.parquet")
 # Replace NA with 0
 dfData = dfData.replace(np.nan, 0)
 
+# sales_estimate_margin, production_estimate_margin and final_estimate_margin
+dfData['sales_estimate_margin'] = dfData['sales_estimate_contribution']/dfData['sales_estimate_revenue']
+dfData['production_estimate_margin'] = dfData['production_estimate_contribution']/dfData['production_estimate_revenue']
+dfData['final_estimate_margin'] = dfData['final_estimate_contribution']/dfData['final_estimate_revenue']
+
+# Replace NA with 0
+dfData = dfData.replace(np.nan, 0)
+
 # Split data into wip and finished jobs. This serves as test and train data.
 dfDataFinished = dfData[dfData['wip'] == 0]
 dfDataWIP = dfData[dfData['wip'] == 1]
@@ -139,27 +147,37 @@ from sklearn.cluster import KMeans
 # Run the process for different numbers of clusters.
 lCluster = [2, 3, 4, 5]
 # Assign cluster to each job
+# Create a dictionary to store the cluster data
+cluster_data = {f'cluster_{nCluster}': [] for nCluster in lCluster}
+
+# Assign cluster to each job
 for nCluster in lCluster:
     # Create KMeans object
     kmeans = KMeans(n_clusters=nCluster, random_state=607, n_init='auto', max_iter=1000)
     # Fit the model based on mean sales_estimate_contribution for each job
     kmeans.fit(dfData[['sales_estimate_margin']].replace(np.nan, 0))
-    # Predict the cluster for each observation
-    dfData[f'cluster_{nCluster}'] = kmeans.predict(dfData[['sales_estimate_margin']].replace(np.nan, 0))
-    dfDataWIP[f'cluster_{nCluster}'] = kmeans.predict(dfDataWIP[['sales_estimate_margin']].replace(np.nan, 0))
-    dfData_reg[f'cluster_{nCluster}'] = kmeans.predict(dfData_reg[['sales_estimate_margin']].replace(np.nan, 0))
+    # Predict the cluster for each observation and store it in the dictionary
+    cluster_data[f'cluster_{nCluster}'] = kmeans.predict(dfData[['sales_estimate_margin']].replace(np.nan, 0))
+
+# Create a DataFrame for the cluster data
+df_cluster = pd.DataFrame(cluster_data, index=dfData.index)
+
+# Concatenate the original DataFrame with the cluster DataFrame
+dfData = pd.concat([dfData, df_cluster], axis=1)
+dfData_reg = pd.concat([dfData_reg, df_cluster], axis=1)
+dfDataWIP = pd.concat([dfDataWIP, df_cluster], axis=1)
 
 # Plot number of observations in each cluster in a subplot for each number of clusters
 fig, ax = plt.subplots(2, 2, figsize=(20, 10))
 for i, nCluster in enumerate(lCluster):
     sns.countplot(x=f'cluster_{nCluster}', data=dfData, ax=ax[i // 2, i % 2])
-    ax[i // 2, i % 2].set_xlabel(f'Cluster for {nCluster} cluster solution')
+    ax[i // 2, i % 2].set_xlabel(f'cluster for {nCluster} cluster solution')
     ax[i // 2, i % 2].set_ylabel('Number of observations')
 plt.savefig("./Results/Figures/1_9_cluster.png")
 plt.savefig("./Results/Presentation/1_9_cluster.svg")
 upload(plt, 'Project-based Internship', 'figures/1_9_cluster.png')
 
-# Add intercept to dfData
+# Add intercept to dfData, dfDataWIP and dfData_reg
 dfData['intercept'] = 1
 dfDataWIP['intercept'] = 1
 dfData_reg['intercept'] = 1
