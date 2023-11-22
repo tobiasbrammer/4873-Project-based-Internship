@@ -195,7 +195,7 @@ axs[0].legend().remove()
 axs[1].legend().remove()
 axs[2].legend().remove()
 axs[3].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-plt.savefig("./Results/Presentation/analysis_scatter.png")
+plt.savefig("./Results/Presentation/analysis_scatter.svg")
 
 
 # Summary of Variables (mean, std, min, max, missing, % missing)
