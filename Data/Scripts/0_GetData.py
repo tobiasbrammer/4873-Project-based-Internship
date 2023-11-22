@@ -120,8 +120,16 @@ dfData.loc[dfData['final_estimate_costs'] == 0, 'final_estimate_costs'] = dfData
     dfData['final_estimate_costs'] == 0, 'budget_costs']
 
 dfData['sales_estimate_margin'] = dfData['sales_estimate_contribution']/dfData['sales_estimate_revenue']
+dfData.loc[dfData['sales_estimate_margin'] > 1, 'sales_estimate_margin'] = 1
+dfData.loc[dfData['sales_estimate_margin'] < -1, 'sales_estimate_margin'] = -1
+
 dfData['production_estimate_margin'] = dfData['production_estimate_contribution']/dfData['production_estimate_revenue']
+dfData.loc[dfData['production_estimate_margin'] > 1, 'production_estimate_margin'] = 1
+dfData.loc[dfData['production_estimate_margin'] < -1, 'production_estimate_margin'] = -1
+
 dfData['final_estimate_margin'] = dfData['final_estimate_contribution']/dfData['final_estimate_revenue']
+dfData.loc[dfData['final_estimate_margin'] > 1, 'final_estimate_margin'] = 1
+dfData.loc[dfData['final_estimate_margin'] < -1, 'final_estimate_margin'] = -1
 
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns
@@ -238,7 +246,7 @@ def calculate_risk(group):
         y = group['contribution_scurve_diff']
         model = LinearRegression().fit(X.fillna(0), y.fillna(0))
         residuals = y - model.predict(X.fillna(0))
-        group['risk'] = residuals * group['production_estimate_costs']
+        group['risk'] = -residuals * group['production_estimate_costs']
     return group
 
 

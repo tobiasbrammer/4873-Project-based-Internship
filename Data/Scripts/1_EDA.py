@@ -160,6 +160,44 @@ plt.savefig("./Results/Presentation/1_5_cost_share.svg")
 upload(plt, 'Project-based Internship', 'figures/1_5_cost_share.png')
 
 
+# Create a figure with 4 subplots (1 column, 4 rows)
+fig, axs = plt.subplots(4, 1, figsize=(20, 20))
+# Plot 1: Risk vs Total Contribution
+sns.scatterplot(ax=axs[0], data=dfData, x='risk', y='total_contribution', hue='department')
+sns.regplot(ax=axs[0], data=dfData[dfData['department'] == '505'], x='risk', y='total_contribution', scatter=False, color=vColors[1])
+sns.regplot(ax=axs[0], data=dfData[dfData['department'] == '515'], x='risk', y='total_contribution', scatter=False, color=vColors[2])
+axs[0].set_xlabel("Risk (mDKK)")
+axs[0].set_ylabel("Total Contribution (mDKK)")
+axs[0].grid(alpha=0.35)
+# Plot 2: Billable Rate vs Total Contribution
+sns.scatterplot(ax=axs[1], data=dfData, x='billable_rate_dep', y='total_contribution', hue='department')
+sns.regplot(ax=axs[1], data=dfData[dfData['department'] == '505'], x='billable_rate_dep', y='total_contribution', scatter=False, color=vColors[1])
+sns.regplot(ax=axs[1], data=dfData[dfData['department'] == '515'], x='billable_rate_dep', y='total_contribution', scatter=False, color=vColors[2])
+axs[1].set_xlabel("Billable Rate")
+axs[1].set_ylabel("Total Contribution (mDKK)")
+axs[1].grid(alpha=0.35)
+# Plot 3: Project Duration vs Total Contribution
+sns.scatterplot(ax=axs[2], data=dfData, x='total_days', y='total_contribution', hue='department')
+sns.regplot(ax=axs[2], data=dfData[dfData['department'] == '505'], x='total_days', y='total_contribution', scatter=False, color=vColors[1])
+sns.regplot(ax=axs[2], data=dfData[dfData['department'] == '515'], x='total_days', y='total_contribution', scatter=False, color=vColors[2])
+axs[2].set_xlabel("Project Duration (days)")
+axs[2].set_ylabel("Total Contribution (mDKK)")
+axs[2].grid(alpha=0.35)
+# Plot 4: Costs S-Curve Difference vs Total Contribution
+sns.scatterplot(ax=axs[3], data=dfData, x='costs_scurve_diff', y='total_contribution', hue='department')
+sns.regplot(ax=axs[3], data=dfData[dfData['department'] == '505'], x='costs_scurve_diff', y='total_contribution', scatter=False, color=vColors[1])
+sns.regplot(ax=axs[3], data=dfData[dfData['department'] == '515'], x='costs_scurve_diff', y='total_contribution', scatter=False, color=vColors[2])
+axs[3].set_xlabel("Costs S-Curve Difference (mDKK)")
+axs[3].set_ylabel("Total Contribution (mDKK)")
+axs[3].grid(alpha=0.35)
+# Legend
+axs[0].legend().remove()
+axs[1].legend().remove()
+axs[2].legend().remove()
+axs[3].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+plt.savefig("./Results/Presentation/analysis_scatter.png")
+
+
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.select_dtypes(exclude=['datetime']).describe().transpose()
 summary_data_date = dfData.select_dtypes(include=['datetime']).describe().transpose()

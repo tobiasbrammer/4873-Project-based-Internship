@@ -416,7 +416,7 @@ gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 # Generate of sequence of numbers based on gb_cv.best_params_ to get more appropriate parameters in the defined range.
 gb_grid_detail = {
     'learning_rate': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('learning_rate')).round(4)),
-    'max_depth': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('max_depth')).astype("int")),
+    'max_depth': gb_grid.get('max_depth'),
     'min_samples_leaf': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('min_samples_leaf')).astype("int")),
     'max_features': gb_grid.get('max_features'),
     'n_estimators': list((np.arange(0.8, 1.2, 0.05)*gb_cv.best_params_.get('n_estimators')).astype("int")),

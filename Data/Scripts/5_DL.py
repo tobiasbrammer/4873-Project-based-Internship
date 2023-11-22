@@ -8,6 +8,7 @@ import joblib
 from plot_config import *
 from plot_predicted import *
 from notify import *
+from smape import *
 from sklearn.metrics import mean_squared_error
 import multiprocessing
 from tensorflow.keras.optimizers.legacy import Adam
@@ -34,10 +35,6 @@ dfDataScaled = pd.read_parquet("./dfData_reg_scaled.parquet")
 dfData = pd.read_parquet("./dfData_reg.parquet")
 dfDataPred = pd.read_parquet("./dfDataPred.parquet")
 dfDataWIP = pd.read_parquet("./dfDataWIP_pred.parquet")
-
-# Define sMAPE
-def smape(actual, predicted):
-    return 100 / len(actual) * np.sum(np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
 
 
 # Import lNumericCols from ./.AUX/lNumericCols.txt
@@ -401,9 +398,9 @@ dfRMSE.loc['Bates and Granger', 'sMAPE'] = smape_bates_granger
 ## MSE-based weights as ω = MSE^(-1) / sum(MSE^(-1))
 # Calculate MSE
 dfDataPredMSE = pd.DataFrame()
-for col in dfDataPred.columns:
-    if col not in ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution',
-                   trainMethod]:
+for col in ['predicted_en', 'predicted_gb', 'predicted_lag', 'predicted_lag_budget',
+            'predicted_lstm', 'predicted_ols', 'predicted_rf_full', 'predicted_rf_sparse',
+            'predicted_et', 'predicted_xgb']:
         dfDataPredMSE[f'{col}'] = pd.DataFrame((dfDataPred[col] - dfDataPred[sDepVar]) ** 2).mean(axis=0)
 
 # Calculate the weights as dfDataPredMSE.transpose() / sum(dfDataPredMSE.transpose())
@@ -411,8 +408,17 @@ dfDataPredWeightsMSE = pd.DataFrame()
 dfDataPredWeightsMSE['weights'] = dfDataPredMSE.transpose() / dfDataPredMSE.sum(axis=1)[0]
 
 # Calculate the weighted average of the predicted values
-dfDataPred['predicted_mse'] = dfDataPred[dfDataPred.columns.difference(
-    ['date', 'job_no', sDepVar, 'production_estimate_contribution', 'final_estimate_contribution', trainMethod])].mul(
+dfDataPred['predicted_mse'] = dfDataPred[['predicted_boost',
+                                        'predicted_en',
+                                        'predicted_gb',
+                                        'predicted_lag',
+                                        'predicted_lag_budget',
+                                        'predicted_lstm',
+                                        'predicted_ols',
+                                        'predicted_rf_full',
+                                        'predicted_rf_sparse',
+                                        'predicted_et',
+                                        'predicted_xgb']].mul(
     dfDataPredWeightsMSE['weights'], axis=1).sum(axis=1)
 
 dfData['predicted_mse'] = dfDataPred['predicted_mse']
@@ -451,13 +457,15 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         label='Predicted (Average)')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_bates_granger'].transform('sum'),
-        label='Predicted (Bates and Granger)')
+        label='Predicted (Bates Granger)')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_mse'].transform('sum'),
         label='Predicted (MSE)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
+ax.set_aspect('auto')
+ax.set_ylim([-5, 15.00])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
@@ -474,19 +482,21 @@ ax.plot(dfData['date'],
         label='Predicted (Average)')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_bates_granger'].transform('sum'),
-        label='Predicted (Bates and Granger)')
+        label='Predicted (Bates Granger)')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_mse'].transform('sum'),
         label='Predicted (MSE)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
+ax.set_aspect('auto')
+ax.set_ylim([-20, 100.00])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.5)
 plt.rcParams['axes.axisbelow'] = True
-plt.savefig("./Results/Figures/5_2_1_avg.png")
-plt.savefig("./Results/Presentation/5_2_1_avg.svg")
-upload(plt, 'Project-based Internship', 'figures/5_2_1_avg.png')
+plt.savefig("./Results/Figures/FullSample/5_2_avg_fs.png")
+plt.savefig("./Results/Presentation/FullSample/5_2_avg_fs.svg")
+upload(plt, 'Project-based Internship', 'figures/5_2_avg_fs.png')
 
 ########################################################################################################################
 
@@ -509,14 +519,56 @@ upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex
 
 plt.close('all')
 
-
-
 dfRMSE.to_csv("./Results/Tables/5_1_rmse.csv")
 
 # Save to .parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
 dfData.to_parquet("./dfData_reg.parquet")
 dfDataWIP.to_parquet("./dfDataWIP_pred.parquet")
+
+
+########################################################################################################################
+
+dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
+dfData_org = pd.read_parquet('./dfData_org.parquet')
+
+lJob = ['S218705', 'S100762', 'S289834', 'S102941']
+
+plt.close('all')
+
+# Create a subplot for each job_no in lJob
+fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
+# Loop through each job_no in lJob
+for i, sJobNo in enumerate(lJob):
+    # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_lstm'],
+               label='predicted (lstm)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_bates_granger'],
+               label='predicted (Bates Granger)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_mse'],
+               label='predicted (MSE)', linestyle='dashed')
+    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_boost'],
+               label='predicted (boost)', linestyle='dashed')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
+               label='cumulative contribution')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
+               label='slutvurdering')
+    ax[i].axhline(y=0, color='black', linestyle='-')
+    ax[i].set_xlabel('Date')
+    ax[i].set_ylabel('Contribution')
+    ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
+    ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=6).get_frame().set_linewidth(0.0)
+    plt.grid(alpha=0.5)
+    plt.rcParams['axes.axisbelow'] = True
+plt.savefig("./Results/Figures/Jobs/dl.png")
+# Save figure
+
 
 ########################################################################################################################
 # if ./Results/Figures/Jobs does not exist, create it
@@ -533,9 +585,8 @@ for job_no in dfDataPred['job_no'].unique():
     for col in dfDataJob.columns:
         if col in [sDepVar,
                    'production_estimate_contribution',
-                   'predicted_lstm',
-                   'final_estimate_contribution',
-                   'risk']:
+                   'predicted_gb',
+                   'final_estimate_contribution']:
             if col == 'production_estimate_contribution':
                 ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
             elif col == 'final_estimate_contribution':
@@ -556,6 +607,7 @@ for job_no in dfDataPred['job_no'].unique():
     plt.close('all')
 
 ########################################################################################################################
+
 
 
 ########################################################################################################################

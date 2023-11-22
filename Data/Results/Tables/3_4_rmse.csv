@@ -9,12 +9,12 @@ OLS with lags and budget,1.1279,65.6686
 OLS Forecast Combination,1.0996,65.4151
 Cluster Combination,1.1811,62.6924
 DST Cluster Combination,1.0898,64.2028
-Elastic Net,1.0743,63.7862
-Random Forest (Full),0.294,23.7858
-Random Forest (Sparse),1.3007,60.5619
-Extra Trees,0.5234,34.9815
-Gradient Boosting,0.2143,18.3962
-XGBoost,0.3947,21.6226
-Combined Boosting,0.2544,18.5262
-Ensemble of Ensembles,0.3809,24.2717
-Average of ML,0.5039,34.369
+Elastic Net,1.0746,63.7948
+Random Forest (Full),0.3142,23.1552
+Random Forest (Sparse),1.2981,60.7461
+Extra Trees,0.3514,23.8806
+Gradient Boosting,0.2418,20.7977
+XGBoost,0.532,23.589
+Combined Boosting,0.3373,20.6084
+Ensemble of Ensembles,0.3268,22.294
+Average of ML,0.4762,31.2696
