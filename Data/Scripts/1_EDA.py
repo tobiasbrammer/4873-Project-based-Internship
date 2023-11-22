@@ -161,7 +161,7 @@ upload(plt, 'Project-based Internship', 'figures/1_5_cost_share.png')
 
 
 # Create a figure with 4 subplots (1 column, 4 rows)
-fig, axs = plt.subplots(4, 1, figsize=(35, 20))
+fig, axs = plt.subplots(4, 1, figsize=(30, 20))
 # Plot 1: Risk vs Total Contribution
 sns.scatterplot(ax=axs[0], data=dfData, x='risk', y='total_contribution', hue='department')
 sns.regplot(ax=axs[0], data=dfData[dfData['department'] == '505'], x='risk', y='total_contribution', scatter=False, color=vColors[1])
