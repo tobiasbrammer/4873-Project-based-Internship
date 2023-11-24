@@ -67,9 +67,9 @@ print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 notify(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
 
-# # Play sound when finished
-# if os.name == 'posix':
-#     os.system('say "Finished."')
+# Play sound when finished
+ if os.name == 'posix':
+     os.system('say "Halløj."')
 # # If operating system is Windows then
 # elif os.name == 'nt':
 #     import winsound
