@@ -721,7 +721,6 @@ for i, sJobNo in enumerate(lJob):
     plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/Jobs/dl.png")
 
-notify('Finished DL')
 
 ########################################################################################################################
 # if ./Results/Figures/Jobs does not exist, create it
@@ -781,7 +780,7 @@ for job_no in dfDataWIP['job_no'].unique():
     # Plot the cumsum of actual and predicted contribution of sJobNo
     fig, ax = plt.subplots(figsize=(20, 10))
     for col in ['production_estimate_contribution',
-                'predicted_boosting',
+                'predicted_boost',
                 'predicted_lstm',
                 'final_estimate_contribution',
                 'contribution_cumsum']:
