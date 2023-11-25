@@ -263,6 +263,16 @@ tuner_64.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
                 workers=multiprocessing.cpu_count(),
                 verbose=1)
 
+tuner_128.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                batch_size=128,
+                validation_split=0.10,
+                callbacks=[early_stop],
+                use_multiprocessing=True,
+                workers=multiprocessing.cpu_count(),
+                verbose=1)
+
+
 # Get the optimal hyperparameters
 best_hps_2 = tuner_2.get_best_hyperparameters()[0]
 best_hps_4 = tuner_4.get_best_hyperparameters()[0]
@@ -270,6 +280,7 @@ best_hps_8 = tuner_8.get_best_hyperparameters()[0]
 best_hps_16 = tuner_16.get_best_hyperparameters()[0]
 best_hps_32 = tuner_32.get_best_hyperparameters()[0]
 best_hps_64 = tuner_64.get_best_hyperparameters()[0]
+best_hps_128 = tuner_128.get_best_hyperparameters()[0]
 
 # Fit using models
 model_fit_2 = tuner_2.hypermodel.build(best_hps_4)
@@ -278,6 +289,7 @@ model_fit_8 = tuner_8.hypermodel.build(best_hps_8)
 model_fit_16 = tuner_16.hypermodel.build(best_hps_16)
 model_fit_32 = tuner_32.hypermodel.build(best_hps_32)
 model_fit_64 = tuner_64.hypermodel.build(best_hps_64)
+model_fit_128 = tuner_128.hypermodel.build(best_hps_128)
 
 # Fit model
 model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
@@ -334,6 +346,15 @@ model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
                  workers=multiprocessing.cpu_count(),
                  verbose=1)
 
+model_fit_128.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+                    dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                    epochs=100,
+                    batch_size=128,
+                    validation_split=0.1,
+                    use_multiprocessing=True,
+                    workers=multiprocessing.cpu_count(),
+                    verbose=1)
+
 # Get val_loss of best model
 val_loss_2 = tuner_2.oracle.get_best_trials()[0].score
 val_loss_4 = tuner_4.oracle.get_best_trials()[0].score
@@ -341,11 +362,12 @@ val_loss_8 = tuner_8.oracle.get_best_trials()[0].score
 val_loss_16 = tuner_16.oracle.get_best_trials()[0].score
 val_loss_32 = tuner_32.oracle.get_best_trials()[0].score
 val_loss_64 = tuner_64.oracle.get_best_trials()[0].score
+val_loss_128 = tuner_128.oracle.get_best_trials()[0].score
 
 # Find the best model and set best_hps
 # Make a dataframe of the val_loss of the best models
-df_val_loss = pd.DataFrame({'batch_size': [2, 4, 8, 16, 32, 64],
-                            'val_loss': [val_loss_2, val_loss_4, val_loss_8, val_loss_16, val_loss_32, val_loss_64]})
+df_val_loss = pd.DataFrame({'batch_size': [2, 4, 8, 16, 32, 64, 128],
+                            'val_loss': [val_loss_2, val_loss_4, val_loss_8, val_loss_16, val_loss_32, val_loss_64, val_loss_128]})
 # Find the batch size with the lowest val_loss
 best_batch_size = df_val_loss[df_val_loss['val_loss'] == df_val_loss['val_loss'].min()]['batch_size'].values[0]
 # Set best_hps: best_hps = tuner_{best_batch_size}.get_best_hyperparameters()[0]
@@ -363,7 +385,9 @@ ax.plot(model_fit_32.history.history['val_loss'], label='32 batch size',
         linestyle='solid' if best_batch_size == 32 else 'dashed')
 ax.plot(model_fit_64.history.history['val_loss'], label='64 batch size',
         linestyle='solid' if best_batch_size == 64 else 'dashed')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+ax.plot(model_fit_128.history.history['val_loss'], label='128 batch size',
+        linestyle='solid' if best_batch_size == 128 else 'dashed')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=6).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 ax.set_xlim(0, len(model_fit_4.history.history['val_loss']))
@@ -403,8 +427,9 @@ model_fit.summary()
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(model_fit.history.history['loss'], label='Train')
-ax.plot(model_fit.history.history['val_loss'], label='Validation')
+# omit first 10 epochs
+ax.plot(model_fit.history.history['loss'][10:], label='Training')
+ax.plot(model_fit.history.history['val_loss'][10:], label='Validation')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
