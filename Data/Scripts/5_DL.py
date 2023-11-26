@@ -449,10 +449,64 @@ dfData['predicted_lstm'] = pd.DataFrame(
     index=dfData.index
 )
 
-# Rescale predictions
+
+dfData['predicted_lstm_2'] = pd.DataFrame(
+    model_fit_2.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
+                      batch_size=2,
+                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
+                      ),
+    index=dfData.index
+)
+
+# Predict for different batch sizes
+dfData['predicted_lstm_16'] = pd.DataFrame(
+    model_fit_16.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
+                      batch_size=16,
+                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
+                      ),
+    index=dfData.index
+)
+
+dfData['predicted_lstm_32'] = pd.DataFrame(
+    model_fit_32.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
+                      batch_size=32,
+                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
+                      ),
+    index=dfData.index
+)
+
+
+dfData['predicted_lstm_128'] = pd.DataFrame(
+    model_fit_128.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
+                      batch_size=128,
+                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
+                      ),
+    index=dfData.index
+)
+
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
+dfData['predicted_lstm_2'] = y_scaler.inverse_transform(dfData['predicted_lstm_2'].values.reshape(-1, 1))
+dfData['predicted_lstm_32'] = y_scaler.inverse_transform(dfData['predicted_lstm_16'].values.reshape(-1, 1))
+dfData['predicted_lstm_128'] = y_scaler.inverse_transform(dfData['predicted_lstm_128'].values.reshape(-1, 1))
+
+# Plot difference between predicted and actual values
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData['predicted_lstm'], label='LSTM (best)')
+ax.plot(dfData['predicted_lstm_2'], label='LSTM (batch size = 2)')
+ax.plot(dfData['predicted_lstm_32'], label='LSTM (batch size = 32)')
+ax.plot(dfData['predicted_lstm_128'], label='LSTM (batch size = 128)')
+ax.plot(dfData[sDepVar], label='Actual')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
+plt.xlabel("Date")
+plt.ylabel("Predicted")
+plt.title("Predicted WIP")
+plt.grid(alpha=0.35)
+plt.savefig("./Results/Figures/5_1_lstm_batch.png")
+plt.savefig("./Results/Presentation/5_1_lstm_batch.svg")
+upload(plt, 'Project-based Internship', 'figures/5_1_lstm_batch.png')
 
 print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
+
 
 plot_predicted(dfData, 'predicted_lstm', 'LSTM', '5_1_lstm', transformation='sum', trainMethod=trainMethod,
                sDepVar=sDepVar)
@@ -481,7 +535,8 @@ dfDataWIP['predicted_lstm'] = pd.DataFrame(
                       )
 )
 
-dfDataWIP['predicted_lstm'] = y_scaler.inverse_transform(dfDataWIP['predicted_lstm'].values.reshape(-1, 1))
+
+
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
