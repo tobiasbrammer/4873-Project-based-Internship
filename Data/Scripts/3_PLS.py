@@ -159,28 +159,6 @@ smape_scurve = smape(dfData[dfData[trainMethod] == 0][sDepVar],
 # Predict dfDataWIP[sDepVar]
 predict_and_scale(dfDataWIP, dfDataWIP, results_scurve, 'scurve', lSCurve, lJobNoWIP)
 
-### Debug s-curve ###
-fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum').astype(float), label='Actual',
-        linestyle='dashed')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_scurve'].transform('sum').astype(float), label='S-curve')
-ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution (mDKK)')
-# ax.set_title('Out of Sample')
-ax.set_aspect('auto')
-plt.show()
-
-
-# Get job_no of jobs with min predicted_scurve
-debug = dfData[dfData[trainMethod] == 0][['job_no', 'predicted_scurve']]
-
-
-# dfData job_no == S340274
-debug_job = dfData[dfData['job_no'] == 'S340274']
-
-
 ### Using correlation to select variables ###
 corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
 corr = corr.sort_values(by=sDepVar, ascending=False)
@@ -221,9 +199,9 @@ with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 upload(ols, 'Project-based Internship', 'tables/3_1_ols.tex')
 
-# Predict and rescale sDepVar using OLS
-dfData['predicted_ols'] = results_ols.predict(dfDataScaled[['intercept'] + lIndepVar])
-dfData['predicted_ols'] = y_scaler.inverse_transform(dfData['predicted_ols'].values.reshape(-1, 1))
+# Predict and rescale sDepVar using OLS with lIndepVar
+predict_and_scale(dfData, dfDataScaled, results_ols, 'ols', lIndepVar, lJobNo)
+
 dfDataPred['predicted_ols'] = dfData['predicted_ols']
 
 # Add production_estimate_contribution to dfDataPred
@@ -243,7 +221,7 @@ smape_ols = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_ols'])
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results_ols.predict(dfDataWIP[['intercept'] + lIndepVar]).values.reshape(-1, 1))
+predict_and_scale(dfDataWIP, dfDataWIP, results_ols, 'ols', lIndepVar, lJobNoWIP)
 
 ### Add lagged variables to lIndepVar ###
 # lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
@@ -278,11 +256,8 @@ with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
 upload(results_ols_lag.summary().as_latex(), 'Project-based Internship', 'tables/3_2_ols_lag.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables
-dfData['predicted_lag'] = results_ols_lag.predict(dfDataScaled[['intercept'] + lIndepVar_lag])
-
-dfData['predicted_lag'] = y_scaler.inverse_transform(dfData['predicted_lag'].values.reshape(-1, 1))
+predict_and_scale(dfData, dfDataScaled, results_ols_lag, 'ols_lag', lIndepVar_lag, lJobNo)
 dfDataPred['predicted_lag'] = dfData['predicted_lag']
-
 plot_predicted(dfData, 'predicted_lag', 'OLS with lag', '3_2_ols_lag', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 
@@ -295,7 +270,7 @@ smape_ols_lag = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                       dfData[dfData[trainMethod] == 0]['predicted_lag'])
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_lag'] = y_scaler.inverse_transform(results_ols_lag.predict(dfDataWIP[['intercept'] + lIndepVar_lag]).values.reshape(-1, 1))
+predict_and_scale(dfDataWIP, dfDataWIP, results_ols_lag, 'ols_lag', lIndepVar_lag, lJobNoWIP)
 
 # Include production_estimate_contribution and sales_estimate_contribution
 lIndepVar_lag_budget = lIndepVar_lag + ['production_estimate_contribution', 'sales_estimate_contribution']
@@ -346,13 +321,9 @@ with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
 upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
-dfData['predicted_lag_budget'] = results_lag_budget.predict(dfDataScaled[['intercept'] + lIndepVar_lag_budget])
-
-dfData['predicted_lag_budget'] = y_scaler.inverse_transform(dfData['predicted_lag_budget'].values.reshape(-1, 1))
+predict_and_scale(dfData, dfDataScaled, results_lag_budget, 'ols_lag_budget', lIndepVar_lag_budget, lJobNo)
 dfDataPred['predicted_lag_budget'] = dfData['predicted_lag_budget']
-
 plot_predicted(dfData, 'predicted_lag_budget', 'OLS with lag and budget', '3_3_ols_lag_budget', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
-
 
 # Calculate RMSE of OLS with lagged variables and budget
 rmse_ols_lag_budget = np.sqrt(mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar],
@@ -362,10 +333,7 @@ smape_ols_lag_budget = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                              dfData[dfData[trainMethod] == 0]['predicted_lag_budget'])
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_lag_budget'] = results_lag_budget.predict(dfDataWIP[['intercept'] + lIndepVar_lag_budget])
-
-dfDataWIP['predicted_lag_budget'] = y_scaler.inverse_transform(
-    dfDataWIP['predicted_lag_budget'].values.reshape(-1, 1))
+predict_and_scale(dfDataWIP, dfDataWIP, results_lag_budget, 'ols_lag_budget', lIndepVar_lag_budget, lJobNoWIP)
 
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
@@ -393,12 +361,9 @@ rmse_prod = np.sqrt(
 smape_prod = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution'])
 
 
-
 dfRMSE = pd.DataFrame({'RMSE': [rmse_final, rmse_prod, rmse_dst, rmse_scurve, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
                        'sMAPE': [smape_final, smape_prod, smape_dst, smape_scurve, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
                       index=['Final Estimate', 'Production Estimate', 'DST', 'S-curve', 'OLS', 'OLS with lagged variables', 'OLS with lags and budget', 'OLS Forecast Combination'])
-
-
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
 

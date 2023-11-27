@@ -6,6 +6,7 @@ import pandas as pd
 import datetime
 import joblib
 from plot_config import *
+from predict_and_scale import *
 from plot_predicted import *
 from smape import *
 from sklearn.metrics import mean_squared_error
@@ -126,6 +127,16 @@ lIndepVar = [col for col in lIndepVar if not col.startswith('cluster_')]
 with open('./.AUX/lIndepVar.txt', 'w') as f:
     f.write('\n'.join(lIndepVar))
 
+# Import lJobNo from ./.AUX/lJobNo.txt
+with open('./.AUX/lJobNo.txt', 'r') as f:
+    lJobNo = f.read()
+lJobNo = lJobNo.split('\n')
+
+# Import lJobNoWIP from ./.AUX/lJobNoWIP.txt
+with open('./.AUX/lJobNoWIP.txt', 'r') as f:
+    lJobNoWIP = f.read()
+lJobNoWIP = lJobNoWIP.split('\n')
+
 lIndepVar = lIndepVar + ['intercept']
 # Sparse model with OLS variables
 start_time_en_sparse = datetime.datetime.now()
@@ -149,10 +160,9 @@ print(f'The optimal EN tol is {elastic_net_cv.best_params_.get("tol")}.')
 # Save model to .MODS/ as pickle
 joblib.dump(elastic_net_cv, './.MODS/elastic_net_cv.pickle')
 
-dfData['predicted_en'] = elastic_net_cv.predict(dfDataScaled[lIndepVar].replace(np.nan, 0))
-dfData['predicted_en'] = y_scaler.inverse_transform(dfData['predicted_en'].values.reshape(-1, 1))
-end_time_en_sparse = datetime.datetime.now()
-print(f'ElasticNet finished in {end_time_en_sparse - start_time_en_sparse}.')
+predict_and_scale(dfData, dfDataScaled, elastic_net_cv, 'en', lIndepVar, lJobNo)
+
+print(f'ElasticNet finished in {datetime.datetime.now() - start_time_en_sparse}.')
 
 plot_predicted(dfData, 'predicted_en', 'Elastic Net', '4_0_en', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -172,8 +182,7 @@ dfRMSE.loc['Elastic Net', 'sMAPE'] = smape_en_sparse
 dfDataPred['predicted_en'] = dfData['predicted_en']
 
 # Predict WIP
-dfDataWIP['predicted_en'] = elastic_net_cv.predict(dfDataWIP[lIndepVar].replace(np.nan, 0))
-dfDataWIP['predicted_en'] = y_scaler.inverse_transform(dfDataWIP['predicted_en'].values.reshape(-1, 1))
+predict_and_scale(dfDataWIP, dfDataWIP, elastic_net_cv, 'en', lIndepVar, lJobNoWIP)
 
 ### Random Forest Regression ###
 # Define Random Forest model
@@ -215,14 +224,13 @@ rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 joblib.dump(rf_cv, './.MODS/rf_cv.pickle')
 
 # Predict and rescale using RF
-dfData['predicted_rf_full'] = rf_cv.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_rf_full'] = y_scaler.inverse_transform(dfData['predicted_rf_full'].values.reshape(-1, 1))
+predict_and_scale(dfData, dfDataScaled, rf_cv, 'rf_full',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
-end_time_rf = datetime.datetime.now()
+plot_predicted(dfData, 'predicted_rf_full', 'Random Forest', '4_1_rf_full', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
-print(f'RF Full fit finished in {end_time_rf - start_time_rf}.')
+print(f'RF Full fit finished in {datetime.datetime.now() - start_time_rf}.')
 print(f'     ')
 # Print hyperparameters
 print(f'The optimal RF number of estimators is {rf_cv.best_params_.get("n_estimators")}.')
@@ -232,8 +240,6 @@ print(f'The optimal RF minimum sample leaf is {rf_cv.best_params_.get("min_sampl
 print(f'The optimal RF maximum features is {rf_cv.best_params_.get("max_features")}.')
 print(f'The optimal RF maximum samples is {rf_cv.best_params_.get("max_samples").astype("int")}.')
 print(f'The optimal RF RMSE is {np.sqrt(-rf_cv.best_score_).round(4)}.')
-
-plot_predicted(dfData, 'predicted_rf_full', 'Random Forest', '4_1_rf_full', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of RF
 rmse_rf_full = np.sqrt(
@@ -250,8 +256,8 @@ dfRMSE.loc['Random Forest (Full)', 'sMAPE'] = smape_rf_full
 dfDataPred['predicted_rf_full'] = dfData['predicted_rf_full']
 
 # Predict WIP
-dfDataWIP['predicted_rf_full'] = rf_cv.predict(dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_rf_full'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_full'].values.reshape(-1, 1))
+predict_and_scale(dfDataWIP, dfDataWIP, rf_cv, 'rf_full',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 # Variable importance
 dfVarImp = pd.DataFrame(rf_cv.best_estimator_.feature_importances_, index=[dfDataWIP[lNumericCols].columns.difference([sDepVar])], columns=['importance'])
@@ -277,14 +283,12 @@ rf_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.diff
 # Save model to .MODS/ as pickle
 joblib.dump(rf_cv, './.MODS/rf_cv_sparse.pickle')
 # Predict and rescale using RF
-dfData['predicted_rf_sparse'] = rf_cv.predict(
-    dfDataScaled[lIndepVar][dfDataScaled[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_rf_sparse'] = y_scaler.inverse_transform(dfData['predicted_rf_sparse'].values.reshape(-1, 1))
-end_time_rf = datetime.datetime.now()
-print(f'     ')
-print(f'RF Sparse fit finished in {end_time_rf - start_time_rf}.')
 
+predict_and_scale(dfData, dfDataScaled, rf_cv, 'rf_sparse', lIndepVar, lJobNo)
 plot_predicted(dfData, 'predicted_rf_sparse', 'Random Forest', '4_2_rf_sparse', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
+print(f'     ')
+print(f'RF Sparse fit finished in {datetime.datetime.now() - start_time_rf}.')
 
 # Calculate RMSE of RF
 rmse_rf_sparse = np.sqrt(
@@ -302,9 +306,7 @@ dfRMSE.loc['Random Forest (Sparse)', 'sMAPE'] = smape_rf_sparse
 dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
 
 # Predict WIP
-dfDataWIP['predicted_rf_sparse'] = rf_cv.predict(
-    dfDataWIP[lIndepVar][dfDataWIP[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_rf_sparse'] = y_scaler.inverse_transform(dfDataWIP['predicted_rf_sparse'].values.reshape(-1, 1))
+predict_and_scale(dfDataWIP, dfDataWIP, rf_cv, 'rf_sparse', lIndepVar, lJobNoWIP)
 
 ## Extremely Randomized Trees ##
 # Define Extremely Randomized Trees model
@@ -353,9 +355,11 @@ et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 # Save model to .MODS/ as pickle
 joblib.dump(et_cv, './.MODS/et_cv.pickle')
 # Predict and rescale using ET
-dfData['predicted_et'] = et_cv.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_et'] = y_scaler.inverse_transform(dfData['predicted_et'].values.reshape(-1, 1))
+
+predict_and_scale(dfData, dfDataScaled, et_cv, 'et',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+
+plot_predicted(dfData, 'predicted_et', 'Extra Trees', '4_3_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
 print(f'ET fit finished in {datetime.datetime.now() - start_time_et}.')
@@ -368,8 +372,6 @@ print(f'The optimal ET minimum sample leaf is {et_cv.best_params_.get("min_sampl
 print(f'The optimal ET maximum features is {et_cv.best_params_.get("max_features")}.')
 print(f'The optimal ET maximum samples is {et_cv.best_params_.get("max_samples")}.')
 print(f'The optimal ET RMSE is {np.sqrt(-et_cv.best_score_).round(4)}.')
-
-plot_predicted(dfData, 'predicted_et', 'Extra Trees', '4_3_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of ET
 rmse_et = np.sqrt(
@@ -387,9 +389,8 @@ dfRMSE.loc['Extra Trees', 'sMAPE'] = smape_et
 dfDataPred['predicted_et'] = dfData['predicted_et']
 
 # Predict WIP
-dfDataWIP['predicted_et'] = et_cv.predict(
-    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-
+predict_and_scale(dfDataWIP, dfDataWIP, et_cv, 'et',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Boosted Regression Trees ###
 # Define Boosted Regression Trees model
@@ -433,14 +434,13 @@ gb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].co
 joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
 
 # Predict and rescale using GB
-dfData['predicted_gb'] = gb_cv_det.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_gb'] = y_scaler.inverse_transform(dfData['predicted_gb'].values.reshape(-1, 1))
 
-end_time_gb = datetime.datetime.now()
+predict_and_scale(dfData, dfDataScaled, gb_cv_det, 'gb',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
-print(f'GB fit finished in {end_time_gb - start_time_gb}.')
+print(f'GB fit finished in {datetime.datetime.now() - start_time_gb}.')
 print(f'     ')
 # Optimal hyperparameters
 print(f'The optimal GB learning rate is {gb_cv_det.best_params_.get("learning_rate")}.')
@@ -448,8 +448,6 @@ print(f'The optimal GB maximum depth is {gb_cv_det.best_params_.get("max_depth")
 print(f'The optimal GB minimum sample leaf is {gb_cv_det.best_params_.get("min_samples_leaf")}.')
 print(f'The optimal GB maximum features is {gb_cv_det.best_params_.get("max_features")}.')
 print(f'The optimal GB number of estimators is {gb_cv_det.best_params_.get("n_estimators")}.')
-
-plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of GB
 rmse_gb = np.sqrt(
@@ -465,10 +463,8 @@ dfRMSE.loc['Gradient Boosting', 'sMAPE'] = smape_gb
 dfDataPred['predicted_gb'] = dfData['predicted_gb']
 
 # Predict WIP
-dfDataWIP['predicted_gb'] = gb_cv_det.predict(
-    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_gb'] = y_scaler.inverse_transform(dfDataWIP['predicted_gb'].values.reshape(-1, 1))
-
+predict_and_scale(dfDataWIP, dfDataWIP, gb_cv_det, 'gb',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### XGBoost Regression ###
 # Define XGBoost model
@@ -516,13 +512,13 @@ xgb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].c
 # Save model to .MODS/ as pickle
 joblib.dump(xgb_cv_det, './.MODS/xgb_cv.pickle')
 # Predict and rescale using XGB
-dfData['predicted_xgb'] = xgb_cv_det.predict(
-    dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfData['predicted_xgb'] = y_scaler.inverse_transform(dfData['predicted_xgb'].values.reshape(-1, 1))
-end_time_xgb = datetime.datetime.now()
+predict_and_scale(dfData, dfDataScaled, xgb_cv_det, 'xgb',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+
+plot_predicted(dfData, 'predicted_xgb', 'XGBoost', '4_5_xgb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
-print(f'XGB fit finished in {end_time_xgb - start_time_xgb}.')
+print(f'XGB fit finished in {datetime.datetime.now() - start_time_xgb}.')
 print(f'     ')
 # Best hyperparameters
 print(f'Optimal learning rate: {xgb_cv_det.best_params_.get("learning_rate")}')
@@ -534,9 +530,6 @@ print(f'Optimal subsample: {xgb_cv_det.best_params_.get("subsample")}')
 print(f'Optimal colsample bytree: {xgb_cv_det.best_params_.get("colsample_bytree")}')
 print(f'Optimal reg alpha: {xgb_cv_det.best_params_.get("reg_alpha")}')
 print(f'Optimal reg lambda: {xgb_cv_det.best_params_.get("reg_lambda")}')
-
-plot_predicted(dfData, 'predicted_xgb', 'XGBoost', '4_5_xgb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
-
 
 # Calculate RMSE of XGB
 rmse_xgb = np.sqrt(
@@ -552,10 +545,8 @@ dfRMSE.loc['XGBoost', 'sMAPE'] = smape_xgb
 dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
 
 # Predict WIP
-dfDataWIP['predicted_xgb'] = xgb_cv_det.predict(
-    dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0))
-dfDataWIP['predicted_xgb'] = y_scaler.inverse_transform(dfDataWIP['predicted_xgb'].values.reshape(-1, 1))
-
+predict_and_scale(dfDataWIP, dfDataWIP, xgb_cv_det, 'xgb',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Forecast Combination with Boosting
 dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
@@ -563,7 +554,6 @@ dfData['predicted_boost'] = (dfData['predicted_gb'] + dfDataPred['predicted_xgb'
 dfDataWIP['predicted_boost'] = (dfDataWIP['predicted_gb'] + dfDataWIP['predicted_xgb']) / 2
 
 plot_predicted(dfData, 'predicted_boost', 'Combined Boosting', '4_6_boost', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
-
 
 # Calculate RMSE of GB_FC
 rmse_gb_fc = np.sqrt(
