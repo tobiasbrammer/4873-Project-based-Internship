@@ -499,11 +499,24 @@ dfData['predicted_lstm_128'] = y_scaler.inverse_transform(dfData['predicted_lstm
 
 # Plot difference between predicted and actual values
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['predicted_lstm'], label='LSTM (best)')
-ax.plot(dfData['predicted_lstm_2'], label='LSTM (batch size = 2)')
-ax.plot(dfData['predicted_lstm_32'], label='LSTM (batch size = 32)')
-ax.plot(dfData['predicted_lstm_128'], label='LSTM (batch size = 128)')
-ax.plot(dfData[sDepVar], label='Actual')
+ax.plot(dfData['date'],
+        dfData.groupby('date')[sDepVar].transform('sum'),
+        label='Actual', linestyle='dashed')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lstm'].transform('sum'),
+        label='LSTM (best)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lstm_2'].transform('sum'),
+        label='LSTM (batch size = 2)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lstm_16'].transform('sum'),
+        label='LSTM (batch size = 16)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lstm_32'].transform('sum'),
+        label='LSTM (batch size = 32)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lstm_128'].transform('sum'),
+        label='LSTM (batch size = 128)')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.xlabel("Date")
 plt.ylabel("Predicted")
