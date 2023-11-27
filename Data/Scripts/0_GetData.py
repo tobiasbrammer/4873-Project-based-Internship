@@ -352,7 +352,7 @@ dfDesc['description'] = dfDesc['description'].str.replace('æ', 'ae')
 dfDesc['description'] = dfDesc['description'].str.replace('å', 'aa')
 
 # Step 3: Convert to Document-Term Matrix and remove sparse terms
-vectorizer = CountVectorizer(min_df=0.02, max_df=0.15)
+vectorizer = CountVectorizer(min_df=0.0075, max_df=0.15)
 X = vectorizer.fit_transform(dfDesc['description'])
 df_matrix = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
 
