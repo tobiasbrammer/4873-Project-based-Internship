@@ -276,6 +276,9 @@ dfData['total_costs'] = dfData.groupby('job_no')['costs_cumsum'].transform('last
 dfData['total_contribution'] = dfData.groupby('job_no')['contribution_cumsum'].transform('last')
 dfData['total_margin'] = dfData['total_contribution'] / dfData['total_costs']
 
+# Omit jobs where total_costs is 0
+dfData = dfData[dfData['total_costs'] != 0]
+
 # Calculate share of labor cost, material cost and other cost cumsum
 dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].fillna(0) / dfData['costs_cumsum']).replace(
     [np.inf, -np.inf], 0)
