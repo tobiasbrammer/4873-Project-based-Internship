@@ -13,6 +13,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import ExtraTreesRegressor
 
 warnings.filterwarnings('ignore')
 
@@ -137,7 +138,6 @@ with open('./.AUX/lJobNoWIP.txt', 'r') as f:
     lJobNoWIP = f.read()
 lJobNoWIP = lJobNoWIP.split('\n')
 
-lIndepVar = lIndepVar + ['intercept']
 # Sparse model with OLS variables
 start_time_en_sparse = datetime.datetime.now()
 elastic_net_cv.fit(dfDataScaledTrain[lIndepVar].replace(np.nan, 0), dfDataScaledTrain[sDepVar])
@@ -160,11 +160,10 @@ print(f'The optimal EN tol is {elastic_net_cv.best_params_.get("tol")}.')
 # Save model to .MODS/ as pickle
 joblib.dump(elastic_net_cv, './.MODS/elastic_net_cv.pickle')
 
-predict_and_scale(dfData, dfDataScaled, elastic_net_cv, 'en', lIndepVar, lJobNo)
+predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), elastic_net_cv, 'en', lIndepVar, lJobNo)
+plot_predicted(dfData, 'predicted_en', 'Elastic Net', '4_0_en', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'ElasticNet finished in {datetime.datetime.now() - start_time_en_sparse}.')
-
-plot_predicted(dfData, 'predicted_en', 'Elastic Net', '4_0_en', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of EN
 rmse_en_sparse = np.sqrt(
@@ -224,8 +223,10 @@ rf_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].column
 joblib.dump(rf_cv, './.MODS/rf_cv.pickle')
 
 # Predict and rescale using RF
-predict_and_scale(dfData, dfDataScaled, rf_cv, 'rf_full',
+predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), rf_cv, 'rf_full',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+
+debug = dfData[dfData[trainMethod] == 0][['job_no', 'predicted_rf_full','total_contribution']].copy()
 
 plot_predicted(dfData, 'predicted_rf_full', 'Random Forest', '4_1_rf_full', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -256,7 +257,7 @@ dfRMSE.loc['Random Forest (Full)', 'sMAPE'] = smape_rf_full
 dfDataPred['predicted_rf_full'] = dfData['predicted_rf_full']
 
 # Predict WIP
-predict_and_scale(dfDataWIP, dfDataWIP, rf_cv, 'rf_full',
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), rf_cv, 'rf_full',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 # Variable importance
@@ -284,7 +285,9 @@ rf_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.diff
 joblib.dump(rf_cv, './.MODS/rf_cv_sparse.pickle')
 # Predict and rescale using RF
 
-predict_and_scale(dfData, dfDataScaled, rf_cv, 'rf_sparse', lIndepVar, lJobNo)
+predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), rf_cv, 'rf_sparse',
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNo)
+
 plot_predicted(dfData, 'predicted_rf_sparse', 'Random Forest', '4_2_rf_sparse', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
@@ -306,11 +309,10 @@ dfRMSE.loc['Random Forest (Sparse)', 'sMAPE'] = smape_rf_sparse
 dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
 
 # Predict WIP
-predict_and_scale(dfDataWIP, dfDataWIP, rf_cv, 'rf_sparse', lIndepVar, lJobNoWIP)
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), rf_cv, 'rf_sparse',
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
 
 ## Extremely Randomized Trees ##
-# Define Extremely Randomized Trees model
-from sklearn.ensemble import ExtraTreesRegressor
 
 # Define grid for et
 et_grid = {
@@ -330,9 +332,8 @@ et_cv = RandomizedSearchCV(ExtraTreesRegressor(random_state=0), et_grid, n_iter=
 # Fit to the training data
 start_time_et = datetime.datetime.now()
 
-
 # Detailed grid
-et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+et_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
             dfDataScaledTrain[sDepVar])
 
 et_grid_detail = {
@@ -349,15 +350,15 @@ et_cv = RandomizedSearchCV(ExtraTreesRegressor(random_state=0), et_grid_detail, 
                             scoring="neg_mean_squared_error", cv=3, verbose=False, refit=True,
                            )
 
-et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+et_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
             dfDataScaledTrain[sDepVar])
 
 # Save model to .MODS/ as pickle
 joblib.dump(et_cv, './.MODS/et_cv.pickle')
 # Predict and rescale using ET
 
-predict_and_scale(dfData, dfDataScaled, et_cv, 'et',
-                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), et_cv, 'et',
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNo)
 
 plot_predicted(dfData, 'predicted_et', 'Extra Trees', '4_3_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -389,8 +390,8 @@ dfRMSE.loc['Extra Trees', 'sMAPE'] = smape_et
 dfDataPred['predicted_et'] = dfData['predicted_et']
 
 # Predict WIP
-predict_and_scale(dfDataWIP, dfDataWIP, et_cv, 'et',
-                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), et_cv, 'et',
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Boosted Regression Trees ###
 # Define Boosted Regression Trees model
@@ -411,7 +412,7 @@ gb_cv = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid, n
 
 # Fit to the training data
 start_time_gb = datetime.datetime.now()
-gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+gb_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 
 # Generate of sequence of numbers based on gb_cv.best_params_ to get more appropriate parameters in the defined range.
@@ -427,7 +428,7 @@ gb_grid_detail = {
 gb_cv_det = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid_detail, n_iter=100, scoring=None, cv=3,
                            verbose=0, refit=True, n_jobs=-1)
 # Fit to the training data
-gb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+gb_cv_det.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 
 # Save model to .MODS/ as pickle
@@ -435,8 +436,8 @@ joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
 
 # Predict and rescale using GB
 
-predict_and_scale(dfData, dfDataScaled, gb_cv_det, 'gb',
-                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), gb_cv_det, 'gb',
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNo)
 plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
@@ -464,7 +465,7 @@ dfDataPred['predicted_gb'] = dfData['predicted_gb']
 
 # Predict WIP
 predict_and_scale(dfDataWIP, dfDataWIP, gb_cv_det, 'gb',
-                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
 
 ### XGBoost Regression ###
 # Define XGBoost model
@@ -487,7 +488,7 @@ xgb_cv = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid, n_iter=100, 
 
 # Fit to the training data
 start_time_xgb = datetime.datetime.now()
-xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+xgb_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
 
 # Detailed grid
@@ -506,14 +507,14 @@ xgb_grid_detail = {
 xgb_cv_det = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid_detail, n_iter=100, scoring=None, cv=3,
                             verbose=0, refit=True, n_jobs=-1)
 
-xgb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+xgb_cv_det.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
 
 # Save model to .MODS/ as pickle
 joblib.dump(xgb_cv_det, './.MODS/xgb_cv.pickle')
 # Predict and rescale using XGB
-predict_and_scale(dfData, dfDataScaled, xgb_cv_det, 'xgb',
-                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), xgb_cv_det, 'xgb',
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNo)
 
 plot_predicted(dfData, 'predicted_xgb', 'XGBoost', '4_5_xgb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -546,7 +547,7 @@ dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
 
 # Predict WIP
 predict_and_scale(dfDataWIP, dfDataWIP, xgb_cv_det, 'xgb',
-                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
+                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Forecast Combination with Boosting
 dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
@@ -637,6 +638,12 @@ fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
 # Loop through each job_no in lJob
 for i, sJobNo in enumerate(lJob):
     # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
+               label='cumulative contribution')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
+               label='slutvurdering')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_rf_et'],
                label='predicted (ensemble)', linestyle='dashed')
@@ -649,12 +656,6 @@ for i, sJobNo in enumerate(lJob):
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_boost'],
                label='predicted (boost)', linestyle='dashed')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
-               label='cumulative contribution')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
-               label='slutvurdering')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
     ax[i].set_ylabel('Contribution')

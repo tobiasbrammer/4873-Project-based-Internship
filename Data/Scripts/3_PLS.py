@@ -256,7 +256,7 @@ with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
 upload(results_ols_lag.summary().as_latex(), 'Project-based Internship', 'tables/3_2_ols_lag.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables
-predict_and_scale(dfData, dfDataScaled, results_ols_lag, 'ols_lag', lIndepVar_lag, lJobNo)
+predict_and_scale(dfData, dfDataScaled, results_ols_lag, 'lag', lIndepVar_lag, lJobNo)
 dfDataPred['predicted_lag'] = dfData['predicted_lag']
 plot_predicted(dfData, 'predicted_lag', 'OLS with lag', '3_2_ols_lag', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -321,7 +321,7 @@ with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
 upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
-predict_and_scale(dfData, dfDataScaled, results_lag_budget, 'ols_lag_budget', lIndepVar_lag_budget, lJobNo)
+predict_and_scale(dfData, dfDataScaled, results_lag_budget, 'lag_budget', lIndepVar_lag_budget, lJobNo)
 dfDataPred['predicted_lag_budget'] = dfData['predicted_lag_budget']
 plot_predicted(dfData, 'predicted_lag_budget', 'OLS with lag and budget', '3_3_ols_lag_budget', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -351,12 +351,12 @@ smape_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainM
 
 # Compare RMSE and sMAPE of the different models in a table
 rmse_final = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['final_estimate_contribution'].replace(np.nan, 0)))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['final_estimate_contribution']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_final = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['final_estimate_contribution'])
 
 rmse_prod = np.sqrt(
-    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution'].replace(np.nan, 0)))
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_prod = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution'])
 
@@ -581,6 +581,12 @@ fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10*len(lJob)))
 # Loop through each job_no in lJob
 for i, sJobNo in enumerate(lJob):
     # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
+               label='cumulative contribution')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
+               label='slutvurdering')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_dst'],
                label='predicted (dst)', linestyle='dashed')
@@ -593,12 +599,6 @@ for i, sJobNo in enumerate(lJob):
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_fc_cluster_dst'],
                label='predicted (cluster)', linestyle='dashed')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
-               label='cumulative contribution')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
-               label='slutvurdering')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
     ax[i].set_ylabel('Contribution')

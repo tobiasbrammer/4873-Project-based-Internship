@@ -1,47 +1,45 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                   & total\_contribution & \textbf{  R-squared:         } &     0.210   \\
-\textbf{Model:}                           &         OLS         & \textbf{  Adj. R-squared:    } &     0.207   \\
-\textbf{Method:}                          &    Least Squares    & \textbf{  F-statistic:       } &     81.75   \\
-\textbf{Date:}                            &   Mon, 27 Nov 2023  & \textbf{  Prob (F-statistic):} & 9.18e-179   \\
-\textbf{Time:}                            &       08:41:22      & \textbf{  Log-Likelihood:    } &    2916.5   \\
-\textbf{No. Observations:}                &          3703       & \textbf{  AIC:               } &    -5807.   \\
-\textbf{Df Residuals:}                    &          3690       & \textbf{  BIC:               } &    -5726.   \\
-\textbf{Df Model:}                        &            12       & \textbf{                     } &             \\
-\textbf{Covariance Type:}                 &      nonrobust      & \textbf{                     } &             \\
+\textbf{Dep. Variable:}                  & total\_contribution & \textbf{  R-squared:         } &     0.214   \\
+\textbf{Model:}                          &         OLS         & \textbf{  Adj. R-squared:    } &     0.211   \\
+\textbf{Method:}                         &    Least Squares    & \textbf{  F-statistic:       } &     75.30   \\
+\textbf{Date:}                           &   Mon, 27 Nov 2023  & \textbf{  Prob (F-statistic):} & 5.09e-177   \\
+\textbf{Time:}                           &       14:54:47      & \textbf{  Log-Likelihood:    } &    2788.5   \\
+\textbf{No. Observations:}               &          3620       & \textbf{  AIC:               } &    -5549.   \\
+\textbf{Df Residuals:}                   &          3606       & \textbf{  BIC:               } &    -5462.   \\
+\textbf{Df Model:}                       &            13       & \textbf{                     } &             \\
+\textbf{Covariance Type:}                &      nonrobust      & \textbf{                     } &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
-                                          & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+                                         & \textbf{coef} & \textbf{std err} & \textbf{t} & \textbf{P$> |$t$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{const}                            &      -0.2368  &        0.050     &    -4.740  &         0.000        &       -0.335    &       -0.139     \\
-\textbf{contract\_work}                   &       0.2430  &        0.044     &     5.516  &         0.000        &        0.157    &        0.329     \\
-\textbf{contract\_work\_cumsum}           &       0.3360  &        0.053     &     6.397  &         0.000        &        0.233    &        0.439     \\
-\textbf{costs\_scurve\_diff}              &       0.2512  &        0.027     &     9.381  &         0.000        &        0.199    &        0.304     \\
-\textbf{tilbuds\_og\_entreprisekontrakt}  &       0.0372  &        0.006     &     6.734  &         0.000        &        0.026    &        0.048     \\
-\textbf{billable\_hours\_qty\_cumsum}     &      -0.0251  &        0.019     &    -1.296  &         0.195        &       -0.063    &        0.013     \\
-\textbf{ombygning}                        &       0.0388  &        0.007     &     5.593  &         0.000        &        0.025    &        0.052     \\
-\textbf{kbyg33\_no\_limitations}          &       0.1050  &        0.023     &     4.483  &         0.000        &        0.059    &        0.151     \\
-\textbf{billable\_rate\_dep}              &       0.0706  &        0.013     &     5.433  &         0.000        &        0.045    &        0.096     \\
-\textbf{kbyg44\_employment\_expectations} &       0.0362  &        0.014     &     2.664  &         0.008        &        0.010    &        0.063     \\
-\textbf{material\_cost\_share}            &       0.0310  &        0.024     &     1.316  &         0.188        &       -0.015    &        0.077     \\
-\textbf{contribution\_lag1}               &       0.3759  &        0.037     &    10.205  &         0.000        &        0.304    &        0.448     \\
-\textbf{revenue\_lag1}                    &       0.1819  &        0.024     &     7.560  &         0.000        &        0.135    &        0.229     \\
-\textbf{costs\_lag1}                      &       0.2048  &        0.026     &     7.745  &         0.000        &        0.153    &        0.257     \\
+\textbf{const}                           &      -0.1852  &        0.063     &    -2.937  &         0.003        &       -0.309    &       -0.062     \\
+\textbf{contract\_work}                  &       0.2791  &        0.038     &     7.302  &         0.000        &        0.204    &        0.354     \\
+\textbf{contract\_work\_cumsum}          &       0.1005  &        0.057     &     1.763  &         0.078        &       -0.011    &        0.212     \\
+\textbf{tilbuds\_og\_entreprisekontrakt} &       0.0595  &        0.006     &    10.213  &         0.000        &        0.048    &        0.071     \\
+\textbf{ntek}                            &       0.1507  &        0.021     &     7.124  &         0.000        &        0.109    &        0.192     \\
+\textbf{billable\_hours\_qty\_cumsum}    &       0.0054  &        0.021     &     0.260  &         0.795        &       -0.035    &        0.046     \\
+\textbf{dnu}                             &      -0.0636  &        0.017     &    -3.681  &         0.000        &       -0.097    &       -0.030     \\
+\textbf{holstebro}                       &       0.1382  &        0.016     &     8.751  &         0.000        &        0.107    &        0.169     \\
+\textbf{ombygning}                       &       0.0503  &        0.008     &     6.033  &         0.000        &        0.034    &        0.067     \\
+\textbf{kbyg33\_no\_limitations}         &       0.0551  &        0.012     &     4.452  &         0.000        &        0.031    &        0.079     \\
+\textbf{risk}                            &       0.1909  &        0.057     &     3.341  &         0.001        &        0.079    &        0.303     \\
+\textbf{revenue\_lag1}                   &       0.4853  &        0.046     &    10.651  &         0.000        &        0.396    &        0.575     \\
+\textbf{costs\_lag1}                     &       0.4335  &        0.050     &     8.596  &         0.000        &        0.335    &        0.532     \\
+\textbf{labor\_cost\_share\_lag1}        &      -0.0087  &        0.009     &    -0.954  &         0.340        &       -0.027    &        0.009     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 482.216 & \textbf{  Durbin-Watson:     } &    1.870  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 5677.737  \\
-\textbf{Skew:}          &  -0.095 & \textbf{  Prob(JB):          } &     0.00  \\
-\textbf{Kurtosis:}      &   9.063 & \textbf{  Cond. No.          } & 3.10e+15  \\
+\textbf{Omnibus:}       & 480.671 & \textbf{  Durbin-Watson:     } &    1.880  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 5887.541  \\
+\textbf{Skew:}          &  -0.088 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &   9.245 & \textbf{  Cond. No.          } &     76.6  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}
 \end{center}
 
 Notes: \newline
- [1] Standard Errors assume that the covariance matrix of the errors is correctly specified. \newline
- [2] The smallest eigenvalue is 1.81e-27. This might indicate that there are \newline
- strong multicollinearity problems or that the design matrix is singular.
+ [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.

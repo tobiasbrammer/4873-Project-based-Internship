@@ -27,9 +27,7 @@ def predict_and_scale(df, dfScaled, model, sName, lModelVars, lJobNo):
             for i in range(len(lIndex)):
                 lIndexSeq = lIndex[0:i + 1]
                 # Predict using the provided model
-                dfScaled.loc[lIndex[i], predicted_col] = \
-                model.predict(dfScaled.loc[lIndexSeq, ['intercept'] + lModelVars]).values[i]
-
+                dfScaled.loc[lIndex[i], predicted_col] = model.predict(dfScaled.loc[lIndexSeq, lModelVars])[i]
                 # Rescale and update the original dataframe
                 df.loc[lIndex[i], predicted_col] = y_scaler.inverse_transform(
                     dfScaled.loc[lIndex[i], predicted_col].reshape(-1, 1)).reshape(-1)
