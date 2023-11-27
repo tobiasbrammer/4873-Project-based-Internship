@@ -201,6 +201,14 @@ tuner_64 = kt.Hyperband(model_builder,
                         directory='./.MODS',
                         project_name='LSTM_64')
 
+tuner_128 = kt.Hyperband(model_builder,
+                        objective='val_loss',
+                        max_epochs=50,
+                        factor=3,
+                        seed=607,
+                        directory='./.MODS',
+                        project_name='LSTM_128')
+
 # Define early stopping
 early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=15)
 
