@@ -60,14 +60,14 @@ subprocess.run(["python", "./Scripts/4_ML.py"])
 
 # Run 5_DL.py
 print("Running 5_DL.py...")
-#subprocess.run(["python", "./Scripts/5_DL.py"])
+subprocess.run(["python", "./Scripts/5_DL.py"])
 
 # Total runtime
 print(f'Execution finished in {datetime.datetime.now() - start_time}.')
 notify(f'Execution finished in {datetime.datetime.now() - start_time}.')
 
 
-# # Play sound when finished
+# Play sound when finished
 # if os.name == 'posix':
 #     os.system('say "Finished."')
 # # If operating system is Windows then

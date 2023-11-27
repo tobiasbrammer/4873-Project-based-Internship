@@ -17,13 +17,6 @@ elif os.name == 'nt':
 
 os.chdir(sDir)
 
-import dropbox
-from pathlib import Path
-from io import BytesIO
-import matplotlib.pyplot as plt
-import re
-import subprocess
-
 # Read dfData parquet file
 dfData = pd.read_parquet("dfData.parquet")
 
@@ -103,7 +96,6 @@ train_data_desc = dfDataTrain[non_numeric_cols]
 # def identity_function(X):
 #     return X
 
-
 # Scale the data
 y_scaler = MinMaxScaler()
 x_scaler = MinMaxScaler()
@@ -111,7 +103,6 @@ x_scaler = MinMaxScaler()
 # Dummy
 # y_scaler = FunctionTransformer(identity_function)
 # x_scaler = FunctionTransformer(identity_function)
-
 
 # x_scaler = PowerTransformer(method='yeo-johnson')
 # y_scaler = PowerTransformer(method='yeo-johnson')
