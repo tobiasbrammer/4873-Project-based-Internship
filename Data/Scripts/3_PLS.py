@@ -6,6 +6,7 @@ from matplotlib.colors import LinearSegmentedColormap
 import statsmodels.api as sm
 import joblib
 from plot_config import *
+from predict_and_scale import *
 from plot_predicted import *
 from smape import *
 from sklearn.metrics import mean_squared_error
@@ -68,8 +69,7 @@ dfDataScaledTest = dfDataScaled.drop(train_index)
 
 ### Predict sDepVar using OLS ###
 # Predict using data from DST (only external variables)
-
-lDST = ['kbyg11', 'kbyg22', 'kbyg33_no_limitations', 'kbyg44_confidence_indicator']
+lDST = [s for s in dfDataScaled.columns if 'kbyg' in s]
 
 # Write lDST to .AUX/
 with open('./.AUX/lDST.txt', 'w') as lVars:
@@ -84,12 +84,35 @@ with open('Results/Tables/3_0_dst.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 upload(ols, 'Project-based Internship', 'tables/3_0_dst.tex')
 
-# Predict and rescale sDepVar using OLS
-dfData['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataScaled[['intercept'] + lDST]).values.reshape(-1, 1))
+### Create function to predict sequentially for each job ###
+# By sequentially introducing unseen data to the model,
+# the study evaluates the model's predictive accuracy as each project advances.
+
+
+# Predict sDepVar using OLS for each job.
+# Predict sDepVar for each job number by exposing the model to an expanding window of data. Start with the first observation and add one observation for each iteration.
+
+# Create a list of job numbers
+lJobNo = dfData['job_no'].unique().tolist()
+lJobNoWIP = dfDataWIP['job_no'].unique().tolist()
+# Omit nan from lJobNo
+lJobNo = [x for x in lJobNo if str(x) != 'nan']
+lJobNoWIP = [x for x in lJobNoWIP if str(x) != 'nan']
+
+# Save lJobNo to .AUX/
+with open('./.AUX/lJobNo.txt', 'w') as lVars:
+    lVars.write('\n'.join(lJobNo))
+
+# Save lJobNoWIP to .AUX/
+with open('./.AUX/lJobNoWIP.txt', 'w') as lVars:
+    lVars.write('\n'.join(lJobNoWIP))
+
+
+predict_and_scale(dfData, dfDataScaled, results_dst, 'dst', lDST, lJobNo)
 
 dfDataPred = dfData[['date', 'job_no', sDepVar, 'predicted_dst']]
 
-plot_predicted(dfData, 'predicted_dst', 'Statistics Denmark', '3_0_dst', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+plot_predicted(dfData, 'predicted_dst', 'Statistics Denmark', '3_0_dst', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar, show=False)
 
 # Calculate out-of-sample RMSE of DST
 rmse_dst = np.sqrt(
@@ -100,8 +123,8 @@ rmse_dst = np.sqrt(
 smape_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_dst'])
 
-
-dfDataWIP['predicted_dst'] = y_scaler.inverse_transform(results_dst.predict(dfDataWIP[['intercept'] + lDST]).values.reshape(-1, 1))
+# Predict and scale dfDataWIP
+predict_and_scale(dfDataWIP, dfDataWIP, results_dst, 'dst', lDST, lJobNoWIP)
 
 ### OLS with s-curve differences. ###
 lSCurve = ['revenue_scurve_diff', 'costs_scurve_diff', 'contribution_scurve_diff']
@@ -118,7 +141,7 @@ with open('Results/Tables/3_9_scurve.tex', 'w', encoding='utf-8') as f:
 upload(ols, 'Project-based Internship', 'tables/3_9_scurve.tex')
 
 # Predict and rescale sDepVar using OLS
-dfData['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predict(dfDataScaled[['intercept'] + lSCurve]).values.reshape(-1, 1))
+predict_and_scale(dfData, dfDataScaled, results_scurve, 'scurve', lSCurve, lJobNo)
 
 dfDataPred['predicted_scurve'] = dfData['predicted_scurve']
 
@@ -134,7 +157,29 @@ smape_scurve = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_scurve'].replace(np.nan, 0))
 
 # Predict dfDataWIP[sDepVar]
-dfDataWIP['predicted_scurve'] = y_scaler.inverse_transform(results_scurve.predict(dfDataWIP[['intercept'] + lSCurve]).values.reshape(-1, 1))
+predict_and_scale(dfDataWIP, dfDataWIP, results_scurve, 'scurve', lSCurve, lJobNoWIP)
+
+### Debug s-curve ###
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum').astype(float), label='Actual',
+        linestyle='dashed')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_scurve'].transform('sum').astype(float), label='S-curve')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Contribution (mDKK)')
+# ax.set_title('Out of Sample')
+ax.set_aspect('auto')
+plt.show()
+
+
+# Get job_no of jobs with min predicted_scurve
+debug = dfData[dfData[trainMethod] == 0][['job_no', 'predicted_scurve']]
+
+
+# dfData job_no == S340274
+debug_job = dfData[dfData['job_no'] == 'S340274']
+
 
 ### Using correlation to select variables ###
 corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
@@ -205,7 +250,7 @@ dfDataWIP['predicted_ols'] = y_scaler.inverse_transform(results_ols.predict(dfDa
 #                              'contribution_lag2', 'revenue_lag2', 'costs_lag2',
 #                              'contribution_lag3', 'revenue_lag3', 'costs_lag3']
 
-lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1']
+lIndepVar_lag = lIndepVar + ['revenue_lag1', 'costs_lag1', 'labor_cost_share_lag1']
 
 # Correlation between sDepVar and lIndepVar_lag
 fig, ax = plt.subplots(figsize=(20, 10))

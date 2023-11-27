@@ -122,14 +122,18 @@ dfData.loc[dfData['final_estimate_costs'] == 0, 'final_estimate_costs'] = dfData
 dfData['sales_estimate_margin'] = dfData['sales_estimate_contribution']/dfData['sales_estimate_revenue']
 dfData.loc[dfData['sales_estimate_margin'] > 1, 'sales_estimate_margin'] = 1
 dfData.loc[dfData['sales_estimate_margin'] < -1, 'sales_estimate_margin'] = -1
+dfData['sales_estimate_margin'] = dfData['sales_estimate_margin'].replace([np.inf, -np.inf], np.nan)
+
 
 dfData['production_estimate_margin'] = dfData['production_estimate_contribution']/dfData['production_estimate_revenue']
 dfData.loc[dfData['production_estimate_margin'] > 1, 'production_estimate_margin'] = 1
 dfData.loc[dfData['production_estimate_margin'] < -1, 'production_estimate_margin'] = -1
+dfData['production_estimate_margin'] = dfData['production_estimate_margin'].replace([np.inf, -np.inf], np.nan)
 
 dfData['final_estimate_margin'] = dfData['final_estimate_contribution']/dfData['final_estimate_revenue']
 dfData.loc[dfData['final_estimate_margin'] > 1, 'final_estimate_margin'] = 1
 dfData.loc[dfData['final_estimate_margin'] < -1, 'final_estimate_margin'] = -1
+dfData['final_estimate_margin'] = dfData['final_estimate_margin'].replace([np.inf, -np.inf], np.nan)
 
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns
@@ -186,14 +190,14 @@ dfData['progress'] = dfData['days_since_start'] / dfData['total_days']
 dfData['completion_rate'] = (dfData['costs_cumsum'] / dfData['production_estimate_costs']).replace([np.inf, -np.inf], 0)
 
 # Calculate scurve basad on \Phi(x;\mu,\nu)=\left[1+\left(\frac{x\cdot(1-\mu)}{\mu\cdot(1-x)}\right)^{-\nu}\right]^{-1}
-# where \mu is 0.5 and \nu is 1.5
+# where \mu is 0.6 and \nu is 2
 dfData['scurve'] = 1 / (1 + (dfData['progress'] * (1 - 0.6) / (0.6 * (1 - dfData['progress']))) ** (-2))
 
-dfData['revenue_scurve'] = dfData['scurve'] * dfData['budget_revenue']
-dfData['costs_scurve'] = dfData['scurve'] * dfData['budget_costs']
+dfData['revenue_scurve'] = dfData['scurve'] * dfData['production_estimate_revenue']
+dfData['costs_scurve'] = dfData['scurve'] * dfData['production_estimate_costs']
 dfData['revenue_scurve_diff'] = dfData['revenue_scurve'] - dfData['revenue_cumsum']
 dfData['costs_scurve_diff'] = dfData['costs_scurve'] - dfData['costs_cumsum']
-dfData['contribution_scurve'] = dfData['scurve'] * (dfData['budget_revenue'] - dfData['budget_costs'])
+dfData['contribution_scurve'] = dfData['scurve'] * (dfData['production_estimate_revenue'] - dfData['production_estimate_costs'])
 dfData['contribution_scurve_diff'] = dfData['contribution_scurve'] - dfData['contribution_cumsum']
 
 # Calculate contribution margin as contribution_cumsum / costs_cumsum
@@ -254,7 +258,7 @@ def calculate_risk(group):
 dfData = dfData.groupby('job_no', group_keys=False).apply(calculate_risk)
 
 # Determine the PACF and ACF of revenue, costs and contribution
-for col in ['revenue', 'costs', 'contribution']:
+for col in ['revenue', 'costs']:
     fig, ax = plt.subplots(1, 2, figsize=(20, 10))
     plot_acf(dfData[col], ax=ax[0], lags=5, zero=False)
     plot_pacf(dfData[col], ax=ax[1], lags=5, zero=False)
@@ -264,16 +268,6 @@ for col in ['revenue', 'costs', 'contribution']:
     plt.savefig(f"./Results/Figures/1_6_{col}_acf_pacf.png")
     plt.savefig(f"./Results/Presentation/1_6_{col}_acf_pacf.svg")
     upload(plt, 'Project-based Internship', f'figures/1_6_{col}_acf_pacf.png')
-
-# Get 5 lagged values for revenue, costs and contribution for each job_no
-for col in ['revenue', 'costs', 'contribution']:
-    for i in range(1, 6):
-        dfData[f'{col}_lag{i}'] = dfData.groupby('job_no', observed=True)[col].shift(i)
-
-# For all lags replace NA with 0
-for col in ['revenue', 'costs', 'contribution']:
-    for i in range(1, 6):
-        dfData[f'{col}_lag{i}'] = dfData[f'{col}_lag{i}'].fillna(0)
 
 # Order by date
 dfData.sort_values('date', inplace=True)
@@ -288,6 +282,16 @@ dfData['labor_cost_share'] = (dfData['costs_of_labor_cumsum'].fillna(0) / dfData
 dfData['material_cost_share'] = (
             (dfData['costs_of_materials_cumsum'] + dfData['other_costs_cumsum']).fillna(0) / dfData[
         'costs_cumsum']).replace([np.inf, -np.inf], 0)
+
+# Get 5 lagged values for revenue, costs and contribution for each job_no
+for col in ['revenue', 'costs', 'labor_cost_share']:
+    for i in range(1, 6):
+        dfData[f'{col}_lag{i}'] = dfData.groupby('job_no', observed=True)[col].shift(i)
+
+# For all lags replace NA with 0
+for col in ['revenue', 'costs', 'labor_cost_share']:
+    for i in range(1, 6):
+        dfData[f'{col}_lag{i}'] = dfData[f'{col}_lag{i}'].fillna(0)
 
 # Omit labor_cost_cumsum, material_cost_cumsum and other_cost_cumsum
 dfData.drop(columns=['costs_of_labor_cumsum', 'costs_of_materials_cumsum', 'other_costs_cumsum'], inplace=True)
@@ -563,6 +567,9 @@ dfData['train'] = dfData['job_no'].isin(lJobNoTrain).astype(int)
 dfData['train_TS'] = dfData.groupby('job_no')['job_no'].transform(
     lambda x: np.random.choice([0, 1], size=len(x), p=[.1, .9]))
 
+
+# If wip is 0 then set to 1, else set to 0
+dfData['wipTrain'] = (dfData['wip'] == 0).astype(int)
 
 # Save DataFrame to file
 dfData.to_csv("dfData.csv", index=False)

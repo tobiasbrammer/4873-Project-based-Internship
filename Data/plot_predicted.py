@@ -30,7 +30,7 @@ def upload(ax, project, path):
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
 
 
-def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformation='sum'):
+def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformation='sum', show=False):
     # Plot the sum of predicted and actual sDepVar by date
     fig, ax = plt.subplots(figsize=(20, 10))
     ax.plot(df[df[trainMethod] == 0]['date'],
@@ -40,7 +40,7 @@ def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformat
             df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation).astype(float), label=label)
     ax.set_xlabel('Date')
     ax.set_ylabel('Total Contribution (mDKK)')
-    ax.set_title('Out of Sample')
+    # ax.set_title('Out of Sample')
     ax.set_aspect('auto')
     ax.set_ylim([-5, 15.00])
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
@@ -61,7 +61,7 @@ def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformat
             df.groupby('date')[predicted].transform(transformation).astype(float), label=label)
     ax.set_xlabel('Date')
     ax.set_ylabel('Total Contribution (mDKK)')
-    ax.set_title('Full Sample')
+    # ax.set_title('Full Sample')
     ax.set_aspect('auto')
     ax.set_ylim([-20, 100.00])
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
@@ -70,5 +70,6 @@ def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformat
     plt.savefig(f"./Results/Figures/FullSample/{file_fs}.png")
     plt.savefig(f"./Results/Presentation/FullSample/{file_fs}.svg")
     upload(plt, 'Project-based Internship', f'figures/{file_fs}.png')
-
+    if show:
+        plt.show()
     plt.close('all')

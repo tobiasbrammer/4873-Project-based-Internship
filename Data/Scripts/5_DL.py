@@ -210,7 +210,7 @@ tuner_128 = kt.Hyperband(model_builder,
                         project_name='LSTM_128')
 
 # Define early stopping
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=15)
+early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=15)
 
 # Fit model
 start_time_lstm_tune = datetime.datetime.now()
@@ -381,25 +381,27 @@ best_batch_size = df_val_loss[df_val_loss['val_loss'] == df_val_loss['val_loss']
 # Set best_hps: best_hps = tuner_{best_batch_size}.get_best_hyperparameters()[0]
 best_hps = eval(f'best_hps_{best_batch_size}')
 
+iRollWindow = 5
+
 # Compare val_loss of best models over epochs
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(model_fit_4.history.history['val_loss'], label='4 batch size',
+ax.plot(model_fit_4.history.history['val_loss'].rolling(iRollWindow).mean(), label='4 batch size',
         linestyle='solid' if best_batch_size == 4 else 'dashed')
-ax.plot(model_fit_8.history.history['val_loss'], label='8 batch size',
+ax.plot(model_fit_8.history.history['val_loss'].rolling(iRollWindow).mean(), label='8 batch size',
         linestyle='solid' if best_batch_size == 8 else 'dashed')
-ax.plot(model_fit_16.history.history['val_loss'], label='16 batch size',
+ax.plot(model_fit_16.history.history['val_loss'].rolling(iRollWindow).mean(), label='16 batch size',
         linestyle='solid' if best_batch_size == 16 else 'dashed')
-ax.plot(model_fit_32.history.history['val_loss'], label='32 batch size',
+ax.plot(model_fit_32.history.history['val_loss'].rolling(iRollWindow).mean(), label='32 batch size',
         linestyle='solid' if best_batch_size == 32 else 'dashed')
-ax.plot(model_fit_64.history.history['val_loss'], label='64 batch size',
+ax.plot(model_fit_64.history.history['val_loss'].rolling(iRollWindow).mean(), label='64 batch size',
         linestyle='solid' if best_batch_size == 64 else 'dashed')
-ax.plot(model_fit_128.history.history['val_loss'], label='128 batch size',
+ax.plot(model_fit_128.history.history['val_loss'].rolling(iRollWindow).mean(), label='128 batch size',
         linestyle='solid' if best_batch_size == 128 else 'dashed')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=6).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 ax.set_xlim(0, len(model_fit_4.history.history['val_loss']))
-plt.title("Validation Loss of LSTM")
+plt.title("Rolling Validation Loss of LSTM")
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/5_0_lstm_tune.png")
 plt.savefig("./Results/Presentation/5_0_lstm_tune.svg")
@@ -415,7 +417,7 @@ for i in range(best_hps.get('additional_layers')):
 print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
 ## Create model from optimal hyperparameters ##
-early_stop = EarlyStopping(monitor='val_loss', mode='auto', verbose=1, patience=250)
+early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=250)
 
 # Fit model
 model_fit = model_builder(best_hps)
@@ -435,9 +437,8 @@ model_fit.summary()
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
-# omit first 10 epochs
-ax.plot(model_fit.history.history['loss'][10:], label='Training')
-ax.plot(model_fit.history.history['val_loss'][10:], label='Validation')
+ax.plot(model_fit.history.history['loss'][10:].rolling(iRollWindow).mean(), label='Training')
+ax.plot(model_fit.history.history['val_loss'][10:].rolling(iRollWindow).mean(), label='Validation')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
@@ -494,6 +495,7 @@ dfData['predicted_lstm_128'] = pd.DataFrame(
 
 dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
 dfData['predicted_lstm_2'] = y_scaler.inverse_transform(dfData['predicted_lstm_2'].values.reshape(-1, 1))
+dfData['predicted_lstm_16'] = y_scaler.inverse_transform(dfData['predicted_lstm_16'].values.reshape(-1, 1))
 dfData['predicted_lstm_32'] = y_scaler.inverse_transform(dfData['predicted_lstm_16'].values.reshape(-1, 1))
 dfData['predicted_lstm_128'] = y_scaler.inverse_transform(dfData['predicted_lstm_128'].values.reshape(-1, 1))
 
@@ -544,6 +546,9 @@ smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar],
 dfRMSE.loc['LSTM', 'RMSE'] = rmse_lstm
 dfRMSE.loc['LSTM', 'sMAPE'] = smape_lstm
 
+# Round to 4 decimals
+dfRMSE = dfRMSE.round(4)
+
 # Add to dfDataPred
 dfDataPred['predicted_lstm'] = dfData['predicted_lstm']
 
@@ -555,12 +560,6 @@ dfDataWIP['predicted_lstm'] = pd.DataFrame(
                       use_multiprocessing=True, workers=multiprocessing.cpu_count()
                       )
 )
-
-
-
-
-# Round to 4 decimals
-dfRMSE = dfRMSE.round(4)
 
 ########################################################################################################################
 
@@ -577,6 +576,7 @@ dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
                                           'predicted_et',
                                           'predicted_xgb']].mean(axis=1)
 dfData['predicted_avg'] = dfDataPred['predicted_avg']
+
 dfDataPred[sDepVar] = dfData[sDepVar]
 
 dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
@@ -592,11 +592,6 @@ dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
                                         'predicted_xgb']].mean(axis=1)
 
 ### Explore different weighting schemes ###
-# Bate and Granger weights use sample estimates for the population-optimal weights in ω∗ = (I'Σ^(-1)I)Σ^(-1)I
-# where I is the identity matrix and Σ^(-1) is the inverse of the covariance matrix of the forecast errors.
-# The Bate and Granger weights are given by ω = (I'Σ^(-1)I)Σ^(-1)I / (I'Σ^(-1)I)Σ^(-1)I1
-# where 1 is a vector of ones.
-
 # Calculate covariance matrix of the forecast errors. The forecast errors are the difference between the actual and
 # predicted values of sDepVar.
 dfDataPredError = pd.DataFrame()
