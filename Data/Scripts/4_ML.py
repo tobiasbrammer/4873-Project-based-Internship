@@ -320,6 +320,8 @@ dfRMSE.loc['Random Forest (Sparse)', 'sMAPE'] = smape_rf_sparse
 # Add to dfDataPred
 dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
 
+plot_predicted(dfData, 'predicted_rf_sparse', 'Random Forest', '4_1_rf_sparse', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
 # Predict WIP
 predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), rf_cv, 'rf_sparse',
                   dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
@@ -450,6 +452,7 @@ joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
 
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), gb_cv_det, 'gb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+
 plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')

@@ -75,6 +75,7 @@ plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().s
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_3_margin.png")
 plt.savefig("./Results/Presentation/1_3_margin.svg")
+plt.draw()
 upload(plt, 'Project-based Internship', 'figures/1_3_margin.png')
 
 # Select random job

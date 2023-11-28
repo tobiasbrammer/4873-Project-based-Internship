@@ -184,7 +184,6 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar].corr(), anno
                 (1, vColors[0]
                  )])
             )
-plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_0_2_corr.png")
 plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
@@ -210,7 +209,8 @@ dfDataPred['production_estimate_contribution'] = dfData['production_estimate_con
 dfDataPred['final_estimate_contribution'] = dfData['final_estimate_contribution']
 dfDataPred['risk'] = dfData['risk']
 
-plot_predicted(dfData, 'predicted_ols', 'OLS', '3_1_ols', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+plot_predicted(dfData, 'predicted_ols', 'OLS', '3_1_ols', transformation='sum',
+               trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate out-of-sample RMSE of OLS
 rmse_ols = np.sqrt(
@@ -240,7 +240,6 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag].corr(), 
                 (1, vColors[0]
                  )])
             )
-plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_2_2_corr_incl_lag.png")
 plt.savefig("./Results/Presentation/3_2_2_corr_incl_lag.svg")
 upload(plt, 'Project-based Internship', 'figures/3_2_2_corr_incl_lag.png')
@@ -289,7 +288,6 @@ sns.heatmap(dfData[dfData[trainMethod] == 1][[sDepVar] + lIndepVar_lag_budget].c
                 (1, vColors[0]
                  )])
             )
-plt.title(f'Correlation between {sDepVar} and selected variables')
 plt.savefig("./Results/Figures/3_4_2_corr_incl_lag_budget.png")
 plt.savefig("./Results/Presentation/3_4_2_corr_incl_lag_budget.svg")
 upload(plt, 'Project-based Internship', 'figures/3_4_2_corr_incl_lag_budget.png')
