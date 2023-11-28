@@ -263,7 +263,7 @@ for col in ['revenue', 'costs']:
     plot_acf(dfData[col], ax=ax[0], lags=5, zero=False)
     plot_pacf(dfData[col], ax=ax[1], lags=5, zero=False)
     ax[0].set_ylim(-0.4)
-    fig.suptitle(f'PACF and ACF of {col}')
+    #fig.suptitle(f'PACF and ACF of {col}')
     plt.tight_layout()
     plt.savefig(f"./Results/Figures/1_6_{col}_acf_pacf.png")
     plt.savefig(f"./Results/Presentation/1_6_{col}_acf_pacf.svg")
@@ -369,13 +369,6 @@ plt.xlabel("Terms")
 plt.ylabel("Frequency")
 plt.tight_layout()
 plt.grid(alpha=0.35)
-plt.annotate('Source: ELCON A/S',
-             xy=(1.0, -0.35),
-             color='grey',
-             xycoords='axes fraction',
-             ha='right',
-             va="center",
-             fontsize=10)
 plt.savefig("./Results/Figures/1_7_description.png")
 plt.savefig("./Results/Presentation/1_7_description.svg")
 upload(plt, 'Project-based Internship', 'figures/1_7_description.png')
@@ -538,7 +531,6 @@ ax[1, 0].plot(dst_df_plot['date'], dst_df_plot['kbyg33_no_limitations'])
 ax[1, 0].set_title('Share with No Production Limitations')
 ax[1, 1].plot(dst_df_plot['date'], dst_df_plot['kbyg44_confidence_indicator'])
 ax[1, 1].set_title('Confidence Indicator')
-fig.suptitle('DST Data')
 plt.tight_layout()
 plt.savefig("./Results/Figures/1_8_dst_data.png")
 plt.savefig("./Results/Presentation/1_8_dst_data.svg")
