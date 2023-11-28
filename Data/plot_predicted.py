@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import dropbox
+from dropbox.files import WriteMode
 from pathlib import Path
 from io import BytesIO
 import subprocess
@@ -25,9 +26,9 @@ def upload(ax, project, path):
     # Will throw an UploadError if it fails
     if format == 'tex':
         # Handle .tex files by directly uploading their content
-        dbx.files_upload(ax.encode(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+        dbx.files_upload(ax.encode(), f'/Apps/Overleaf/{project}/{path}', mode=WriteMode.overwrite)
     else:
-        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
+        dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=WriteMode.overwrite)
 
 def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformation='sum', show=False):
     # Plot the sum of predicted and actual sDepVar by date

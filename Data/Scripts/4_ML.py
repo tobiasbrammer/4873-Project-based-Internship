@@ -48,6 +48,8 @@ lNumericCols = lNumericCols.split('\n')
 
 # Omit columns that contain 'cluster_'
 lNumericCols = [col for col in lNumericCols if not col.startswith('cluster_')]
+# Omit total_contribution, total_margin and total_costs
+lNumericCols = [col for col in lNumericCols if col not in ['total_contribution', 'total_margin', 'total_costs']]
 
 # Replace infinite values with NaN
 dfDataScaled.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -474,7 +476,7 @@ dfRMSE.loc['Gradient Boosting', 'sMAPE'] = smape_gb
 dfDataPred['predicted_gb'] = dfData['predicted_gb']
 
 # Predict WIP
-predict_and_scale(dfDataWIP, dfDataWIP, gb_cv_det, 'gb',
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), gb_cv_det, 'gb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### XGBoost Regression ###
@@ -556,7 +558,7 @@ dfRMSE.loc['XGBoost', 'sMAPE'] = smape_xgb
 dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
 
 # Predict WIP
-predict_and_scale(dfDataWIP, dfDataWIP, xgb_cv_det, 'xgb',
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), xgb_cv_det, 'xgb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Forecast Combination with Boosting

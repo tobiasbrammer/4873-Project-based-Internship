@@ -1,38 +1,41 @@
 \begin{center}
 \begin{tabular}{lclc}
 \toprule
-\textbf{Dep. Variable:}                  & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.912   \\
-\textbf{Model:}                          &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.911   \\
-\textbf{Method:}                         &    Least Squares    & \textbf{  F-statistic:       }          &     2707.   \\
-\textbf{Date:}                           &   Tue, 28 Nov 2023  & \textbf{  Prob (F-statistic):}          &     0.00    \\
-\textbf{Time:}                           &       09:24:00      & \textbf{  Log-Likelihood:    }          &    1765.8   \\
-\textbf{No. Observations:}               &          3620       & \textbf{  AIC:               }          &    -3510.   \\
-\textbf{Df Residuals:}                   &          3609       & \textbf{  BIC:               }          &    -3442.   \\
-\textbf{Df Model:}                       &            11       & \textbf{                     }          &             \\
-\textbf{Covariance Type:}                &         HAC         & \textbf{                     }          &             \\
+\textbf{Dep. Variable:}                     & total\_contribution & \textbf{  R-squared (uncentered):}      &     0.947   \\
+\textbf{Model:}                             &         OLS         & \textbf{  Adj. R-squared (uncentered):} &     0.947   \\
+\textbf{Method:}                            &    Least Squares    & \textbf{  F-statistic:       }          &     5708.   \\
+\textbf{Date:}                              &   Tue, 28 Nov 2023  & \textbf{  Prob (F-statistic):}          &     0.00    \\
+\textbf{Time:}                              &       09:59:56      & \textbf{  Log-Likelihood:    }          &    2827.2   \\
+\textbf{No. Observations:}                  &          3763       & \textbf{  AIC:               }          &    -5626.   \\
+\textbf{Df Residuals:}                      &          3749       & \textbf{  BIC:               }          &    -5539.   \\
+\textbf{Df Model:}                          &            14       & \textbf{                     }          &             \\
+\textbf{Covariance Type:}                   &         HAC         & \textbf{                     }          &             \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lcccccc}
-                                         & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P$> |$z$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
+                                            & \textbf{coef} & \textbf{std err} & \textbf{z} & \textbf{P$> |$z$|$} & \textbf{[0.025} & \textbf{0.975]}  \\
 \midrule
-\textbf{contract\_work}                  &       0.1661  &        0.118     &     1.408  &         0.159        &       -0.065    &        0.397     \\
-\textbf{contract\_work\_cumsum}          &       0.0727  &        0.084     &     0.865  &         0.387        &       -0.092    &        0.237     \\
-\textbf{tilbuds\_og\_entreprisekontrakt} &      -0.0150  &        0.008     &    -1.781  &         0.075        &       -0.031    &        0.002     \\
-\textbf{ntek}                            &       0.0881  &        0.024     &     3.652  &         0.000        &        0.041    &        0.135     \\
-\textbf{billable\_hours\_qty\_cumsum}    &       0.1162  &        0.055     &     2.101  &         0.036        &        0.008    &        0.225     \\
-\textbf{dnu}                             &      -0.0481  &        0.013     &    -3.646  &         0.000        &       -0.074    &       -0.022     \\
-\textbf{holstebro}                       &       0.2231  &        0.016     &    14.128  &         0.000        &        0.192    &        0.254     \\
-\textbf{ombygning}                       &       0.0838  &        0.008     &     9.865  &         0.000        &        0.067    &        0.100     \\
-\textbf{kbyg33\_no\_limitations}         &       0.6299  &        0.009     &    70.562  &         0.000        &        0.612    &        0.647     \\
-\textbf{labor\_cost\_share\_lag1}        &       0.1536  &        0.014     &    11.309  &         0.000        &        0.127    &        0.180     \\
-\textbf{sales\_estimate\_contribution}   &       0.4167  &        0.075     &     5.590  &         0.000        &        0.271    &        0.563     \\
+\textbf{contract\_work}                     &      -0.7767  &        0.141     &    -5.517  &         0.000        &       -1.053    &       -0.501     \\
+\textbf{contract\_work\_cumsum}             &       0.2161  &        0.073     &     2.946  &         0.003        &        0.072    &        0.360     \\
+\textbf{ntek}                               &       0.0934  &        0.021     &     4.451  &         0.000        &        0.052    &        0.135     \\
+\textbf{tilbuds\_og\_entreprisekontrakt}    &       0.0421  &        0.006     &     7.376  &         0.000        &        0.031    &        0.053     \\
+\textbf{billable\_hours\_qty\_cumsum}       &       0.0194  &        0.051     &     0.384  &         0.701        &       -0.080    &        0.119     \\
+\textbf{dnu}                                &      -0.0683  &        0.008     &    -8.762  &         0.000        &       -0.084    &       -0.053     \\
+\textbf{ombygning}                          &       0.0460  &        0.005     &     8.910  &         0.000        &        0.036    &        0.056     \\
+\textbf{kbyg33\_no\_limitations}            &       0.1144  &        0.014     &     8.236  &         0.000        &        0.087    &        0.142     \\
+\textbf{holstebro}                          &       0.1299  &        0.017     &     7.601  &         0.000        &        0.096    &        0.163     \\
+\textbf{billable\_rate\_dep}                &       0.1655  &        0.015     &    10.922  &         0.000        &        0.136    &        0.195     \\
+\textbf{revenue\_lag1}                      &       0.5840  &        0.040     &    14.462  &         0.000        &        0.505    &        0.663     \\
+\textbf{labor\_cost\_share\_lag1}           &       0.0177  &        0.006     &     2.736  &         0.006        &        0.005    &        0.030     \\
+\textbf{production\_estimate\_contribution} &       0.7852  &        0.143     &     5.501  &         0.000        &        0.505    &        1.065     \\
+\textbf{sales\_estimate\_contribution}      &       0.6630  &        0.064     &    10.432  &         0.000        &        0.538    &        0.788     \\
 \bottomrule
 \end{tabular}
 \begin{tabular}{lclc}
-\textbf{Omnibus:}       & 204.647 & \textbf{  Durbin-Watson:     } &     1.236  \\
-\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } &   823.343  \\
-\textbf{Skew:}          &   0.069 & \textbf{  Prob(JB):          } & 1.63e-179  \\
-\textbf{Kurtosis:}      &   5.332 & \textbf{  Cond. No.          } &      26.1  \\
+\textbf{Omnibus:}       & 655.853 & \textbf{  Durbin-Watson:     } &    1.817  \\
+\textbf{Prob(Omnibus):} &   0.000 & \textbf{  Jarque-Bera (JB):  } & 6732.337  \\
+\textbf{Skew:}          &  -0.516 & \textbf{  Prob(JB):          } &     0.00  \\
+\textbf{Kurtosis:}      &   9.471 & \textbf{  Cond. No.          } &     69.2  \\
 \bottomrule
 \end{tabular}
 %\caption{OLS Regression Results}

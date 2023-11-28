@@ -23,14 +23,6 @@ dfData = pd.read_parquet("dfData.parquet")
 # Replace NA with 0
 dfData = dfData.replace(np.nan, 0)
 
-# sales_estimate_margin, production_estimate_margin and final_estimate_margin
-dfData['sales_estimate_margin'] = dfData['sales_estimate_contribution']/dfData['sales_estimate_revenue']
-dfData['production_estimate_margin'] = dfData['production_estimate_contribution']/dfData['production_estimate_revenue']
-dfData['final_estimate_margin'] = dfData['final_estimate_contribution']/dfData['final_estimate_revenue']
-
-# Replace NA with 0
-dfData = dfData.replace(np.nan, 0)
-
 # Split data into wip and finished jobs. This serves as test and train data.
 dfDataFinished = dfData[dfData['wip'] == 0]
 dfDataWIP = dfData[dfData['wip'] == 1]
