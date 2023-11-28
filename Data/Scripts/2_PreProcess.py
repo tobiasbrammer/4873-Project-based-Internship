@@ -78,6 +78,8 @@ with open('./.AUX/sDepVar.txt', 'r') as f:
 
 # Remove sDepVar from independent variables
 colIndepVarNum = [col for col in dfData[numeric_cols].columns if col != sDepVar]
+# Omit total_costs and total_margin from colIndepVarNum
+colIndepVarNum = [col for col in dfData[numeric_cols].columns if col not in [sDepVar, 'total_costs', 'total_margin']]
 
 # Shift all independent variables three periods back, so that the independent variables are lagged.
 # This is done to avoid leakage, and to ensure that the model can be used for forecasting.

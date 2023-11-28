@@ -226,7 +226,14 @@ joblib.dump(rf_cv, './.MODS/rf_cv.pickle')
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), rf_cv, 'rf_full',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
-debug = dfData[dfData[trainMethod] == 0][['job_no', 'predicted_rf_full','total_contribution']].copy()
+debug = dfData[dfData[trainMethod] == 0][['job_no', 'predicted_rf_full', 'total_contribution']].copy()
+
+debug['error'] = debug['predicted_rf_full'] - debug['total_contribution']
+# S283191
+# S283186
+
+# dfData where job_no not S283191 and S283186
+dfData_debug = dfData[~dfData['job_no'].isin(['S283191', 'S283186'])].copy()
 
 plot_predicted(dfData, 'predicted_rf_full', 'Random Forest', '4_1_rf_full', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -261,9 +268,12 @@ predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), rf_cv, 'rf_full',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 # Variable importance
-dfVarImp = pd.DataFrame(rf_cv.best_estimator_.feature_importances_, index=[dfDataWIP[lNumericCols].columns.difference([sDepVar])], columns=['importance'])
+dfVarImp = pd.DataFrame(rf_cv.best_estimator_.feature_importances_,
+                        index=[dfDataWIP[lNumericCols].columns.difference([sDepVar])],
+                        columns=['importance'])
 dfVarImp.drop('intercept', inplace=True)
-dfVarImp = dfVarImp[dfVarImp['importance'] > 0.01]
+dfVarImp.drop(lIndepVar, inplace=True)
+dfVarImp = dfVarImp[dfVarImp['importance'] > 0.001]
 dfVarImp.sort_values(by='importance', ascending=False, inplace=True)
 dfVarImp['cumsum'] = dfVarImp['importance'].cumsum()
 dfVarImp['cumsum'] = dfVarImp['cumsum'] / dfVarImp['cumsum'].max()
@@ -333,7 +343,7 @@ et_cv = RandomizedSearchCV(ExtraTreesRegressor(random_state=0), et_grid, n_iter=
 start_time_et = datetime.datetime.now()
 
 # Detailed grid
-et_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
+et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
             dfDataScaledTrain[sDepVar])
 
 et_grid_detail = {
@@ -350,7 +360,7 @@ et_cv = RandomizedSearchCV(ExtraTreesRegressor(random_state=0), et_grid_detail, 
                             scoring="neg_mean_squared_error", cv=3, verbose=False, refit=True,
                            )
 
-et_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
+et_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
             dfDataScaledTrain[sDepVar])
 
 # Save model to .MODS/ as pickle
@@ -358,7 +368,7 @@ joblib.dump(et_cv, './.MODS/et_cv.pickle')
 # Predict and rescale using ET
 
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), et_cv, 'et',
-                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNo)
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
 plot_predicted(dfData, 'predicted_et', 'Extra Trees', '4_3_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -391,7 +401,7 @@ dfDataPred['predicted_et'] = dfData['predicted_et']
 
 # Predict WIP
 predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), et_cv, 'et',
-                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Boosted Regression Trees ###
 # Define Boosted Regression Trees model
@@ -412,7 +422,7 @@ gb_cv = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid, n
 
 # Fit to the training data
 start_time_gb = datetime.datetime.now()
-gb_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
+gb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 
 # Generate of sequence of numbers based on gb_cv.best_params_ to get more appropriate parameters in the defined range.
@@ -428,7 +438,7 @@ gb_grid_detail = {
 gb_cv_det = RandomizedSearchCV(GradientBoostingRegressor(random_state=0), gb_grid_detail, n_iter=100, scoring=None, cv=3,
                            verbose=0, refit=True, n_jobs=-1)
 # Fit to the training data
-gb_cv_det.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
+gb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
           dfDataScaledTrain[sDepVar])
 
 # Save model to .MODS/ as pickle
@@ -437,7 +447,7 @@ joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
 # Predict and rescale using GB
 
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), gb_cv_det, 'gb',
-                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNo)
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
@@ -465,7 +475,7 @@ dfDataPred['predicted_gb'] = dfData['predicted_gb']
 
 # Predict WIP
 predict_and_scale(dfDataWIP, dfDataWIP, gb_cv_det, 'gb',
-                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### XGBoost Regression ###
 # Define XGBoost model
@@ -488,7 +498,7 @@ xgb_cv = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid, n_iter=100, 
 
 # Fit to the training data
 start_time_xgb = datetime.datetime.now()
-xgb_cv.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
+xgb_cv.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
 
 # Detailed grid
@@ -507,14 +517,14 @@ xgb_grid_detail = {
 xgb_cv_det = RandomizedSearchCV(XGBRegressor(random_state=0), xgb_grid_detail, n_iter=100, scoring=None, cv=3,
                             verbose=0, refit=True, n_jobs=-1)
 
-xgb_cv_det.fit(dfDataScaledTrain[lIndepVar][dfDataScaledTrain[lIndepVar].columns.difference([sDepVar])].replace(np.nan, 0),
+xgb_cv_det.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
            dfDataScaledTrain[sDepVar])
 
 # Save model to .MODS/ as pickle
 joblib.dump(xgb_cv_det, './.MODS/xgb_cv.pickle')
 # Predict and rescale using XGB
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), xgb_cv_det, 'xgb',
-                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNo)
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
 plot_predicted(dfData, 'predicted_xgb', 'XGBoost', '4_5_xgb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -547,7 +557,7 @@ dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
 
 # Predict WIP
 predict_and_scale(dfDataWIP, dfDataWIP, xgb_cv_det, 'xgb',
-                  dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Forecast Combination with Boosting
 dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 2

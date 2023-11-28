@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import dropbox
+¢import dropbox
 from pathlib import Path
 from io import BytesIO
 import subprocess
@@ -29,7 +29,6 @@ def upload(ax, project, path):
     else:
         dbx.files_upload(bs.getvalue(), f'/Apps/Overleaf/{project}/{path}', mode=dropbox.files.WriteMode.overwrite)
 
-
 def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformation='sum', show=False):
     # Plot the sum of predicted and actual sDepVar by date
     fig, ax = plt.subplots(figsize=(20, 10))
@@ -40,9 +39,8 @@ def plot_predicted(df, predicted, label, file, trainMethod, sDepVar, transformat
             df[df[trainMethod] == 0].groupby('date')[predicted].transform(transformation).astype(float), label=label)
     ax.set_xlabel('Date')
     ax.set_ylabel('Total Contribution (mDKK)')
-    # ax.set_title('Out of Sample')
     ax.set_aspect('auto')
-    ax.set_ylim([-5, 15.00])
+    ax.set_ylim([-5, 20.00])
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.5)
     plt.rcParams['axes.axisbelow'] = True

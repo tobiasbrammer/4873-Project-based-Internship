@@ -38,7 +38,6 @@ sns.kdeplot(data=dfData, x='sales_estimate_costs', label='sales estimate costs')
 sns.kdeplot(data=dfData, x='production_estimate_costs', label='production estimate costs')
 sns.kdeplot(data=dfData, x='final_estimate_costs', label='final estimate costs')
 plt.rcParams.update({'font.size': 20})
-# Set font size of x and y labels
 plt.xlabel("Costs (mDKK)", fontsize=20)
 plt.ylabel("Density", fontsize=20)
 plt.xlim(dfData['budget_costs'].quantile(0.00000000001), 10)
@@ -54,18 +53,28 @@ sns.kdeplot(data=dfData, x='budget_revenue', label='budget revenue')
 sns.kdeplot(data=dfData, x='sales_estimate_revenue', label='sales estimate revenue')
 sns.kdeplot(data=dfData, x='production_estimate_revenue', label='production estimate revenue')
 sns.kdeplot(data=dfData, x='final_estimate_revenue', label='final estimate revenue')
-# limit x-axis to cover 99.99% of the data
 plt.xlim(-10, dfData['budget_revenue'].quantile(0.9999999999))
 plt.xlabel("Revenue (mDKK)")
 plt.ylabel("Density")
-# legend below x-axis label
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/1_1_revenue.png")
 plt.savefig("./Results/Presentation/1_1_revenue.svg")
 upload(plt, 'Project-based Internship', 'figures/1_1_revenue.png')
 
+# Plot distribution of budget_revenue, sales_estimate_revenue, production_estimate_revenue and final_estimate_revenue
+plt.figure(figsize=(20, 10))
+sns.kdeplot(data=dfData, x='sales_estimate_margin', label='sales estimate margin')
+sns.kdeplot(data=dfData, x='production_estimate_margin', label='production estimate margin')
+sns.kdeplot(data=dfData, x='final_estimate_margin', label='final estimate margin')
+plt.xlim(-0.5, 0.5)
+plt.xlabel("Margin")
+plt.ylabel("Density")
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
+plt.grid(alpha=0.35)
+plt.savefig("./Results/Figures/1_3_margin.png")
+plt.savefig("./Results/Presentation/1_3_margin.svg")
+upload(plt, 'Project-based Internship', 'figures/1_3_margin.png')
 
 # Select random job
 job_no = 'S309436'
@@ -92,34 +101,33 @@ plt.savefig("./Results/Figures/1_2_scurve.png")
 plt.savefig("./Results/Presentation/1_2_scurve.svg")
 upload(plt, 'Project-based Internship', 'figures/1_2_scurve.png')
 
-# Plot kde of risk and sum of risk by date for each department in a grid with 2 rows and 1 column
-fig, ax = plt.subplots(2, 1, figsize=(20, 10))
-sns.kdeplot(data=dfData, x='risk', label='risk', ax=ax[0])
-ax[0].set_xlabel("Risk (mDKK)")
-ax[0].set_ylabel("Density")
-ax[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=1).get_frame().set_linewidth(0.0)
-# Limit x-axis to cover 99.99% of the data
-ax[0].set_xlim(dfData['risk'].quantile(0.01), 0.99)
-sns.lineplot(x='date', y='risk', hue='department', data=dfData, errorbar=None, ax=ax[1])
-ax[1].set_xlabel("Date")
-ax[1].set_ylabel("Risk")
-ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.35)
-plt.savefig("./Results/Figures/1_3_risk.png")
-plt.savefig("./Results/Presentation/1_3_risk.svg")
-upload(plt, 'Project-based Internship', 'figures/1_3_risk.png')
-
-# Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
-plt.figure(figsize=(20, 10))
-sns.kdeplot(data=dfData, x='risk', label='risk')
-plt.xlabel("Risk (mDKK)")
-plt.ylabel("Density")
-plt.xlim(dfData['risk'].quantile(0.01), dfData['risk'].quantile(0.99))
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=1).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.35)
-plt.savefig("./Results/Figures/1_3_risk.png")
-plt.savefig("./Results/Presentation/1_3_risk.svg")
-upload(plt, 'Project-based Internship', 'figures/1_3_risk.png')
+# # Plot kde of risk and sum of risk by date for each department in a grid with 2 rows and 1 column
+# fig, ax = plt.subplots(2, 1, figsize=(20, 10))
+# sns.kdeplot(data=dfData, x='risk', label='risk', ax=ax[0])
+# ax[0].set_xlabel("Risk (mDKK)")
+# ax[0].set_ylabel("Density")
+# ax[0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=1).get_frame().set_linewidth(0.0)
+# ax[0].set_xlim(dfData['risk'].quantile(0.01), 0.99)
+# sns.lineplot(x='date', y='risk', hue='department', data=dfData, errorbar=None, ax=ax[1])
+# ax[1].set_xlabel("Date")
+# ax[1].set_ylabel("Risk")
+# ax[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
+# plt.grid(alpha=0.35)
+# plt.savefig("./Results/Figures/1_3_risk.png")
+# plt.savefig("./Results/Presentation/1_3_risk.svg")
+# upload(plt, 'Project-based Internship', 'figures/1_3_risk.png')
+#
+# # Plot distribution of budget_costs, sales_estimate_costs, production_estimate_costs and final_estimate_costs
+# plt.figure(figsize=(20, 10))
+# sns.kdeplot(data=dfData, x='risk', label='risk')
+# plt.xlabel("Risk (mDKK)")
+# plt.ylabel("Density")
+# plt.xlim(dfData['risk'].quantile(0.01), dfData['risk'].quantile(0.99))
+# plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=1).get_frame().set_linewidth(0.0)
+# plt.grid(alpha=0.35)
+# plt.savefig("./Results/Figures/1_3_risk.png")
+# plt.savefig("./Results/Presentation/1_3_risk.svg")
+# upload(plt, 'Project-based Internship', 'figures/1_3_risk.png')
 
 
 ### Missing Data Analysis ###
@@ -169,7 +177,7 @@ sns.regplot(ax=axs[0], data=dfData[dfData['department'] == '515'], x='risk', y='
 axs[0].set_xlabel("Risk (mDKK)")
 axs[0].set_ylabel("Total Contribution (mDKK)")
 axs[0].grid(alpha=0.35)
-# Plot 2: Billable Rate vs Total Contribution
+
 sns.scatterplot(ax=axs[1], data=dfData, x='billable_rate_dep', y='total_contribution', hue='department')
 sns.regplot(ax=axs[1], data=dfData[dfData['department'] == '505'], x='billable_rate_dep', y='total_contribution', scatter=False, color=vColors[1])
 sns.regplot(ax=axs[1], data=dfData[dfData['department'] == '515'], x='billable_rate_dep', y='total_contribution', scatter=False, color=vColors[2])
@@ -201,28 +209,37 @@ plt.savefig("./Results/Presentation/analysis_scatter.svg")
 # Summary of Variables (mean, std, min, max, missing, % missing)
 summary_data = dfData.select_dtypes(exclude=['datetime']).describe().transpose()
 summary_data_date = dfData.select_dtypes(include=['datetime']).describe().transpose()
+
 # Keep index, min, max, mean, std.
 formatted_df_eda_1 = summary_data[['mean', 'std', 'min', 'max']]
 formatted_df_eda_1_date = summary_data_date[['min', 'max']]
+
 # Rename first = min and last = max
 formatted_df_eda_1_date = formatted_df_eda_1_date.rename(columns={'first': 'min', 'last': 'max'})
+
 # Format as dd-mm-yyyy
 formatted_df_eda_1_date = formatted_df_eda_1_date.applymap(lambda x: x.strftime('%d-%m-%Y'))
 formatted_df_eda_1_date.insert(0, 'mean', np.nan)
 formatted_df_eda_1_date.insert(1, 'std', np.nan)
+
 # Count number of missing values for each variable
 missing_values = dfData.isnull().sum().to_frame()
+
 # Rename column
 missing_values = missing_values.rename(columns={0: 'missing'})
+
 # Percentage of missing values
 missing_values['% missing'] = missing_values['missing'] / len(dfData) * 100
+
 # formatted_df_eda_1 = formatted_df_eda_1.select_dtypes(include=[np.number]).map('{:,.2f}'.format)
 # Add mean and std to formatted_df_eda_1_date (set to NA)
 formatted_df_eda_1_date['mean'] = np.nan
 formatted_df_eda_1_date['std'] = np.nan
+
 # Join formatted_df_eda_1 and formatted_df_eda_1_date. Date variables are first.
 # AttributeError: 'DataFrame' object has no attribute 'append'
 formatted_df_eda_1 = pd.concat([formatted_df_eda_1_date, formatted_df_eda_1], axis=0)
+
 # Join missing
 formatted_df_eda_1 = formatted_df_eda_1.join(missing_values)
 

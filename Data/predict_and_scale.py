@@ -1,4 +1,4 @@
-def predict_and_scale(df, dfScaled, model, sName, lModelVars, lJobNo):
+def predict_and_scale(df, dfScaled, model, sName, lModelVars, lJobNo, bConst=False):
     """
     Function to predict and scale data for each job number.
 
@@ -13,10 +13,17 @@ def predict_and_scale(df, dfScaled, model, sName, lModelVars, lJobNo):
     None: The function modifies the df and dfScaled DataFrames in place.
     """
     import joblib
+    from statsmodels.regression.linear_model import RegressionResultsWrapper
     import pandas as pd
     import numpy as np
 
-    x_scaler = joblib.load("./.AUX/x_scaler.save")
+    # If bConst is True, then add 'intercept' to the list of model variables
+    if bConst:
+        lModelVars = lModelVars + ['intercept']
+    else:
+        pass
+
+    # x_scaler = joblib.load("./.AUX/x_scaler.save")
     y_scaler = joblib.load("./.AUX/y_scaler.save")
 
     predicted_col = f'predicted_{sName}'
@@ -27,7 +34,10 @@ def predict_and_scale(df, dfScaled, model, sName, lModelVars, lJobNo):
             for i in range(len(lIndex)):
                 lIndexSeq = lIndex[0:i + 1]
                 # Predict using the provided model
-                dfScaled.loc[lIndex[i], predicted_col] = model.predict(dfScaled.loc[lIndexSeq, lModelVars])[i]
+                if isinstance(model, RegressionResultsWrapper):
+                    dfScaled.loc[lIndex[i], predicted_col] = model.predict(dfScaled.loc[lIndexSeq, lModelVars]).values[i]
+                else:
+                    dfScaled.loc[lIndex[i], predicted_col] = model.predict(dfScaled.loc[lIndexSeq, lModelVars])[i]
                 # Rescale and update the original dataframe
                 df.loc[lIndex[i], predicted_col] = y_scaler.inverse_transform(
                     dfScaled.loc[lIndex[i], predicted_col].reshape(-1, 1)).reshape(-1)

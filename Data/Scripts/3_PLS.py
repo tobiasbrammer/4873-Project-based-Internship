@@ -75,10 +75,10 @@ lDST = [s for s in dfDataScaled.columns if 'kbyg' in s]
 with open('./.AUX/lDST.txt', 'w') as lVars:
     lVars.write('\n'.join(lDST))
 
-model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lDST]))
+model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lDST]))
 results_dst = model.fit()
 # Save results to LaTeX
-ols = results_dst.summary(alpha=0.05).as_latex()
+ols = results_dst.summary(alpha=0.05).as_latex().split('\n\nNotes:')[0]
 
 with open('Results/Tables/3_0_dst.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
@@ -107,9 +107,9 @@ with open('./.AUX/lJobNo.txt', 'w') as lVars:
 with open('./.AUX/lJobNoWIP.txt', 'w') as lVars:
     lVars.write('\n'.join(lJobNoWIP))
 
+predict_and_scale(dfData, dfDataScaled, results_dst, 'dst', lDST, lJobNo, bConst=False)
 
-predict_and_scale(dfData, dfDataScaled, results_dst, 'dst', lDST, lJobNo)
-
+# Check if model type is RegressionResultsWrapper:
 dfDataPred = dfData[['date', 'job_no', sDepVar, 'predicted_dst']]
 
 plot_predicted(dfData, 'predicted_dst', 'Statistics Denmark', '3_0_dst', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar, show=False)
@@ -124,24 +124,24 @@ smape_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_dst'])
 
 # Predict and scale dfDataWIP
-predict_and_scale(dfDataWIP, dfDataWIP, results_dst, 'dst', lDST, lJobNoWIP)
+predict_and_scale(dfDataWIP, dfDataWIP, results_dst, 'dst', lDST, lJobNoWIP, bConst=False)
 
 ### OLS with s-curve differences. ###
 lSCurve = ['revenue_scurve_diff', 'costs_scurve_diff', 'contribution_scurve_diff']
 
-model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lSCurve]))
+model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lSCurve]))
 results_scurve = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
 results_scurve.save('./.MODS/results_scurve.pickle')
 # Save results to LaTeX
-ols = results_scurve.summary(alpha=0.05).as_latex()
+ols = results_scurve.summary(alpha=0.05).as_latex().split('\n\nNotes:')[0]
 
 with open('Results/Tables/3_9_scurve.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 upload(ols, 'Project-based Internship', 'tables/3_9_scurve.tex')
 
 # Predict and rescale sDepVar using OLS
-predict_and_scale(dfData, dfDataScaled, results_scurve, 'scurve', lSCurve, lJobNo)
+predict_and_scale(dfData, dfDataScaled, results_scurve, 'scurve', lSCurve, lJobNo, bConst=False)
 
 dfDataPred['predicted_scurve'] = dfData['predicted_scurve']
 
@@ -157,7 +157,7 @@ smape_scurve = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_scurve'].replace(np.nan, 0))
 
 # Predict dfDataWIP[sDepVar]
-predict_and_scale(dfDataWIP, dfDataWIP, results_scurve, 'scurve', lSCurve, lJobNoWIP)
+predict_and_scale(dfDataWIP, dfDataWIP, results_scurve, 'scurve', lSCurve, lJobNoWIP, bConst=False)
 
 ### Using correlation to select variables ###
 corr = dfData[dfData[trainMethod] == 1][lNumericCols].corr()
@@ -190,17 +190,17 @@ plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
 
 # Run OLS
-model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar]), missing='drop')
+model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lIndepVar]), missing='drop')
 results_ols = model.fit()
 # Save results to LaTeX
-ols = results_ols.summary(alpha=0.05).as_latex()
+ols = results_ols.summary(alpha=0.05).as_latex().split('\n\nNotes:')[0]
 
 with open('Results/Tables/3_1_ols.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 upload(ols, 'Project-based Internship', 'tables/3_1_ols.tex')
 
 # Predict and rescale sDepVar using OLS with lIndepVar
-predict_and_scale(dfData, dfDataScaled, results_ols, 'ols', lIndepVar, lJobNo)
+predict_and_scale(dfData, dfDataScaled, results_ols, 'ols', lIndepVar, lJobNo, bConst=False)
 
 dfDataPred['predicted_ols'] = dfData['predicted_ols']
 
@@ -221,7 +221,7 @@ smape_ols = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                   dfData[dfData[trainMethod] == 0]['predicted_ols'])
 
 # Predict dfDataWIP[sDepVar]
-predict_and_scale(dfDataWIP, dfDataWIP, results_ols, 'ols', lIndepVar, lJobNoWIP)
+predict_and_scale(dfDataWIP, dfDataWIP, results_ols, 'ols', lIndepVar, lJobNoWIP, bConst=False)
 
 ### Add lagged variables to lIndepVar ###
 # lIndepVar_lag = lIndepVar + ['contribution_lag1', 'revenue_lag1', 'costs_lag1',
@@ -246,17 +246,17 @@ plt.savefig("./Results/Presentation/3_2_2_corr_incl_lag.svg")
 upload(plt, 'Project-based Internship', 'figures/3_2_2_corr_incl_lag.png')
 
 # Run OLS with lagged variables
-model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag]), missing='drop')
+model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lIndepVar_lag]), missing='drop')
 results_ols_lag = model.fit()
 # Save results to LaTeX
-ols = results_ols_lag.summary(alpha=0.05).as_latex()
+ols = results_ols_lag.summary(alpha=0.05).as_latex().split('\n\nNotes:')[0]
 
 with open('Results/Tables/3_2_ols_lag.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
-upload(results_ols_lag.summary().as_latex(), 'Project-based Internship', 'tables/3_2_ols_lag.tex')
+upload(ols, 'Project-based Internship', 'tables/3_2_ols_lag.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables
-predict_and_scale(dfData, dfDataScaled, results_ols_lag, 'lag', lIndepVar_lag, lJobNo)
+predict_and_scale(dfData, dfDataScaled, results_ols_lag, 'lag', lIndepVar_lag, lJobNo, bConst=False)
 dfDataPred['predicted_lag'] = dfData['predicted_lag']
 plot_predicted(dfData, 'predicted_lag', 'OLS with lag', '3_2_ols_lag', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -270,7 +270,7 @@ smape_ols_lag = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                       dfData[dfData[trainMethod] == 0]['predicted_lag'])
 
 # Predict dfDataWIP[sDepVar]
-predict_and_scale(dfDataWIP, dfDataWIP, results_ols_lag, 'ols_lag', lIndepVar_lag, lJobNoWIP)
+predict_and_scale(dfDataWIP, dfDataWIP, results_ols_lag, 'ols_lag', lIndepVar_lag, lJobNoWIP, bConst=False)
 
 # Include production_estimate_contribution and sales_estimate_contribution
 lIndepVar_lag_budget = lIndepVar_lag + ['production_estimate_contribution', 'sales_estimate_contribution']
@@ -294,15 +294,6 @@ plt.savefig("./Results/Figures/3_4_2_corr_incl_lag_budget.png")
 plt.savefig("./Results/Presentation/3_4_2_corr_incl_lag_budget.svg")
 upload(plt, 'Project-based Internship', 'figures/3_4_2_corr_incl_lag_budget.png')
 
-# Run OLS with lagged variables and budget
-model = sm.OLS(dfDataScaledTrain[sDepVar], sm.add_constant(dfDataScaledTrain[lIndepVar_lag_budget]), missing='drop')
-results_lag_budget = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
-# Save model to .MODS/
-results_lag_budget.save('./.MODS/results_lag_budget.pickle')
-
-# Save results to LaTeX
-ols = results_lag_budget.summary(alpha=0.05).as_latex()
-
 # Check for multicollinearity
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
@@ -313,15 +304,30 @@ vif_data["feature"] = dfDataScaledTrain[lIndepVar_lag_budget].columns
 # Calculate VIF for each feature
 vif_data["VIF"] = [variance_inflation_factor(dfDataScaledTrain[lIndepVar_lag_budget].values, i)
                      for i in range(len(dfDataScaledTrain[lIndepVar_lag_budget].columns))]
-print(vif_data)
+# Order by VIF ascending
+vif_data = vif_data.sort_values(by='VIF', ascending=False)
+vif_data.columns.values[0] = ''
+upload(vif_data.to_latex(index=False), 'Project-based Internship', 'tables/3_4_2_vif.tex')
 
+
+# Omit variables with VIF > 30 from lIndepVar_lag_budget.
+lIndepVar_lag_budget = [x for x in lIndepVar_lag_budget if x not in vif_data[vif_data['VIF'] > 30]['feature'].tolist()]
+
+# Run OLS with lagged variables and budget
+model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lIndepVar_lag_budget]), missing='drop')
+results_lag_budget = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
+# Save model to .MODS/
+results_lag_budget.save('./.MODS/results_lag_budget.pickle')
+
+# Save results to LaTeX
+ols = results_lag_budget.summary(alpha=0.05).as_latex().split('\n\nNotes:')[0]
 
 with open('Results/Tables/3_3_ols_lag_budget.tex', 'w', encoding='utf-8') as f:
     f.write(ols)
 upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
-predict_and_scale(dfData, dfDataScaled, results_lag_budget, 'lag_budget', lIndepVar_lag_budget, lJobNo)
+predict_and_scale(dfData, dfDataScaled, results_lag_budget, 'lag_budget', lIndepVar_lag_budget, lJobNo, bConst=False)
 dfDataPred['predicted_lag_budget'] = dfData['predicted_lag_budget']
 plot_predicted(dfData, 'predicted_lag_budget', 'OLS with lag and budget', '3_3_ols_lag_budget', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -333,7 +339,7 @@ smape_ols_lag_budget = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                              dfData[dfData[trainMethod] == 0]['predicted_lag_budget'])
 
 # Predict dfDataWIP[sDepVar]
-predict_and_scale(dfDataWIP, dfDataWIP, results_lag_budget, 'ols_lag_budget', lIndepVar_lag_budget, lJobNoWIP)
+predict_and_scale(dfDataWIP, dfDataWIP, results_lag_budget, 'ols_lag_budget', lIndepVar_lag_budget, lJobNoWIP, bConst=False)
 
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
@@ -380,7 +386,7 @@ for iCluster in lCluster:
         # Check if the subset of data has enough observations for OLS
         if data_subset.shape[0] > 1:
             # Run OLS
-            model_cluster = sm.OLS(data_subset[sDepVar], sm.add_constant(data_subset[['intercept'] + lIndepVar_lag_budget]))
+            model_cluster = sm.OLS(data_subset[sDepVar], (data_subset[['intercept'] + lIndepVar_lag_budget]))
             results_cluster = model_cluster.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
             # Save model to .MODS/
             results_cluster.save('./.MODS/results_cluster_' + str(iCluster) + '_' + str(iClusterLabel) + '.pickle')
@@ -594,7 +600,7 @@ for i, sJobNo in enumerate(lJob):
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_scurve'],
                label='predicted (s-curve)', linestyle='dotted')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_ols'],
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_lag'],
                label='predicted (ols)', linestyle='dashdot')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_fc_cluster_dst'],
