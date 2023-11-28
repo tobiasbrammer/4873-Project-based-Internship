@@ -18,6 +18,7 @@ A financial metric used during construction calculates estimated revenue by adju
 
 ### Statistical
 - OLS
+- Elastic Net
 
 ### Bagging
 - Random Forest
