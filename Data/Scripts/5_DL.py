@@ -9,6 +9,7 @@ import datetime
 import joblib
 from plot_config import *
 from plot_predicted import *
+from predict_and_scale import *
 from notify import *
 from smape import *
 from sklearn.metrics import mean_squared_error
@@ -78,6 +79,16 @@ with open('./.AUX/sDepVar.txt', 'r') as f:
 # Load trainMethod from ./.AUX/trainMethod.txt
 with open('./.AUX/trainMethod.txt', 'r') as f:
     trainMethod = f.read()
+
+# Import lJobNo from ./.AUX/lJobNo.txt
+with open('./.AUX/lJobNo.txt', 'r') as f:
+    lJobNo = f.read()
+lJobNo = lJobNo.split('\n')
+
+# Import lJobNoWIP from ./.AUX/lJobNoWIP.txt
+with open('./.AUX/lJobNoWIP.txt', 'r') as f:
+    lJobNoWIP = f.read()
+lJobNoWIP = lJobNoWIP.split('\n')
 
 # Import lIndepVar_lag_budget from ./.AUX/lIndepVar_lag_budget.txt
 with open('./.AUX/lIndepVar_lag_budget.txt', 'r') as f:
@@ -201,12 +212,12 @@ tuner_64 = kt.Hyperband(model_builder,
                         project_name='LSTM_64')
 
 tuner_128 = kt.Hyperband(model_builder,
-                        objective='val_loss',
-                        max_epochs=50,
-                        factor=3,
-                        seed=607,
-                        directory='./.MODS',
-                        project_name='LSTM_128')
+                         objective='val_loss',
+                         max_epochs=50,
+                         factor=3,
+                         seed=607,
+                         directory='./.MODS',
+                         project_name='LSTM_128')
 
 # Define early stopping
 early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=15)
@@ -271,13 +282,13 @@ tuner_64.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
                 verbose=1)
 
 tuner_128.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                batch_size=128,
-                validation_split=0.10,
-                callbacks=[early_stop],
-                use_multiprocessing=True,
-                workers=multiprocessing.cpu_count(),
-                verbose=1)
+                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                 batch_size=128,
+                 validation_split=0.10,
+                 callbacks=[early_stop],
+                 use_multiprocessing=True,
+                 workers=multiprocessing.cpu_count(),
+                 verbose=1)
 
 
 # Get the optimal hyperparameters
@@ -301,7 +312,7 @@ model_fit_128 = tuner_128.hypermodel.build(best_hps_128)
 # Fit model
 model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=100,
+                epochs=200,
                 batch_size=2,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -310,7 +321,7 @@ model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_4.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=100,
+                epochs=200,
                 batch_size=4,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -319,7 +330,7 @@ model_fit_4.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_8.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=100,
+                epochs=200,
                 batch_size=8,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -328,7 +339,7 @@ model_fit_8.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_16.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=100,
+                 epochs=200,
                  batch_size=16,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -337,7 +348,7 @@ model_fit_16.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=100,
+                 epochs=200,
                  batch_size=32,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -346,7 +357,7 @@ model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=100,
+                 epochs=200,
                  batch_size=64,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -354,13 +365,13 @@ model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
                  verbose=1)
 
 model_fit_128.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                    dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                    epochs=100,
-                    batch_size=128,
-                    validation_split=0.1,
-                    use_multiprocessing=True,
-                    workers=multiprocessing.cpu_count(),
-                    verbose=1)
+                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                  epochs=200,
+                  batch_size=128,
+                  validation_split=0.1,
+                  use_multiprocessing=True,
+                  workers=multiprocessing.cpu_count(),
+                  verbose=1)
 
 # Get val_loss of best model
 val_loss_2 = tuner_2.oracle.get_best_trials()[0].score
@@ -384,19 +395,19 @@ iRollWindow = 5
 
 # Compare val_loss of best models over epochs
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(model_fit_4.history.history['val_loss'].rolling(iRollWindow).mean(), label='4 batch size',
+ax.plot(pd.Series(model_fit_4.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='4 batch size',
         linestyle='solid' if best_batch_size == 4 else 'dashed')
-ax.plot(model_fit_8.history.history['val_loss'].rolling(iRollWindow).mean(), label='8 batch size',
+ax.plot(pd.Series(model_fit_8.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='8 batch size',
         linestyle='solid' if best_batch_size == 8 else 'dashed')
-ax.plot(model_fit_16.history.history['val_loss'].rolling(iRollWindow).mean(), label='16 batch size',
+ax.plot(pd.Series(model_fit_16.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='16 batch size',
         linestyle='solid' if best_batch_size == 16 else 'dashed')
-ax.plot(model_fit_32.history.history['val_loss'].rolling(iRollWindow).mean(), label='32 batch size',
+ax.plot(pd.Series(model_fit_32.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='32 batch size',
         linestyle='solid' if best_batch_size == 32 else 'dashed')
-ax.plot(model_fit_64.history.history['val_loss'].rolling(iRollWindow).mean(), label='64 batch size',
+ax.plot(pd.Series(model_fit_64.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='64 batch size',
         linestyle='solid' if best_batch_size == 64 else 'dashed')
-ax.plot(model_fit_128.history.history['val_loss'].rolling(iRollWindow).mean(), label='128 batch size',
+ax.plot(pd.Series(model_fit_128.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='128 batch size',
         linestyle='solid' if best_batch_size == 128 else 'dashed')
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=6).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 ax.set_xlim(0, len(model_fit_4.history.history['val_loss']))
@@ -436,8 +447,8 @@ model_fit.summary()
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(model_fit.history.history['loss'][10:].rolling(iRollWindow).mean(), label='Training')
-ax.plot(model_fit.history.history['val_loss'][10:].rolling(iRollWindow).mean(), label='Validation')
+ax.plot(pd.Series(model_fit.history.history['loss']).rolling(iRollWindow).mean()[iRollWindow:], label='Training')
+ax.plot(pd.Series(model_fit.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='Validation')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
@@ -447,56 +458,11 @@ plt.savefig("./Results/Figures/5_0_loss.png")
 plt.savefig("./Results/Presentation/5_0_loss.svg")
 upload(plt, 'Project-based Internship', 'figures/5_0_loss.png')
 
-# For each job predict sDepVar using model_fit
-dfData['predicted_lstm'] = pd.DataFrame(
-    # Ignore index and get the last value of the prediction
-    model_fit.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
-                      batch_size=best_batch_size,
-                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
-                      ),
-    index=dfData.index
-)
-
-
-dfData['predicted_lstm_2'] = pd.DataFrame(
-    model_fit_2.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
-                      batch_size=2,
-                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
-                      ),
-    index=dfData.index
-)
-
-# Predict for different batch sizes
-dfData['predicted_lstm_16'] = pd.DataFrame(
-    model_fit_16.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
-                      batch_size=16,
-                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
-                      ),
-    index=dfData.index
-)
-
-dfData['predicted_lstm_32'] = pd.DataFrame(
-    model_fit_32.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
-                      batch_size=32,
-                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
-                      ),
-    index=dfData.index
-)
-
-
-dfData['predicted_lstm_128'] = pd.DataFrame(
-    model_fit_128.predict(dfDataScaled[lNumericCols][dfDataScaled[lNumericCols].columns.difference([sDepVar])],
-                      batch_size=128,
-                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
-                      ),
-    index=dfData.index
-)
-
-dfData['predicted_lstm'] = y_scaler.inverse_transform(dfData['predicted_lstm'].values.reshape(-1, 1))
-dfData['predicted_lstm_2'] = y_scaler.inverse_transform(dfData['predicted_lstm_2'].values.reshape(-1, 1))
-dfData['predicted_lstm_16'] = y_scaler.inverse_transform(dfData['predicted_lstm_16'].values.reshape(-1, 1))
-dfData['predicted_lstm_32'] = y_scaler.inverse_transform(dfData['predicted_lstm_16'].values.reshape(-1, 1))
-dfData['predicted_lstm_128'] = y_scaler.inverse_transform(dfData['predicted_lstm_128'].values.reshape(-1, 1))
+predict_and_scale(dfData, dfDataScaled, model_fit, 'lstm',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+                  lJobNo,
+                  bConst=False,
+                  iBatchSize=best_batch_size)
 
 # Plot difference between predicted and actual values
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -527,9 +493,6 @@ plt.savefig("./Results/Figures/5_1_lstm_batch.png")
 plt.savefig("./Results/Presentation/5_1_lstm_batch.svg")
 upload(plt, 'Project-based Internship', 'figures/5_1_lstm_batch.png')
 
-print(f'LSTM fit finished in {datetime.datetime.now() - start_time_lstm_tune}.')
-
-
 plot_predicted(dfData, 'predicted_lstm', 'LSTM', '5_1_lstm', transformation='sum', trainMethod=trainMethod,
                sDepVar=sDepVar)
 
@@ -552,13 +515,13 @@ dfRMSE = dfRMSE.round(4)
 dfDataPred['predicted_lstm'] = dfData['predicted_lstm']
 
 # Predict WIP
-dfDataWIP['predicted_lstm'] = pd.DataFrame(
-    # Ignore index and get the last value of the prediction
-    model_fit.predict(dfDataWIP[lNumericCols][dfDataWIP[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
-                      batch_size=best_batch_size,
-                      use_multiprocessing=True, workers=multiprocessing.cpu_count()
-                      )
-)
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan, 0), model_fit, 'lstm',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+                  lJobNoWIP,
+                  bConst=False,
+                  iBatchSize=best_batch_size)
+
+print(f'LSTM finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 
 ########################################################################################################################
 
@@ -789,6 +752,12 @@ fig, ax = plt.subplots(len(lJob), 1, figsize=(20, 10 * len(lJob)))
 # Loop through each job_no in lJob
 for i, sJobNo in enumerate(lJob):
     # Plot total contribution, contribution, revenue and cumulative contribution
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
+               label='cumulative contribution')
+    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
+               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
+               label='slutvurdering')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_lstm'],
                label='predicted (lstm)', linestyle='dashed')
@@ -801,12 +770,6 @@ for i, sJobNo in enumerate(lJob):
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_boost'],
                label='predicted (boosting)', linestyle='dashed')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               dfData_org[dfData_org['job_no'] == sJobNo]['contribution_cumsum'],
-               label='cumulative contribution')
-    ax[i].plot(dfData[dfData['job_no'] == sJobNo]['date'],
-               dfData_org[dfData_org['job_no'] == sJobNo]['final_estimate_contribution'],
-               label='slutvurdering')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
     ax[i].set_ylabel('Contribution (mDKK)')
