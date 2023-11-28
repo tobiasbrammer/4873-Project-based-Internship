@@ -135,6 +135,12 @@ dfData.loc[dfData['final_estimate_margin'] > 1, 'final_estimate_margin'] = 1
 dfData.loc[dfData['final_estimate_margin'] < -1, 'final_estimate_margin'] = -1
 dfData['final_estimate_margin'] = dfData['final_estimate_margin'].replace([np.inf, -np.inf], np.nan)
 
+dfData['budget_margin'] = dfData['budget_contribution']/dfData['budget_revenue']
+dfData.loc[dfData['budget_margin'] > 1, 'budget_margin'] = 1
+dfData.loc[dfData['budget_margin'] < -1, 'budget_margin'] = -1
+dfData['budget_margin'] = dfData['budget_margin'].replace([np.inf, -np.inf], np.nan)
+
+
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns
 numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" not in col and "_rate" not in col]

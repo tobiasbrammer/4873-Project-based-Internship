@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-¢import dropbox
+import dropbox
 from pathlib import Path
 from io import BytesIO
 import subprocess
