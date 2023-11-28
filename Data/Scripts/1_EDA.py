@@ -149,7 +149,7 @@ sns.barplot(x=dfMissing[dfMissing['missing_pct'] > 0]['column'],
 plt.xticks(rotation=90)
 plt.xlabel("Columns")
 plt.ylabel("Missing Percentage")
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.35)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")

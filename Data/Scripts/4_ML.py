@@ -670,10 +670,10 @@ for i, sJobNo in enumerate(lJob):
                label='predicted (boost)', linestyle='dashed')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
-    ax[i].set_ylabel('Contribution')
+    ax[i].set_ylabel('Contribution (mDKK)')
     ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
     ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
+    plt.grid(alpha=0.35)
     plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/Jobs/ml.png")
-# Save figure
+

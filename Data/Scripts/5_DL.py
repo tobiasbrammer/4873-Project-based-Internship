@@ -1,6 +1,5 @@
 # Import required libraries
 import sys
-
 sys.path.insert(0, '.')
 import os
 import warnings
@@ -717,7 +716,7 @@ ax.set_title('Out of Sample')
 ax.set_aspect('auto')
 ax.set_ylim([-5, 15.00])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.35)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_2_avg.png")
 plt.savefig("./Results/Presentation/5_2_avg.svg")
@@ -742,7 +741,7 @@ ax.set_title('Full Sample')
 ax.set_aspect('auto')
 ax.set_ylim([-20, 100.00])
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.35)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/FullSample/5_2_avg_fs.png")
 plt.savefig("./Results/Presentation/FullSample/5_2_avg_fs.svg")
@@ -810,10 +809,10 @@ for i, sJobNo in enumerate(lJob):
                label='slutvurdering')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
-    ax[i].set_ylabel('Contribution')
+    ax[i].set_ylabel('Contribution (mDKK)')
     ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
     ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=6).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
+    plt.grid(alpha=0.35)
     plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/Jobs/dl.png")
 
@@ -848,7 +847,7 @@ for job_no in dfDataPred['job_no'].unique():
     ax.set_ylabel('Contribution')
     ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
+    plt.grid(alpha=0.35)
     plt.rcParams['axes.axisbelow'] = True
     plt.savefig(f"./Results/Figures/Jobs/{job_no}.png")
     plt.close('all')
@@ -891,10 +890,10 @@ for job_no in dfDataWIP['job_no'].unique():
         else:
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
     ax.set_xlabel('Date')
-    ax.set_ylabel('Contribution')
+    ax.set_ylabel('Contribution (mDKK)')
     ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
+    plt.grid(alpha=0.35)
     plt.rcParams['axes.axisbelow'] = True
     plt.savefig(f"./Results/Figures/WIP/{job_no}.png")
     plt.close('all')
