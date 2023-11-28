@@ -143,7 +143,8 @@ dfData['budget_margin'] = dfData['budget_margin'].replace([np.inf, -np.inf], np.
 
 # Divide numeric columns by 1,000,000
 numeric_cols = dfData.select_dtypes(include=['number']).columns
-numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" not in col and "_rate" not in col]
+numeric_cols = [col for col in numeric_cols if "_share" not in col and "_qty" not in col and "_rate" not in col
+                and "_margin" not in col]
 dfData[numeric_cols] = dfData[numeric_cols] / 1000000
 
 # If zip code is more than 4 digits, set to NA
