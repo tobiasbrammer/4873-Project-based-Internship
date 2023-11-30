@@ -14,6 +14,7 @@ from notify import *
 from smape import *
 from sklearn.metrics import mean_squared_error
 import multiprocessing
+import keras_core as keras
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
@@ -22,6 +23,7 @@ from keras.callbacks import EarlyStopping
 import keras_tuner as kt
 
 warnings.filterwarnings('ignore')
+
 
 # Load ./dfData.parquet
 if os.name == 'posix':
@@ -49,7 +51,6 @@ dfData.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 # Keep only numeric columns
 dfDataScaled = dfDataScaled[lNumericCols + ['train']]
-# dfData = dfData[lNumericCols + ['train']]
 
 # Replace NaN with 0
 dfDataScaled.fillna(0, inplace=True)
@@ -162,7 +163,7 @@ def model_builder(hp):
 # Define tuner
 tuner_2 = kt.Hyperband(model_builder,
                        objective='val_loss',
-                       max_epochs=50,
+                       max_epochs=100,
                        factor=3,
                        seed=607,
                        directory='./.MODS',
@@ -170,7 +171,7 @@ tuner_2 = kt.Hyperband(model_builder,
 
 tuner_4 = kt.Hyperband(model_builder,
                        objective='val_loss',
-                       max_epochs=50,
+                       max_epochs=100,
                        factor=3,
                        seed=607,
                        directory='./.MODS',
@@ -178,7 +179,7 @@ tuner_4 = kt.Hyperband(model_builder,
 
 tuner_8 = kt.Hyperband(model_builder,
                        objective='val_loss',
-                       max_epochs=50,
+                       max_epochs=100,
                        factor=3,
                        seed=607,
                        directory='./.MODS',
@@ -187,7 +188,7 @@ tuner_8 = kt.Hyperband(model_builder,
 # Define tuner
 tuner_16 = kt.Hyperband(model_builder,
                         objective='val_loss',
-                        max_epochs=50,
+                        max_epochs=100,
                         factor=3,
                         seed=607,
                         directory='./.MODS',
@@ -196,7 +197,7 @@ tuner_16 = kt.Hyperband(model_builder,
 # Define tuner
 tuner_32 = kt.Hyperband(model_builder,
                         objective='val_loss',
-                        max_epochs=50,
+                        max_epochs=100,
                         factor=3,
                         seed=607,
                         directory='./.MODS',
@@ -205,15 +206,16 @@ tuner_32 = kt.Hyperband(model_builder,
 # Define tuner
 tuner_64 = kt.Hyperband(model_builder,
                         objective='val_loss',
-                        max_epochs=50,
+                        max_epochs=100,
+                        max_retries_per_trial=5,
                         factor=3,
-                        seed=607,
+                        seed=1,
                         directory='./.MODS',
                         project_name='LSTM_64')
 
 tuner_128 = kt.Hyperband(model_builder,
                          objective='val_loss',
-                         max_epochs=50,
+                         max_epochs=100,
                          factor=3,
                          seed=607,
                          directory='./.MODS',
@@ -312,7 +314,7 @@ model_fit_128 = tuner_128.hypermodel.build(best_hps_128)
 # Fit model
 model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=200,
+                epochs=100,
                 batch_size=2,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -321,7 +323,7 @@ model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_4.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=200,
+                epochs=100,
                 batch_size=4,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -330,7 +332,7 @@ model_fit_4.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_8.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=200,
+                epochs=100,
                 batch_size=8,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -339,7 +341,7 @@ model_fit_8.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_16.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=200,
+                 epochs=100,
                  batch_size=16,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -348,7 +350,7 @@ model_fit_16.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=200,
+                 epochs=100,
                  batch_size=32,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -357,7 +359,7 @@ model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=200,
+                 epochs=100,
                  batch_size=64,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -366,7 +368,7 @@ model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_128.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                   dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                  epochs=200,
+                  epochs=100,
                   batch_size=128,
                   validation_split=0.1,
                   use_multiprocessing=True,
