@@ -339,15 +339,18 @@ dfDesc = dfDesc[dfDesc['description'] != ""]
 # Save dfDesc to ./.AUX/dfDesc.parquet
 dfDesc.to_parquet('./.AUX/dfDesc.parquet')
 
-
 # Step 2: Preprocess text
 stemmer = DanishStemmer()
+
+# Omit stemmer step1_suffixes[30]
+stemmer._DanishStemmer__step1_suffixes = stemmer._DanishStemmer__step1_suffixes[:30]
+
 stop_words = stopwords.words('danish')
 
 
 def preprocess(text):
     text = text.lower()
-    text = re.sub(r'[^\w\s]', '', text)
+    #text = re.sub(r'[^\w\s]', '', text)
     text = re.sub(r'\d+', '', text)
     text = ' '.join([stemmer.stem(word) for word in text.split() if word not in stop_words])
     return text.strip()
@@ -376,6 +379,51 @@ plt.xlabel("Terms")
 plt.ylabel("Frequency")
 plt.tight_layout()
 plt.grid(alpha=0.35)
+#plt.savefig("./Results/Figures/1_7_description.png")
+#plt.savefig("./Results/Presentation/1_7_description.svg")
+#upload(plt, 'Project-based Internship', 'figures/1_7_description.png')
+
+
+# Generate palette from vColors. Plot Squares of size 100x100 with color from vColors
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+fig, ax = plt.subplots()
+# Define the starting point for the first square
+start_x = 0
+start_y = 0
+# Define the size of each square
+size = 1
+# Create a square for each color
+for color in vColors:
+    square = patches.Rectangle((start_x, start_y), size, size, facecolor=color)
+    ax.add_patch(square)
+    start_y += size  # Move the starting point for the next square
+# Set the limits of the plot
+ax.set_xlim(0, size)
+ax.set_ylim(0, len(vColors))
+# Hide the axes
+ax.axis('off')
+plt.savefig("./.AUX/Farvekoder.png")
+
+# Word cloud
+from PIL import Image
+
+# Load the image
+img = Image.open("./.AUX/Farvekoder.png")
+# Resize the image to match the word cloud size
+img = img.resize((1600, 800), Image.Resampling.NEAREST)
+# Save the resized image
+img.save("./.AUX/Farvekoder_resized.png")
+# Use the resized image for the ImageColorGenerator
+coloring = np.array(Image.open("./.AUX/Farvekoder_resized.png"))
+image_colors = ImageColorGenerator(coloring)
+# Generate the word cloud
+wordcloud = WordCloud(width=1600, height=800, max_font_size=200, background_color='white').generate_from_frequencies(term_frequencies)
+# Display the word cloud
+plt.figure(figsize=(20, 10))
+plt.imshow(wordcloud.recolor(color_func=image_colors), interpolation="bilinear")
+plt.axis("off")
+plt.tight_layout()
 plt.savefig("./Results/Figures/1_7_description.png")
 plt.savefig("./Results/Presentation/1_7_description.svg")
 upload(plt, 'Project-based Internship', 'figures/1_7_description.png')
