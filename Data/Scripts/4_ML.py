@@ -48,6 +48,8 @@ lNumericCols = lNumericCols.split('\n')
 
 # Omit columns that contain 'cluster_'
 lNumericCols = [col for col in lNumericCols if not col.startswith('cluster_')]
+# Omit total_contribution, total_margin and total_costs
+lNumericCols = [col for col in lNumericCols if col not in ['total_contribution', 'total_margin', 'total_costs']]
 
 # Replace infinite values with NaN
 dfDataScaled.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -318,6 +320,8 @@ dfRMSE.loc['Random Forest (Sparse)', 'sMAPE'] = smape_rf_sparse
 # Add to dfDataPred
 dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
 
+plot_predicted(dfData, 'predicted_rf_sparse', 'Random Forest', '4_1_rf_sparse', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
 # Predict WIP
 predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), rf_cv, 'rf_sparse',
                   dfDataScaled[lIndepVar].columns.difference([sDepVar]), lJobNoWIP)
@@ -448,6 +452,7 @@ joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
 
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), gb_cv_det, 'gb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
+
 plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
@@ -474,7 +479,7 @@ dfRMSE.loc['Gradient Boosting', 'sMAPE'] = smape_gb
 dfDataPred['predicted_gb'] = dfData['predicted_gb']
 
 # Predict WIP
-predict_and_scale(dfDataWIP, dfDataWIP, gb_cv_det, 'gb',
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), gb_cv_det, 'gb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### XGBoost Regression ###
@@ -556,7 +561,7 @@ dfRMSE.loc['XGBoost', 'sMAPE'] = smape_xgb
 dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
 
 # Predict WIP
-predict_and_scale(dfDataWIP, dfDataWIP, xgb_cv_det, 'xgb',
+predict_and_scale(dfDataWIP, dfDataWIP.replace(np.nan,0), xgb_cv_det, 'xgb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNoWIP)
 
 ### Forecast Combination with Boosting
@@ -668,10 +673,10 @@ for i, sJobNo in enumerate(lJob):
                label='predicted (boost)', linestyle='dashed')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
-    ax[i].set_ylabel('Contribution')
+    ax[i].set_ylabel('Contribution (mDKK)')
     ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
     ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
-    plt.grid(alpha=0.5)
+    plt.grid(alpha=0.35)
     plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/Jobs/ml.png")
-# Save figure
+

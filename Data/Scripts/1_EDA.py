@@ -73,9 +73,9 @@ plt.xlabel("Margin")
 plt.ylabel("Density")
 plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.35)
-plt.show()
 plt.savefig("./Results/Figures/1_3_margin.png")
 plt.savefig("./Results/Presentation/1_3_margin.svg")
+plt.draw()
 upload(plt, 'Project-based Internship', 'figures/1_3_margin.png')
 
 # Select random job
@@ -150,7 +150,7 @@ sns.barplot(x=dfMissing[dfMissing['missing_pct'] > 0]['column'],
 plt.xticks(rotation=90)
 plt.xlabel("Columns")
 plt.ylabel("Missing Percentage")
-plt.grid(alpha=0.5)
+plt.grid(alpha=0.35)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/1_4_missing.png")
 plt.savefig("./Results/Presentation/1_4_missing.svg")
