@@ -152,9 +152,9 @@ def model_builder(hp):
         model.add(Dropout(hp.Float(f'dropout_{l + 1}', min_value=0.0, max_value=0.5, step=0.05)))
     model.add(Dense(1, activation=hp.Choice('dense_activation',
                                             values=['relu', 'sigmoid', 'linear', 'tanh', 'exponential'],
-                                            default='relu')))
+                                            default='sigmoid')))
     # Try with different optimizers
-    optimizer = hp.Choice('optimizer', values=['adam', 'rmsprop', 'sgd', 'adagrad', 'adadelta', 'adamax', 'nadam'])
+    optimizer = hp.Choice('optimizer', values=['adam', 'sgd', 'adagrad'])
     # Compile model
     model.compile(optimizer=optimizer, loss=smape_loss, metrics=[rmse_loss])
     return model
@@ -163,7 +163,7 @@ def model_builder(hp):
 # Define tuner
 tuner_2 = kt.Hyperband(model_builder,
                        objective='val_loss',
-                       max_epochs=100,
+                       max_epochs=50,
                        factor=3,
                        seed=607,
                        directory='./.MODS',
@@ -171,7 +171,7 @@ tuner_2 = kt.Hyperband(model_builder,
 
 tuner_4 = kt.Hyperband(model_builder,
                        objective='val_loss',
-                       max_epochs=100,
+                       max_epochs=50,
                        factor=3,
                        seed=607,
                        directory='./.MODS',
@@ -179,7 +179,7 @@ tuner_4 = kt.Hyperband(model_builder,
 
 tuner_8 = kt.Hyperband(model_builder,
                        objective='val_loss',
-                       max_epochs=100,
+                       max_epochs=50,
                        factor=3,
                        seed=607,
                        directory='./.MODS',
@@ -188,7 +188,7 @@ tuner_8 = kt.Hyperband(model_builder,
 # Define tuner
 tuner_16 = kt.Hyperband(model_builder,
                         objective='val_loss',
-                        max_epochs=100,
+                        max_epochs=50,
                         factor=3,
                         seed=607,
                         directory='./.MODS',
@@ -197,7 +197,7 @@ tuner_16 = kt.Hyperband(model_builder,
 # Define tuner
 tuner_32 = kt.Hyperband(model_builder,
                         objective='val_loss',
-                        max_epochs=100,
+                        max_epochs=50,
                         factor=3,
                         seed=607,
                         directory='./.MODS',
@@ -206,16 +206,16 @@ tuner_32 = kt.Hyperband(model_builder,
 # Define tuner
 tuner_64 = kt.Hyperband(model_builder,
                         objective='val_loss',
-                        max_epochs=100,
+                        max_epochs=50,
                         max_retries_per_trial=5,
                         factor=3,
-                        seed=1,
+                        seed=607,
                         directory='./.MODS',
                         project_name='LSTM_64')
 
 tuner_128 = kt.Hyperband(model_builder,
                          objective='val_loss',
-                         max_epochs=100,
+                         max_epochs=50,
                          factor=3,
                          seed=607,
                          directory='./.MODS',
@@ -226,71 +226,71 @@ early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=15)
 
 # Fit model
 start_time_lstm_tune = datetime.datetime.now()
-
-# Fit model to training data
-tuner_2.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-               dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-               batch_size=2,
-               validation_split=0.10,
-               callbacks=[early_stop],
-               use_multiprocessing=True,
-               workers=multiprocessing.cpu_count(),
-               verbose=1)
-
-# Fit model to training data
-tuner_4.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-               dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-               batch_size=4,
-               validation_split=0.10,
-               callbacks=[early_stop],
-               use_multiprocessing=True,
-               workers=multiprocessing.cpu_count(),
-               verbose=1)
-
-tuner_8.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-               dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-               batch_size=8,
-               validation_split=0.10,
-               callbacks=[early_stop],
-               use_multiprocessing=True,
-               workers=multiprocessing.cpu_count(),
-               verbose=1)
-
-tuner_16.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                batch_size=16,
-                validation_split=0.10,
-                callbacks=[early_stop],
-                use_multiprocessing=True,
-                workers=multiprocessing.cpu_count(),
-                verbose=1)
-
-tuner_32.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                batch_size=32,
-                validation_split=0.10,
-                callbacks=[early_stop],
-                use_multiprocessing=True,
-                workers=multiprocessing.cpu_count(),
-                verbose=1)
-
-tuner_64.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                batch_size=64,
-                validation_split=0.10,
-                callbacks=[early_stop],
-                use_multiprocessing=True,
-                workers=multiprocessing.cpu_count(),
-                verbose=1)
-
-tuner_128.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 batch_size=128,
-                 validation_split=0.10,
-                 callbacks=[early_stop],
-                 use_multiprocessing=True,
-                 workers=multiprocessing.cpu_count(),
-                 verbose=1)
+#
+# # Fit model to training data
+# tuner_2.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+#                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+#                batch_size=2,
+#                validation_split=0.10,
+#                callbacks=[early_stop],
+#                use_multiprocessing=True,
+#                workers=multiprocessing.cpu_count(),
+#                verbose=1)
+#
+# # Fit model to training data
+# tuner_4.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+#                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+#                batch_size=4,
+#                validation_split=0.10,
+#                callbacks=[early_stop],
+#                use_multiprocessing=True,
+#                workers=multiprocessing.cpu_count(),
+#                verbose=1)
+#
+# tuner_8.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+#                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+#                batch_size=8,
+#                validation_split=0.10,
+#                callbacks=[early_stop],
+#                use_multiprocessing=True,
+#                workers=multiprocessing.cpu_count(),
+#                verbose=1)
+#
+# tuner_16.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+#                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+#                 batch_size=16,
+#                 validation_split=0.10,
+#                 callbacks=[early_stop],
+#                 use_multiprocessing=True,
+#                 workers=multiprocessing.cpu_count(),
+#                 verbose=1)
+#
+# tuner_32.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+#                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+#                 batch_size=32,
+#                 validation_split=0.10,
+#                 callbacks=[early_stop],
+#                 use_multiprocessing=True,
+#                 workers=multiprocessing.cpu_count(),
+#                 verbose=1)
+#
+# tuner_64.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+#                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+#                 batch_size=64,
+#                 validation_split=0.10,
+#                 callbacks=[early_stop],
+#                 use_multiprocessing=True,
+#                 workers=multiprocessing.cpu_count(),
+#                 verbose=1)
+#
+# tuner_128.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
+#                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+#                  batch_size=128,
+#                  validation_split=0.10,
+#                  callbacks=[early_stop],
+#                  use_multiprocessing=True,
+#                  workers=multiprocessing.cpu_count(),
+#                  verbose=1)
 
 
 # Get the optimal hyperparameters
@@ -303,7 +303,7 @@ best_hps_64 = tuner_64.get_best_hyperparameters()[0]
 best_hps_128 = tuner_128.get_best_hyperparameters()[0]
 
 # Fit using models
-model_fit_2 = tuner_2.hypermodel.build(best_hps_4)
+model_fit_2 = tuner_2.hypermodel.build(best_hps_2)
 model_fit_4 = tuner_4.hypermodel.build(best_hps_4)
 model_fit_8 = tuner_8.hypermodel.build(best_hps_8)
 model_fit_16 = tuner_16.hypermodel.build(best_hps_16)
@@ -314,7 +314,7 @@ model_fit_128 = tuner_128.hypermodel.build(best_hps_128)
 # Fit model
 model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=100,
+                epochs=250,
                 batch_size=2,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -323,7 +323,7 @@ model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_4.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=100,
+                epochs=250,
                 batch_size=4,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -332,7 +332,7 @@ model_fit_4.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_8.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                epochs=100,
+                epochs=250,
                 batch_size=8,
                 validation_split=0.1,
                 use_multiprocessing=True,
@@ -341,7 +341,7 @@ model_fit_8.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
 
 model_fit_16.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=100,
+                 epochs=250,
                  batch_size=16,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -350,7 +350,7 @@ model_fit_16.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=100,
+                 epochs=250,
                  batch_size=32,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -359,7 +359,7 @@ model_fit_32.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                 epochs=100,
+                 epochs=250,
                  batch_size=64,
                  validation_split=0.1,
                  use_multiprocessing=True,
@@ -368,7 +368,7 @@ model_fit_64.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
 
 model_fit_128.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
                   dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                  epochs=100,
+                  epochs=250,
                   batch_size=128,
                   validation_split=0.1,
                   use_multiprocessing=True,
@@ -393,7 +393,7 @@ best_batch_size = df_val_loss[df_val_loss['val_loss'] == df_val_loss['val_loss']
 # Set best_hps: best_hps = tuner_{best_batch_size}.get_best_hyperparameters()[0]
 best_hps = eval(f'best_hps_{best_batch_size}')
 
-iRollWindow = 5
+iRollWindow = 10
 
 # Compare val_loss of best models over epochs
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -429,7 +429,7 @@ for i in range(best_hps.get('additional_layers')):
 print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
 ## Create model from optimal hyperparameters ##
-early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=250)
+early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=50)
 
 # Fit model
 model_fit = model_builder(best_hps)
@@ -466,6 +466,29 @@ predict_and_scale(dfData, dfDataScaled, model_fit, 'lstm',
                   bConst=False,
                   iBatchSize=best_batch_size)
 
+predict_and_scale(dfData, dfDataScaled, model_fit_32, 'lstm_32',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+                  lJobNo,
+                  bConst=False,
+                  iBatchSize=32
+                  )
+
+predict_and_scale(dfData, dfDataScaled, model_fit_64, 'lstm_64',
+                    dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+                    lJobNo,
+                    bConst=False,
+                    iBatchSize=64
+                    )
+
+predict_and_scale(dfData, dfDataScaled, model_fit_128, 'lstm_128',
+                    dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+                    lJobNo,
+                    bConst=False,
+                    iBatchSize=128
+                    )
+
+
+
 # Plot difference between predicted and actual values
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
@@ -475,14 +498,11 @@ ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lstm'].transform('sum'),
         label='LSTM (best)')
 ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_lstm_2'].transform('sum'),
-        label='LSTM (batch size = 2)')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_lstm_16'].transform('sum'),
-        label='LSTM (batch size = 16)')
-ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lstm_32'].transform('sum'),
         label='LSTM (batch size = 32)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_lstm_64'].transform('sum'),
+        label='LSTM (batch size = 64)')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lstm_128'].transform('sum'),
         label='LSTM (batch size = 128)')
@@ -864,3 +884,6 @@ for job_no in dfDataWIP['job_no'].unique():
     plt.close('all')
 
 ########################################################################################################################
+
+
+notify('The script has finished running.')
