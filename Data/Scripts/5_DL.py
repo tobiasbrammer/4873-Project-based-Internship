@@ -436,7 +436,7 @@ model_fit = model_builder(best_hps)
 
 model_fit.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
               dfDataScaledTrain[sDepVar],
-              epochs=1000,
+              epochs=500,
               batch_size=best_batch_size,
               validation_split=0.1,
               callbacks=[early_stop],
@@ -685,7 +685,11 @@ dfRMSE.loc['MSE', 'sMAPE'] = smape_mse
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'),
+        label='Actual', linestyle='dashed')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_fc'].transform('sum'),
+        label='Predicted (clustered ols)')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_boost'].transform('sum'),
         label='Predicted (boosting)')
@@ -693,8 +697,17 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm'].transform('sum'),
         label='Predicted (lstm)')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_full'].transform('sum'),
-        label='Predicted (rf)')
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_et'].transform('sum'),
+        label='Predicted (ensemble)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_avg'].transform('sum'),
+        label='Predicted (avg)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_bates_granger'].transform('sum'),
+        label='Predicted (bates granger)')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_mse'].transform('sum'),
+        label='Predicted (mse)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Out of Sample')
@@ -712,14 +725,26 @@ fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
         dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
 ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_cluster_fc'].transform('sum'),
+        label='Predicted (clustered ols)')
+ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_boost'].transform('sum'),
         label='Predicted (boosting)')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lstm'].transform('sum'),
         label='Predicted (lstm)')
 ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_rf_full'].transform('sum'),
-        label='Predicted (rf)')
+        dfData.groupby('date')['predicted_rf_et'].transform('sum'),
+        label='Predicted (ensemble)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_avg'].transform('sum'),
+        label='Predicted (avg)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_bates_granger'].transform('sum'),
+        label='Predicted (bates granger)')
+ax.plot(dfData['date'],
+        dfData.groupby('date')['predicted_mse'].transform('sum'),
+        label='Predicted (mse)')
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
 ax.set_title('Full Sample')
@@ -784,11 +809,11 @@ for i, sJobNo in enumerate(lJob):
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_lstm'],
                label='predicted (lstm)', linestyle='dashed')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_rf_full'],
-               label='predicted (rf)', linestyle='dashed')
+               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_rf_et'],
+               label='predicted (ensemble)', linestyle='dashed')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_mse'],
-               label='predicted (MSE)', linestyle='dashed')
+               label='predicted (mse)', linestyle='dashed')
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_boost'],
                label='predicted (boosting)', linestyle='dashed')
