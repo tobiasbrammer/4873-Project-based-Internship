@@ -1,0 +1,11 @@
+,RMSE,sMAPE
+Final Estimate,0.966,67.1235
+Production Estimate,1.241,69.0326
+DST,0.9555,58.8522
+S-curve,0.8916,49.871
+OLS,1.4553,69.8692
+OLS with lagged variables,0.8367,56.8557
+OLS with lags and budget,1.0283,63.4705
+OLS Forecast Combination,0.8986,59.226
+Cluster Combination,0.8839,57.2842
+DST Cluster Combination,0.8451,56.4084
