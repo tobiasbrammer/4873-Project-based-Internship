@@ -308,14 +308,17 @@ tuner_128.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols]
                   verbose=1)
 
 # Get the optimal hyperparameters
-best_hps_2 = tuner_2.get_best_hyperparameters()
-best_hps_4 = tuner_4.get_best_hyperparameters()
-best_hps_8 = tuner_8.get_best_hyperparameters()
-best_hps_16 = tuner_16.get_best_hyperparameters()
-best_hps_32 = tuner_32.get_best_hyperparameters()
-best_hps_64 = tuner_64.get_best_hyperparameters()
-best_hps_128 = tuner_128.get_best_hyperparameters()
-# Fit using models
+best_hps_2 = tuner_2.get_best_hyperparameters(num_trials=1)[0]
+best_hps_4 = tuner_4.get_best_hyperparameters(num_trials=1)[0]
+best_hps_8 = tuner_8.get_best_hyperparameters(num_trials=1)[0]
+best_hps_16 = tuner_16.get_best_hyperparameters(num_trials=1)[0]
+best_hps_32 = tuner_32.get_best_hyperparameters(num_trials=1)[0]
+best_hps_64 = tuner_64.get_best_hyperparameters(num_trials=1)[0]
+best_hps_128 = tuner_128.get_best_hyperparameters(num_trials=1)[0]
+
+
+
+# Fit using models. Build new models with best hyperparameters
 model_fit_2 = tuner_2.hypermodel.build(best_hps_2)
 model_fit_4 = tuner_4.hypermodel.build(best_hps_4)
 model_fit_8 = tuner_8.hypermodel.build(best_hps_8)
