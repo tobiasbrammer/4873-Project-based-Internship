@@ -639,9 +639,10 @@ dfData.to_parquet("./dfData_reg.parquet")
 
 plt.close('all')
 
+pd
 ########################################################################################################################
 
-dfDesc = pd.read_parquet('./.AUX/dfDesc.parquet')
+
 dfData_org = pd.read_parquet('./dfData_org.parquet')
 
 lJob = ['S218705', 'S100762', 'S289834', 'S102941']

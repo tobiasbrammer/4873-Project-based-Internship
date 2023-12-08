@@ -574,6 +574,8 @@ print(f'LSTM finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 ########################################################################################################################
 
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
+dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', 'risk', sDepVar])].mean(axis=1)
+
 dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
                                           'predicted_en',
                                           'predicted_gb',
