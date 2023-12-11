@@ -425,7 +425,7 @@ set nocount on
 	SELECT DISTINCT *
 	FROM #Final
 	WHERE #Final.end_date IS NOT NULL
-	AND job_no = 'S289834'
+	--AND job_no = 'S289834'
 	ORDER BY [year], [month] ASC
 
 
