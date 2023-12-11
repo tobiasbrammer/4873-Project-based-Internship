@@ -639,9 +639,7 @@ dfData.to_parquet("./dfData_reg.parquet")
 
 plt.close('all')
 
-pd
 ########################################################################################################################
-
 
 dfData_org = pd.read_parquet('./dfData_org.parquet')
 

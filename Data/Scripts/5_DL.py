@@ -408,12 +408,12 @@ val_loss_8 = tuner_8.oracle.get_best_trials()[0].score
 val_loss_16 = tuner_16.oracle.get_best_trials()[0].score
 val_loss_32 = tuner_32.oracle.get_best_trials()[0].score
 val_loss_64 = tuner_64.oracle.get_best_trials()[0].score
-val_loss_128 = tuner_128.oracle.get_best_trials()[0].score
+# val_loss_128 = tuner_128.oracle.get_best_trials()[0].score
 
 # Find the best model and set best_hps
 # Make a dataframe of the val_loss of the best models
-df_val_loss = pd.DataFrame({'batch_size': [2, 4, 8, 16, 32, 64, 128],
-                            'val_loss': [val_loss_2, val_loss_4, val_loss_8, val_loss_16, val_loss_32, val_loss_64, val_loss_128]})
+df_val_loss = pd.DataFrame({'batch_size': [2, 4, 8, 16, 32, 64],
+                            'val_loss': [val_loss_2, val_loss_4, val_loss_8, val_loss_16, val_loss_32, val_loss_64]})
 # Find the batch size with the lowest val_loss
 best_batch_size = df_val_loss[df_val_loss['val_loss'] == df_val_loss['val_loss'].min()]['batch_size'].values[0]
 # Set best_hps: best_hps = tuner_{best_batch_size}.get_best_hyperparameters()[0]
@@ -433,8 +433,8 @@ ax.plot(pd.Series(model_fit_32.history.history['val_loss']).rolling(iRollWindow)
         linestyle='solid' if best_batch_size == 32 else 'dashed')
 ax.plot(pd.Series(model_fit_64.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='64 batch size',
         linestyle='solid' if best_batch_size == 64 else 'dashed')
-ax.plot(pd.Series(model_fit_128.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='128 batch size',
-        linestyle='solid' if best_batch_size == 128 else 'dashed')
+# ax.plot(pd.Series(model_fit_128.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='128 batch size',
+#        linestyle='solid' if best_batch_size == 128 else 'dashed')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
@@ -506,12 +506,12 @@ predict_and_scale(dfData, dfDataScaled, model_fit_64, 'lstm_64',
                     iBatchSize=64
                     )
 
-predict_and_scale(dfData, dfDataScaled, model_fit_128, 'lstm_128',
-                    dfDataScaled[lNumericCols].columns.difference([sDepVar]),
-                    lJobNo,
-                    bConst=False,
-                    iBatchSize=128
-                    )
+# predict_and_scale(dfData, dfDataScaled, model_fit_128, 'lstm_128',
+#                     dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+#                     lJobNo,
+#                     bConst=False,
+#                     iBatchSize=128
+#                     )
 
 
 
@@ -529,9 +529,9 @@ ax.plot(dfData['date'],
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lstm_64'].transform('sum'),
         label='LSTM (batch size = 64)')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_lstm_128'].transform('sum'),
-        label='LSTM (batch size = 128)')
+# ax.plot(dfData['date'],
+#         dfData.groupby('date')['predicted_lstm_128'].transform('sum'),
+#         label='LSTM (batch size = 128)')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.xlabel("Date")
 plt.ylabel("Predicted")
