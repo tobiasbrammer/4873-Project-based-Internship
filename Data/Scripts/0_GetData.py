@@ -29,7 +29,7 @@ if os.name == 'posix':
     sDir = "/Users/tobiasbrammer/Library/Mobile Documents/com~apple~CloudDocs/Documents/Aarhus Uni/9. semester/Project Based Internship/Data"
 # If operating system is Windows then
 elif os.name == 'nt':
-    sDir = "C:/Users/tobr/OneDrive - NRGi A S/Projekter/ProjectBasedInternship/Data"
+    sDir = "R:/ØKONOMI/CONTROLLING/.TOBR/ProjectBasedInternship/Data"
 
 os.chdir(sDir)
 
@@ -407,6 +407,7 @@ plt.savefig("./.AUX/Farvekoder.png")
 
 # Word cloud
 from PIL import Image
+from wordcloud import WordCloud, ImageColorGenerator
 
 # Load the image
 img = Image.open("./.AUX/Farvekoder.png")
