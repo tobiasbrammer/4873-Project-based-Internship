@@ -335,7 +335,7 @@ et_grid = {
     "min_samples_split": np.arange(1, 60, 1),  # Minimum samples required to split an internal node
     "min_samples_leaf": np.arange(1, 60, 1),  # Minimum samples required to be at a leaf node
     "max_features": [1 / 3, 0.5, 1, "sqrt", "log2"],  # Number of features to consider for split
-    "bootstrap": [True, True, True, True, True], # Whether bootstrap samples are used when building trees.
+    "bootstrap": [True, False], # Whether bootstrap samples are used when building trees.
     "max_samples": [50, 100, 150, 250, 500, 750, 1000, 1500]  # Number of samples to train each tree
 }
 

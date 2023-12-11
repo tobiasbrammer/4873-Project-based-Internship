@@ -1,23 +1,23 @@
 ,RMSE,sMAPE
-Final Estimate,1.0448,71.919
-Production Estimate,3.5587,75.7274
-DST,1.1419,65.7888
-S-curve,1.3745,62.4077
-OLS,1.135,63.7676
-OLS with lagged variables,1.1243,63.7705
-OLS with lags and budget,1.1279,65.6686
-OLS Forecast Combination,1.0996,65.4151
-Cluster Combination,1.1811,62.6924
-DST Cluster Combination,1.0898,64.2028
-Elastic Net,1.0745,63.7916
-Random Forest (Full),0.3998,23.9261
-Random Forest (Sparse),1.0815,62.3412
-Extra Trees,0.3686,24.4795
-Gradient Boosting,0.2625,20.405
-XGBoost,0.5459,24.239
-Combined Boosting,0.388,22.6172
-Ensemble of Ensembles,0.3769,23.0321
-Average of ML,0.4638,32.3666
-LSTM,1.0562,64.5467
-Bates and Granger,0.9966071467146641,60.72492495588519
-MSE,1.037457500885492,62.053542719356024
+Final Estimate,1.3839,75.289
+Production Estimate,3.401,78.607
+DST,1.3051,63.4698
+S-curve,1.2099,57.6661
+OLS,1.8087,75.5518
+OLS with lagged variables,1.3805,66.0518
+OLS with lags and budget,1.4563,71.4567
+OLS Forecast Combination,1.3209,66.1026
+Cluster Combination,1.4834,64.993
+DST Cluster Combination,1.3254,60.3672
+Elastic Net,1.2524,59.6621
+Random Forest (Full),0.6854,37.1733
+Random Forest (Sparse),1.3449,60.3761
+Extra Trees,0.788,44.6783
+Gradient Boosting,0.7727,44.199
+XGBoost,0.6954,39.0909
+Combined Boosting,0.7199,41.449
+Ensemble of Ensembles,0.7031,38.5882
+Average of ML,0.8045,43.1016
+LSTM,0.2936,26.2971
+Bates and Granger,1.1399668961433025,61.40398399983555
+MSE,1.2691114014294256,65.78706552798357

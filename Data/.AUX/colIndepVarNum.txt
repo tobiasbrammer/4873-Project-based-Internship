@@ -9,9 +9,6 @@ final_estimate_costs
 sales_estimate_contribution
 production_estimate_contribution
 final_estimate_contribution
-budget_revenue
-budget_costs
-budget_contribution
 revenue
 costs
 costs_of_labor
@@ -29,7 +26,6 @@ long_term_illness_share_dep
 sales_estimate_margin
 production_estimate_margin
 final_estimate_margin
-budget_margin
 contract_work_cumsum
 extra_work_cumsum
 revenue_cumsum

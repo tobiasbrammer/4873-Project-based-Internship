@@ -1,5 +1,6 @@
 # Import required libraries
 import sys
+
 sys.path.insert(0, '.')
 import os
 import warnings
@@ -38,7 +39,6 @@ class TerminateOnThreshold(Callback):
 
 
 warnings.filterwarnings('ignore')
-
 
 # Load ./dfData.parquet
 if os.name == 'posix':
@@ -137,7 +137,6 @@ def model_builder(hp):
 
     def smape_loss(y_true, y_pred):
         return 100 * k.mean(k.abs(y_true - y_pred) / (k.abs(y_pred) + k.abs(y_true)), axis=-1)
-
 
     model = Sequential()
     # First LSTM layer
@@ -244,13 +243,13 @@ start_time_lstm_tune = datetime.datetime.now()
 
 # Fit model to training data
 tuner_2.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                batch_size=2,
-                validation_split=0.10,
-                callbacks=[early_stop, TerminateOnNaN(), TerminateOnThreshold(50)],
-                use_multiprocessing=True,
-                workers=multiprocessing.cpu_count(),
-                verbose=1)
+               dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+               batch_size=2,
+               validation_split=0.10,
+               callbacks=[early_stop, TerminateOnNaN(), TerminateOnThreshold(50)],
+               use_multiprocessing=True,
+               workers=multiprocessing.cpu_count(),
+               verbose=1)
 
 # Fit model to training data
 tuner_4.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
@@ -299,13 +298,13 @@ tuner_64.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].
                 verbose=1)
 
 tuner_128.search(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
-                  dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
-                  batch_size=128,
-                  validation_split=0.10,
-                  callbacks=[early_stop, TerminateOnNaN(), TerminateOnThreshold(50)],
-                  use_multiprocessing=True,
-                  workers=multiprocessing.cpu_count(),
-                  verbose=1)
+                 dfDataScaledTrain[sDepVar].values.reshape(-1, 1),
+                 batch_size=128,
+                 validation_split=0.10,
+                 callbacks=[early_stop, TerminateOnNaN(), TerminateOnThreshold(50)],
+                 use_multiprocessing=True,
+                 workers=multiprocessing.cpu_count(),
+                 verbose=1)
 
 # Get the optimal hyperparameters
 best_hps_2 = tuner_2.get_best_hyperparameters(num_trials=1)[0]
@@ -315,8 +314,6 @@ best_hps_16 = tuner_16.get_best_hyperparameters(num_trials=1)[0]
 best_hps_32 = tuner_32.get_best_hyperparameters(num_trials=1)[0]
 best_hps_64 = tuner_64.get_best_hyperparameters(num_trials=1)[0]
 best_hps_128 = tuner_128.get_best_hyperparameters(num_trials=1)[0]
-
-
 
 # Fit using models. Build new models with best hyperparameters
 model_fit_2 = tuner_2.hypermodel.build(best_hps_2)
@@ -335,7 +332,6 @@ model_fit_16.save('./.MODS/LSTM_16.tf')
 model_fit_32.save('./.MODS/LSTM_32.tf')
 model_fit_64.save('./.MODS/LSTM_64.tf')
 model_fit_128.save('./.MODS/LSTM_128.tf')
-
 
 # Fit model
 model_fit_2.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].columns.difference([sDepVar])],
@@ -408,12 +404,13 @@ val_loss_8 = tuner_8.oracle.get_best_trials()[0].score
 val_loss_16 = tuner_16.oracle.get_best_trials()[0].score
 val_loss_32 = tuner_32.oracle.get_best_trials()[0].score
 val_loss_64 = tuner_64.oracle.get_best_trials()[0].score
-# val_loss_128 = tuner_128.oracle.get_best_trials()[0].score
+val_loss_128 = tuner_128.oracle.get_best_trials()[0].score
 
 # Find the best model and set best_hps
 # Make a dataframe of the val_loss of the best models
-df_val_loss = pd.DataFrame({'batch_size': [2, 4, 8, 16, 32, 64],
-                            'val_loss': [val_loss_2, val_loss_4, val_loss_8, val_loss_16, val_loss_32, val_loss_64]})
+df_val_loss = pd.DataFrame({'batch_size': [2, 4, 8, 16, 32, 64, 128],
+                            'val_loss': [val_loss_2, val_loss_4, val_loss_8, val_loss_16, val_loss_32, val_loss_64,
+                                         val_loss_128]})
 # Find the batch size with the lowest val_loss
 best_batch_size = df_val_loss[df_val_loss['val_loss'] == df_val_loss['val_loss'].min()]['batch_size'].values[0]
 # Set best_hps: best_hps = tuner_{best_batch_size}.get_best_hyperparameters()[0]
@@ -423,18 +420,24 @@ iRollWindow = 10
 
 # Compare val_loss of best models over epochs
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(pd.Series(model_fit_4.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='4 batch size',
+ax.plot(pd.Series(model_fit_4.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:],
+        label='4 batch size',
         linestyle='solid' if best_batch_size == 4 else 'dashed')
-ax.plot(pd.Series(model_fit_8.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='8 batch size',
+ax.plot(pd.Series(model_fit_8.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:],
+        label='8 batch size',
         linestyle='solid' if best_batch_size == 8 else 'dashed')
-ax.plot(pd.Series(model_fit_16.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='16 batch size',
+ax.plot(pd.Series(model_fit_16.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:],
+        label='16 batch size',
         linestyle='solid' if best_batch_size == 16 else 'dashed')
-ax.plot(pd.Series(model_fit_32.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='32 batch size',
+ax.plot(pd.Series(model_fit_32.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:],
+        label='32 batch size',
         linestyle='solid' if best_batch_size == 32 else 'dashed')
-ax.plot(pd.Series(model_fit_64.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='64 batch size',
+ax.plot(pd.Series(model_fit_64.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:],
+        label='64 batch size',
         linestyle='solid' if best_batch_size == 64 else 'dashed')
-# ax.plot(pd.Series(model_fit_128.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:], label='128 batch size',
-#        linestyle='solid' if best_batch_size == 128 else 'dashed')
+ax.plot(pd.Series(model_fit_128.history.history['val_loss']).rolling(iRollWindow).mean()[iRollWindow:],
+        label='128 batch size',
+        linestyle='solid' if best_batch_size == 128 else 'dashed')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
@@ -500,20 +503,18 @@ predict_and_scale(dfData, dfDataScaled, model_fit_32, 'lstm_32',
                   )
 
 predict_and_scale(dfData, dfDataScaled, model_fit_64, 'lstm_64',
-                    dfDataScaled[lNumericCols].columns.difference([sDepVar]),
-                    lJobNo,
-                    bConst=False,
-                    iBatchSize=64
-                    )
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+                  lJobNo,
+                  bConst=False,
+                  iBatchSize=64
+                  )
 
-# predict_and_scale(dfData, dfDataScaled, model_fit_128, 'lstm_128',
-#                     dfDataScaled[lNumericCols].columns.difference([sDepVar]),
-#                     lJobNo,
-#                     bConst=False,
-#                     iBatchSize=128
-#                     )
-
-
+predict_and_scale(dfData, dfDataScaled, model_fit_128, 'lstm_128',
+                  dfDataScaled[lNumericCols].columns.difference([sDepVar]),
+                  lJobNo,
+                  bConst=False,
+                  iBatchSize=128
+                  )
 
 # Plot difference between predicted and actual values
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -574,7 +575,8 @@ print(f'LSTM finished in {datetime.datetime.now() - start_time_lstm_tune}.')
 ########################################################################################################################
 
 # Calculate average of all columns in dfDataPred except 'date', 'job_no' and sDepVar
-dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', 'risk', sDepVar])].mean(axis=1)
+dfDataPred['predicted_avg'] = dfDataPred[dfDataPred.columns.difference(['date', 'job_no', 'risk', sDepVar])].mean(
+    axis=1)
 
 dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
                                           'predicted_en',
@@ -594,8 +596,6 @@ dfDataPred[sDepVar] = dfData[sDepVar]
 dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
                                         'predicted_en',
                                         'predicted_gb',
-                                        'predicted_lag',
-                                        'predicted_lag_budget',
                                         'predicted_lstm',
                                         'predicted_ols',
                                         'predicted_rf_full',
@@ -607,9 +607,15 @@ dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
 # Calculate covariance matrix of the forecast errors. The forecast errors are the difference between the actual and
 # predicted values of sDepVar.
 dfDataPredError = pd.DataFrame()
-for col in ['predicted_en', 'predicted_gb', 'predicted_lag', 'predicted_lag_budget',
-            'predicted_lstm', 'predicted_ols', 'predicted_rf_full', 'predicted_rf_sparse',
-            'predicted_et', 'predicted_xgb']:
+for col in ['predicted_boost',
+            'predicted_en',
+            'predicted_gb',
+            'predicted_lstm',
+            'predicted_ols',
+            'predicted_rf_full',
+            'predicted_rf_sparse',
+            'predicted_et',
+            'predicted_xgb']:
     dfDataPredError[f'{col}'] = pd.DataFrame(np.abs(dfDataPred[col] - dfDataPred[sDepVar])).mean(axis=0)
 
 # Calculate the weights as dfDataPredError.transpose() / sum(dfDataPredError.transpose())
@@ -620,8 +626,6 @@ dfDataPredWeights['weights'] = dfDataPredError.transpose() / dfDataPredError.sum
 dfDataPred['predicted_bates_granger'] = dfDataPred[['predicted_boost',
                                                     'predicted_en',
                                                     'predicted_gb',
-                                                    'predicted_lag',
-                                                    'predicted_lag_budget',
                                                     'predicted_lstm',
                                                     'predicted_ols',
                                                     'predicted_rf_full',
@@ -634,8 +638,6 @@ dfData['predicted_bates_granger'] = dfDataPred['predicted_bates_granger']
 dfDataWIP['predicted_bates_granger'] = dfDataWIP[['predicted_boost',
                                                   'predicted_en',
                                                   'predicted_gb',
-                                                  'predicted_lag',
-                                                  'predicted_lag_budget',
                                                   'predicted_lstm',
                                                   'predicted_ols',
                                                   'predicted_rf_full',
@@ -659,9 +661,15 @@ dfRMSE.loc['Bates and Granger', 'sMAPE'] = smape_bates_granger
 ## MSE-based weights as ω = MSE^(-1) / sum(MSE^(-1))
 # Calculate MSE
 dfDataPredMSE = pd.DataFrame()
-for col in ['predicted_en', 'predicted_gb', 'predicted_lag', 'predicted_lag_budget',
-            'predicted_lstm', 'predicted_ols', 'predicted_rf_full', 'predicted_rf_sparse',
-            'predicted_et', 'predicted_xgb']:
+for col in ['predicted_boost',
+            'predicted_en',
+            'predicted_gb',
+            'predicted_lstm',
+            'predicted_ols',
+            'predicted_rf_full',
+            'predicted_rf_sparse',
+            'predicted_et',
+            'predicted_xgb']:
     dfDataPredMSE[f'{col}'] = pd.DataFrame((dfDataPred[col] - dfDataPred[sDepVar]) ** 2).mean(axis=0)
 
 # Calculate the weights as dfDataPredMSE.transpose() / sum(dfDataPredMSE.transpose())
@@ -672,8 +680,6 @@ dfDataPredWeightsMSE['weights'] = dfDataPredMSE.transpose() / dfDataPredMSE.sum(
 dfDataPred['predicted_mse'] = dfDataPred[['predicted_boost',
                                           'predicted_en',
                                           'predicted_gb',
-                                          'predicted_lag',
-                                          'predicted_lag_budget',
                                           'predicted_lstm',
                                           'predicted_ols',
                                           'predicted_rf_full',
@@ -688,8 +694,6 @@ dfDataPred['contribution_cumsum'] = dfData['contribution_cumsum']
 dfDataWIP['predicted_mse'] = dfDataWIP[['predicted_boost',
                                         'predicted_en',
                                         'predicted_gb',
-                                        'predicted_lag',
-                                        'predicted_lag_budget',
                                         'predicted_lstm',
                                         'predicted_ols',
                                         'predicted_rf_full',
@@ -715,33 +719,33 @@ fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'),
         label='Actual', linestyle='dashed')
+# ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+#         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_fc'].transform('sum'),
+#         label='Predicted (clustered ols)')
+# ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+#         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_boost'].transform('sum'),
+#         label='Predicted (boosting)')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_cluster_fc'].transform('sum'),
-        label='Predicted (clustered ols)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_boost'].transform('sum'),
-        label='Predicted (boosting)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm'].transform('sum'),
-        label='Predicted (lstm)')
-ax.plot(dfData[dfData[trainMethod] == 0]['date'],
-        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_et'].transform('sum'),
-        label='Predicted (ensemble)')
+         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm'].transform('sum'),
+         label='LSTM')
+# ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+#         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_rf_et'].transform('sum'),
+#         label='Predicted (ensemble)')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_avg'].transform('sum'),
-        label='Predicted (avg)')
+        label='Mean', alpha=0.5)
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_bates_granger'].transform('sum'),
-        label='Predicted (bates granger)')
+        label='Bates \& Granger', alpha=0.5)
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_mse'].transform('sum'),
-        label='Predicted (mse)')
+        label='MSE', alpha=0.5)
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Out of Sample')
+# ax.set_title('Out of Sample')
 ax.set_aspect('auto')
-ax.set_ylim([-5, 15.00])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+ax.set_ylim([-5, 25.00])
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.35)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/5_2_avg.png")
@@ -752,33 +756,33 @@ upload(plt, 'Project-based Internship', 'figures/5_2_avg.png')
 fig, ax = plt.subplots(figsize=(20, 10))
 ax.plot(dfData['date'],
         dfData.groupby('date')[sDepVar].transform('sum'), label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_cluster_fc'].transform('sum'),
-        label='Predicted (clustered ols)')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_boost'].transform('sum'),
-        label='Predicted (boosting)')
+# ax.plot(dfData['date'],
+#         dfData.groupby('date')['predicted_cluster_fc'].transform('sum'),
+#         label='Predicted (clustered ols)')
+# ax.plot(dfData['date'],
+#         dfData.groupby('date')['predicted_boost'].transform('sum'),
+#         label='Predicted (boosting)')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_lstm'].transform('sum'),
-        label='Predicted (lstm)')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_rf_et'].transform('sum'),
-        label='Predicted (ensemble)')
+        label='LSTM')
+# ax.plot(dfData['date'],
+#         dfData.groupby('date')['predicted_rf_et'].transform('sum'),
+#         label='Predicted (ensemble)')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_avg'].transform('sum'),
-        label='Predicted (avg)')
+        label='Mean', alpha=0.5)
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_bates_granger'].transform('sum'),
-        label='Predicted (bates granger)')
+        label='Bates \& Granger', alpha=0.5)
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_mse'].transform('sum'),
-        label='Predicted (mse)')
+        label='MSE', alpha=0.5)
 ax.set_xlabel('Date')
 ax.set_ylabel('Total Contribution')
-ax.set_title('Full Sample')
+# ax.set_title('Full Sample')
 ax.set_aspect('auto')
 ax.set_ylim([-20, 100.00])
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=4).get_frame().set_linewidth(0.0)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.grid(alpha=0.35)
 plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/FullSample/5_2_avg_fs.png")
@@ -836,24 +840,23 @@ for i, sJobNo in enumerate(lJob):
     ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
                dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_lstm'],
                label='predicted (lstm)', linestyle='dashed')
-    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_rf_et'],
-               label='predicted (ensemble)', linestyle='dashed')
-    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_mse'],
-               label='predicted (mse)', linestyle='dashed')
-    ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
-               dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_boost'],
-               label='predicted (boosting)', linestyle='dashed')
+    # ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+    #            dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_rf_et'],
+    #            label='predicted (ensemble)', linestyle='dashed')
+    # ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+    #            dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_mse'],
+    #            label='predicted (mse)', linestyle='dashed')
+    # ax[i].plot(dfDataPred[dfDataPred['job_no'] == sJobNo]['date'],
+    #            dfDataPred[dfDataPred['job_no'] == sJobNo]['predicted_boost'],
+    #            label='predicted (boosting)', linestyle='dashed')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
     ax[i].set_ylabel('Contribution (mDKK)')
     ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
-    ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=6).get_frame().set_linewidth(0.0)
+    ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.35)
     plt.rcParams['axes.axisbelow'] = True
 plt.savefig("./Results/Figures/Jobs/dl.png")
-
 
 ########################################################################################################################
 # if ./Results/Figures/Jobs does not exist, create it
@@ -869,16 +872,16 @@ for job_no in dfDataPred['job_no'].unique():
     fig, ax = plt.subplots(figsize=(20, 10))
     for col in ['contribution_cumsum',
                 'production_estimate_contribution',
-                'predicted_boost',
+                'predicted_lstm',
                 'final_estimate_contribution']:
         if col == 'production_estimate_contribution':
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
         elif col == 'final_estimate_contribution':
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
-        elif col == 'predicted_lstm' or col == 'predicted_boost':
-            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
         elif col == 'contribution_cumsum':
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
+        elif col == 'predicted_lstm' or col == 'predicted_boost':
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='solid')
         else:
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
     ax.set_xlabel('Date')
@@ -901,28 +904,27 @@ if not os.path.exists('./Results/Figures/WIP'):
 for job_no in dfDataWIP['job_no'].unique():
     # Get the data of job_no
     dfDataJob = dfDataWIP[dfDataWIP['job_no'] == job_no]
-    dfDataJob['LSTM'] = pd.DataFrame(
-        model_fit.predict(
-            dfDataJob[lNumericCols][dfDataJob[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
-            batch_size=best_batch_size,
-            use_multiprocessing=True, workers=multiprocessing.cpu_count()
-        )
-    )
-    # Rescale
-    dfDataJob["LSTM"] = y_scaler.inverse_transform(dfDataJob["LSTM"].values.reshape(-1, 1))
+    # dfDataJob['predicted_lstm'] = pd.DataFrame(
+    #     model_fit.predict(
+    #         dfDataJob[lNumericCols][dfDataJob[lNumericCols].columns.difference([sDepVar])].replace(np.nan, 0),
+    #         batch_size=best_batch_size,
+    #         use_multiprocessing=True, workers=multiprocessing.cpu_count()
+    #     )
+    # )
+    # # Rescale
+    # dfDataJob["predicted_lstm"] = y_scaler.inverse_transform(dfDataJob["predicted_lstm"].values.reshape(-1, 1))
     # Plot the cumsum of actual and predicted contribution of sJobNo
     fig, ax = plt.subplots(figsize=(20, 10))
     for col in ['production_estimate_contribution',
-                'predicted_boost',
-                'predicted_lstm',
                 'final_estimate_contribution',
-                'contribution_cumsum']:
+                'contribution_cumsum',
+                'predicted_lstm']:
         if col == 'production_estimate_contribution':
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
         elif col == 'final_estimate_contribution':
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dotted')
         elif col == 'predicted_lstm':
-            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashdot')
+            ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='solid')
         elif col == 'contribution_cumsum':
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col, linestyle='dashed')
         else:
@@ -937,6 +939,5 @@ for job_no in dfDataWIP['job_no'].unique():
     plt.close('all')
 
 ########################################################################################################################
-
 
 notify('The script has finished running.')
