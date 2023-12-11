@@ -518,25 +518,25 @@ predict_and_scale(dfData, dfDataScaled, model_fit_128, 'lstm_128',
 
 # Plot difference between predicted and actual values
 fig, ax = plt.subplots(figsize=(20, 10))
-ax.plot(dfData['date'],
-        dfData.groupby('date')[sDepVar].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')[sDepVar].transform('sum'),
         label='Actual', linestyle='dashed')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_lstm'].transform('sum'),
-        label='LSTM (best)')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_lstm_32'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm'].transform('sum'),
+        label=f'LSTM (best, batch size = {best_batch_size})')
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm_32'].transform('sum'),
         label='LSTM (batch size = 32)')
-ax.plot(dfData['date'],
-        dfData.groupby('date')['predicted_lstm_64'].transform('sum'),
+ax.plot(dfData[dfData[trainMethod] == 0]['date'],
+        dfData[dfData[trainMethod] == 0].groupby('date')['predicted_lstm_64'].transform('sum'),
         label='LSTM (batch size = 64)')
 # ax.plot(dfData['date'],
 #         dfData.groupby('date')['predicted_lstm_128'].transform('sum'),
 #         label='LSTM (batch size = 128)')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
 plt.xlabel("Date")
-plt.ylabel("Predicted")
-plt.title("Predicted WIP")
+plt.ylabel("Total Contribution (mDKK)")
+# plt.title("Predicted WIP")
 plt.grid(alpha=0.35)
 plt.savefig("./Results/Figures/5_1_lstm_batch.png")
 plt.savefig("./Results/Presentation/5_1_lstm_batch.svg")
@@ -733,15 +733,15 @@ ax.plot(dfData[dfData[trainMethod] == 0]['date'],
 #         label='Predicted (ensemble)')
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_avg'].transform('sum'),
-        label='Mean', alpha=0.5)
+        label='Mean', alpha=1)
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_bates_granger'].transform('sum'),
-        label='Bates \& Granger', alpha=0.5)
+        label='Bates \& Granger', alpha=1)
 ax.plot(dfData[dfData[trainMethod] == 0]['date'],
         dfData[dfData[trainMethod] == 0].groupby('date')['predicted_mse'].transform('sum'),
-        label='MSE', alpha=0.5)
+        label='MSE', alpha=1)
 ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
+ax.set_ylabel('Total Contribution (mDKK)')
 # ax.set_title('Out of Sample')
 ax.set_aspect('auto')
 ax.set_ylim([-5, 25.00])
@@ -770,15 +770,15 @@ ax.plot(dfData['date'],
 #         label='Predicted (ensemble)')
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_avg'].transform('sum'),
-        label='Mean', alpha=0.5)
+        label='Mean', alpha=1)
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_bates_granger'].transform('sum'),
-        label='Bates \& Granger', alpha=0.5)
+        label='Bates \& Granger', alpha=1)
 ax.plot(dfData['date'],
         dfData.groupby('date')['predicted_mse'].transform('sum'),
-        label='MSE', alpha=0.5)
+        label='MSE', alpha=1)
 ax.set_xlabel('Date')
-ax.set_ylabel('Total Contribution')
+ax.set_ylabel('Total Contribution (mDKK)')
 # ax.set_title('Full Sample')
 ax.set_aspect('auto')
 ax.set_ylim([-20, 100.00])
@@ -851,7 +851,7 @@ for i, sJobNo in enumerate(lJob):
     #            label='predicted (boosting)', linestyle='dashed')
     ax[i].axhline(y=0, color='black', linestyle='-')
     ax[i].set_xlabel('Date')
-    ax[i].set_ylabel('Contribution (mDKK)')
+    ax[i].set_ylabel('Total Contribution (mDKK)')
     ax[i].set_title(f'Contribution of {sJobNo} - {dfDesc[dfDesc["job_no"] == sJobNo]["description"].values[0]}')
     ax[i].legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.35)
@@ -885,7 +885,7 @@ for job_no in dfDataPred['job_no'].unique():
         else:
             ax.plot(dfDataJob['date'], dfDataJob[col], label=col)
     ax.set_xlabel('Date')
-    ax.set_ylabel('Contribution')
+    ax.set_ylabel('Total Contribution (mDKK)')
     ax.set_title(f'Actual vs. Predicted Total Contribution of {job_no}')
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=5).get_frame().set_linewidth(0.0)
     plt.grid(alpha=0.35)
