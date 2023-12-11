@@ -106,18 +106,18 @@ dfData.loc[dfData['zip'].astype(str).str.len() > 4, 'zip'] = np.nan
 dfData.loc[dfData['customer_zip'].astype(str).str.len() > 4, 'customer_zip'] = np.nan
 
 # If sales_estimate_revenue, sales_estimate_costs, production_estimate_revenue, production_estimate_costs, final_estimate_revenue or final_estimate_costs is 0, then set to budget_revenue or budget_costs
-dfData.loc[dfData['sales_estimate_revenue'] == 0, 'sales_estimate_revenue'] = dfData.loc[
-    dfData['sales_estimate_revenue'] == 0, 'budget_revenue']
-dfData.loc[dfData['sales_estimate_costs'] == 0, 'sales_estimate_costs'] = dfData.loc[
-    dfData['sales_estimate_costs'] == 0, 'budget_costs']
-dfData.loc[dfData['production_estimate_revenue'] == 0, 'production_estimate_revenue'] = dfData.loc[
-    dfData['production_estimate_revenue'] == 0, 'budget_revenue']
-dfData.loc[dfData['production_estimate_costs'] == 0, 'production_estimate_costs'] = dfData.loc[
-    dfData['production_estimate_costs'] == 0, 'budget_costs']
-dfData.loc[dfData['final_estimate_revenue'] == 0, 'final_estimate_revenue'] = dfData.loc[
-    dfData['final_estimate_revenue'] == 0, 'budget_revenue']
-dfData.loc[dfData['final_estimate_costs'] == 0, 'final_estimate_costs'] = dfData.loc[
-    dfData['final_estimate_costs'] == 0, 'budget_costs']
+# dfData.loc[dfData['sales_estimate_revenue'] == 0, 'sales_estimate_revenue'] = dfData.loc[
+#     dfData['sales_estimate_revenue'] == 0, 'budget_revenue']
+# dfData.loc[dfData['sales_estimate_costs'] == 0, 'sales_estimate_costs'] = dfData.loc[
+#     dfData['sales_estimate_costs'] == 0, 'budget_costs']
+# dfData.loc[dfData['production_estimate_revenue'] == 0, 'production_estimate_revenue'] = dfData.loc[
+#     dfData['production_estimate_revenue'] == 0, 'budget_revenue']
+# dfData.loc[dfData['production_estimate_costs'] == 0, 'production_estimate_costs'] = dfData.loc[
+#     dfData['production_estimate_costs'] == 0, 'budget_costs']
+# dfData.loc[dfData['final_estimate_revenue'] == 0, 'final_estimate_revenue'] = dfData.loc[
+#     dfData['final_estimate_revenue'] == 0, 'budget_revenue']
+# dfData.loc[dfData['final_estimate_costs'] == 0, 'final_estimate_costs'] = dfData.loc[
+#     dfData['final_estimate_costs'] == 0, 'budget_costs']
 
 dfData['sales_estimate_margin'] = dfData['sales_estimate_contribution']/dfData['sales_estimate_revenue']
 dfData.loc[dfData['sales_estimate_margin'] > 1, 'sales_estimate_margin'] = 1
@@ -135,10 +135,10 @@ dfData.loc[dfData['final_estimate_margin'] > 1, 'final_estimate_margin'] = 1
 dfData.loc[dfData['final_estimate_margin'] < -1, 'final_estimate_margin'] = -1
 dfData['final_estimate_margin'] = dfData['final_estimate_margin'].replace([np.inf, -np.inf], np.nan)
 
-dfData['budget_margin'] = dfData['budget_contribution']/dfData['budget_revenue']
-dfData.loc[dfData['budget_margin'] > 1, 'budget_margin'] = 1
-dfData.loc[dfData['budget_margin'] < -1, 'budget_margin'] = -1
-dfData['budget_margin'] = dfData['budget_margin'].replace([np.inf, -np.inf], np.nan)
+# dfData['budget_margin'] = dfData['budget_contribution']/dfData['budget_revenue']
+# dfData.loc[dfData['budget_margin'] > 1, 'budget_margin'] = 1
+# dfData.loc[dfData['budget_margin'] < -1, 'budget_margin'] = -1
+# dfData['budget_margin'] = dfData['budget_margin'].replace([np.inf, -np.inf], np.nan)
 
 
 # Divide numeric columns by 1,000,000
@@ -177,9 +177,9 @@ dfData['days_until_end'] = (dfData['end_date'] - dfData['date']).dt.days
 dfData.loc[dfData['days_until_end'] < 0, 'days_until_end'] = 0
 
 # Calculate share of budget costs and budget revenue
-dfData['budget_costs_share'] = (dfData['revenue'].fillna(0) / dfData['budget_revenue']).replace(
+dfData['budget_costs_share'] = (dfData['revenue'].fillna(0) / dfData['final_estimate_revenue']).replace(
     [np.inf, -np.inf], 0)
-dfData['budget_revenue_share'] = (dfData['costs'].fillna(0) / dfData['budget_costs']).replace(
+dfData['budget_revenue_share'] = (dfData['costs'].fillna(0) / dfData['final_estimate_costs']).replace(
     [np.inf, -np.inf], 0)
 
 ##### Feature engineering #####

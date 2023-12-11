@@ -355,9 +355,9 @@ set nocount on
 	,ISNULL(Budget_final.sales_estimate_sales - Budget_final.sales_estimate_cost,0) 'sales_estimate_contribution'
 	,ISNULL(Budget_final.estimate_sales - Budget_final.estimate_cost,0) 'production_estimate_contribution'
 	,ISNULL(Budget_final.final_estimate_sales - Budget_final.final_estimate_cost,0) 'final_estimate_contribution'
-    ,(ISNULL(Sagsbudget.[Indtaegtsbudget],0)) AS 'budget_revenue'
-    ,(ISNULL(-Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
-    ,((ISNULL(Sagsbudget.[Indtaegtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
+    --,(ISNULL(Sagsbudget.[Indtaegtsbudget],0)) AS 'budget_revenue'
+    --,(ISNULL(-Sagsbudget.[Omkostningsbudget],0)) AS 'budget_costs'
+    --,((ISNULL(Sagsbudget.[Indtaegtsbudget],0)) - (ISNULL(Sagsbudget.[Omkostningsbudget],0))) AS 'budget_contribution'
     ,(ISNULL(Sagsposter.[revenue],0)) AS 'revenue'
     ,(ISNULL(-Sagsposter.costs,0)) 'costs'
     ,(ISNULL(-Sagsposter.costs_of_labor,0)) AS 'costs_of_labor'
@@ -425,6 +425,8 @@ set nocount on
 	SELECT DISTINCT *
 	FROM #Final
 	WHERE #Final.end_date IS NOT NULL
+	AND job_no = 'S289834'
+	ORDER BY [year], [month] ASC
 
 
 DROP TABLE #Sager, #Sagsbudget, #AllCombinations, #Arbejdssedler, #Budget, #Budget_final, #budget_v2, #Cal, #MaxArchive,#Regnskab2, #Regnskab, #Sagsopgaver, #Sagsposter, #RLE, #rle_2, #ArbejderTid, #ArbejderTimer, #Faktureringsgrad, #Final
