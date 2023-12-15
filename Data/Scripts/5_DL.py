@@ -495,6 +495,8 @@ predict_and_scale(dfData, dfDataScaled, model_fit, 'lstm',
                   bConst=False,
                   iBatchSize=best_batch_size)
 
+time_lstm = datetime.datetime.now() - start_time_lstm_tune
+
 predict_and_scale(dfData, dfDataScaled, model_fit_32, 'lstm_32',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]),
                   lJobNo,
@@ -554,8 +556,7 @@ smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                    dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['LSTM', 'RMSE'] = rmse_lstm
-dfRMSE.loc['LSTM', 'sMAPE'] = smape_lstm
+dfRMSE.loc['LSTM'] = [rmse_lstm, smape_lstm, time_lstm]
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
@@ -591,6 +592,29 @@ dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
                                           'predicted_xgb']].mean(axis=1)
 dfData['predicted_avg'] = dfDataPred['predicted_avg']
 
+time_avg = (dfRMSE.loc['Combined Boosting', 'Time'] +
+            dfRMSE.loc['Elastic Net', 'Time'] +
+            dfRMSE.loc['Gradient Boosting', 'Time'] +
+            dfRMSE.loc['LSTM', 'Time'] +
+            dfRMSE.loc['OLS with lagged variables', 'Time'] +
+            dfRMSE.loc['OLS with lags and budget', 'Time'] +
+            dfRMSE.loc['OLS', 'Time'] +
+            dfRMSE.loc['Random Forest (full)', 'Time'] +
+            dfRMSE.loc['Random Forest (sparse)', 'Time'] +
+            dfRMSE.loc['Extra Trees', 'Time'] +
+            dfRMSE.loc['XGBoost', 'Time'])
+
+# Calculate RMSE of Bates and Granger
+rmse_avg = np.sqrt(
+    mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                       dfData[dfData[trainMethod] == 0]['predicted_avg'].replace(np.nan, 0)))
+# Calculate sMAPE
+smape_avg = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
+                            dfData[dfData[trainMethod] == 0]['predicted_avg'].replace(np.nan, 0))
+
+# Add to dfRMSE
+dfRMSE.loc['Average'] = [rmse_avg, smape_avg, time_avg]
+
 dfDataPred[sDepVar] = dfData[sDepVar]
 
 dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
@@ -606,6 +630,9 @@ dfDataWIP['predicted_avg'] = dfDataWIP[['predicted_boost',
 ### Explore different weighting schemes ###
 # Calculate covariance matrix of the forecast errors. The forecast errors are the difference between the actual and
 # predicted values of sDepVar.
+
+time_start_bates_granger = datetime.datetime.now()
+
 dfDataPredError = pd.DataFrame()
 for col in ['predicted_boost',
             'predicted_en',
@@ -633,6 +660,9 @@ dfDataPred['predicted_bates_granger'] = dfDataPred[['predicted_boost',
                                                     'predicted_et',
                                                     'predicted_xgb']].mul(dfDataPredWeights['weights'],
                                                                           axis=1).sum(axis=1)
+
+time_bates_granger = datetime.datetime.now() - time_start_bates_granger + time_avg
+
 dfData['predicted_bates_granger'] = dfDataPred['predicted_bates_granger']
 
 dfDataWIP['predicted_bates_granger'] = dfDataWIP[['predicted_boost',
@@ -655,11 +685,14 @@ smape_bates_granger = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np
                             dfData[dfData[trainMethod] == 0]['predicted_bates_granger'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Bates and Granger', 'RMSE'] = rmse_bates_granger
-dfRMSE.loc['Bates and Granger', 'sMAPE'] = smape_bates_granger
+dfRMSE.loc['Bates and Granger'] = [rmse_bates_granger, smape_bates_granger, time_bates_granger]
+
 
 ## MSE-based weights as ω = MSE^(-1) / sum(MSE^(-1))
 # Calculate MSE
+
+time_start_mse = datetime.datetime.now()
+
 dfDataPredMSE = pd.DataFrame()
 for col in ['predicted_boost',
             'predicted_en',
@@ -688,6 +721,8 @@ dfDataPred['predicted_mse'] = dfDataPred[['predicted_boost',
                                           'predicted_xgb']].mul(
     dfDataPredWeightsMSE['weights'], axis=1).sum(axis=1)
 
+time_mse = datetime.datetime.now() - time_start_mse + time_avg
+
 dfData['predicted_mse'] = dfDataPred['predicted_mse']
 dfDataPred['contribution_cumsum'] = dfData['contribution_cumsum']
 
@@ -711,8 +746,7 @@ smape_mse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
                   dfData[dfData[trainMethod] == 0]['predicted_mse'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['MSE', 'RMSE'] = rmse_mse
-dfRMSE.loc['MSE', 'sMAPE'] = smape_mse
+dfRMSE.loc['MSE'] = [rmse_mse, smape_mse, time_mse]
 
 # Plot the sum of predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))

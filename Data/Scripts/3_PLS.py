@@ -75,6 +75,9 @@ lDST = [s for s in dfDataScaled.columns if 'kbyg' in s]
 with open('./.AUX/lDST.txt', 'w') as lVars:
     lVars.write('\n'.join(lDST))
 
+# Time how long it takes to run OLS
+start_time_dst = datetime.datetime.now()
+
 model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lDST]))
 results_dst = model.fit()
 # Save results to LaTeX
@@ -109,6 +112,8 @@ with open('./.AUX/lJobNoWIP.txt', 'w') as lVars:
 
 predict_and_scale(dfData, dfDataScaled, results_dst, 'dst', lDST, lJobNo, bConst=False)
 
+time_dst = datetime.datetime.now() - start_time_dst
+
 # Check if model type is RegressionResultsWrapper:
 dfDataPred = dfData[['date', 'job_no', sDepVar, 'predicted_dst']]
 
@@ -129,6 +134,8 @@ predict_and_scale(dfDataWIP, dfDataWIP, results_dst, 'dst', lDST, lJobNoWIP, bCo
 ### OLS with s-curve differences. ###
 lSCurve = ['revenue_scurve_diff', 'costs_scurve_diff', 'contribution_scurve_diff']
 
+start_time_scurve = datetime.datetime.now()
+
 model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lSCurve]))
 results_scurve = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
 # Save model to .MODS/
@@ -142,6 +149,8 @@ upload(ols, 'Project-based Internship', 'tables/3_9_scurve.tex')
 
 # Predict and rescale sDepVar using OLS
 predict_and_scale(dfData, dfDataScaled, results_scurve, 'scurve', lSCurve, lJobNo, bConst=False)
+
+time_scurve = datetime.datetime.now() - start_time_scurve
 
 dfDataPred['predicted_scurve'] = dfData['predicted_scurve']
 
@@ -188,6 +197,8 @@ plt.savefig("./Results/Figures/3_0_2_corr.png")
 plt.savefig("./Results/Presentation/3_0_2_corr.svg")
 upload(plt, 'Project-based Internship', 'figures/3_0_2_corr.png')
 
+start_time_ols = datetime.datetime.now()
+
 # Run OLS
 model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lIndepVar]), missing='drop')
 results_ols = model.fit()
@@ -200,6 +211,8 @@ upload(ols, 'Project-based Internship', 'tables/3_1_ols.tex')
 
 # Predict and rescale sDepVar using OLS with lIndepVar
 predict_and_scale(dfData, dfDataScaled, results_ols, 'ols', lIndepVar, lJobNo, bConst=False)
+
+time_ols = datetime.datetime.now() - start_time_ols
 
 dfDataPred['predicted_ols'] = dfData['predicted_ols']
 
@@ -244,6 +257,8 @@ plt.savefig("./Results/Figures/3_2_2_corr_incl_lag.png")
 plt.savefig("./Results/Presentation/3_2_2_corr_incl_lag.svg")
 upload(plt, 'Project-based Internship', 'figures/3_2_2_corr_incl_lag.png')
 
+start_time_ols_lag = datetime.datetime.now()
+
 # Run OLS with lagged variables
 model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lIndepVar_lag]), missing='drop')
 results_ols_lag = model.fit()
@@ -256,6 +271,9 @@ upload(ols, 'Project-based Internship', 'tables/3_2_ols_lag.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables
 predict_and_scale(dfData, dfDataScaled, results_ols_lag, 'lag', lIndepVar_lag, lJobNo, bConst=False)
+
+time_ols_lag = datetime.datetime.now() - start_time_ols_lag
+
 dfDataPred['predicted_lag'] = dfData['predicted_lag']
 plot_predicted(dfData, 'predicted_lag', 'OLS with lag', '3_2_ols_lag', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -311,6 +329,8 @@ upload(vif_data.to_latex(index=False), 'Project-based Internship', 'tables/3_4_2
 # Omit variables with VIF > 30 from lIndepVar_lag_budget.
 lIndepVar_lag_budget = [x for x in lIndepVar_lag_budget if x not in vif_data[vif_data['VIF'] > 30]['feature'].tolist()]
 
+start_time_ols_lag_budget = datetime.datetime.now()
+
 # Run OLS with lagged variables and budget
 model = sm.OLS(dfDataScaledTrain[sDepVar], (dfDataScaledTrain[lIndepVar_lag_budget]), missing='drop')
 results_lag_budget = model.fit(cov_type='HAC', cov_kwds={'maxlags': 3})
@@ -326,6 +346,9 @@ upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 
 # Predict and rescale sDepVar using OLS with lagged variables and budget
 predict_and_scale(dfData, dfDataScaled, results_lag_budget, 'lag_budget', lIndepVar_lag_budget, lJobNo, bConst=False)
+
+time_ols_lag_budget = datetime.datetime.now() - start_time_ols_lag_budget
+
 dfDataPred['predicted_lag_budget'] = dfData['predicted_lag_budget']
 plot_predicted(dfData, 'predicted_lag_budget', 'OLS with lag and budget', '3_3_ols_lag_budget', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -346,6 +369,7 @@ dfDataPred['predicted_fc'] = dfData['predicted_fc']
 
 plot_predicted(dfData, 'predicted_fc', 'OLS Forecast Combination', '3_5_fc', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
+time_fc = datetime.datetime.now() - start_time_dst
 
 # Calculate RMSE of Forecast Combination
 rmse_fc = np.sqrt(
@@ -359,17 +383,23 @@ rmse_final = np.sqrt(
 # symmetric Mean Absolute Error (sMAPE)
 smape_final = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['final_estimate_contribution'])
 
+time_final = np.nan
+
 rmse_prod = np.sqrt(
     mean_squared_error(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution']))
 # symmetric Mean Absolute Error (sMAPE)
 smape_prod = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['production_estimate_contribution'])
 
+time_prod = np.nan
 
 dfRMSE = pd.DataFrame({'RMSE': [rmse_final, rmse_prod, rmse_dst, rmse_scurve, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
-                       'sMAPE': [smape_final, smape_prod, smape_dst, smape_scurve, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc]},
+                       'sMAPE': [smape_final, smape_prod, smape_dst, smape_scurve, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc],
+                      'Time': [time_final, time_prod, time_dst, time_scurve, time_ols, time_ols_lag, time_ols_lag_budget, time_fc]},
                       index=['Final Estimate', 'Production Estimate', 'DST', 'S-curve', 'OLS', 'OLS with lagged variables', 'OLS with lags and budget', 'OLS Forecast Combination'])
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
+
+start_time_fc_cluster = datetime.datetime.now()
 
 ### Use clustering to find similar jobs and predict sDepVar for each cluster ###
 lCluster = [2, 3, 4, 5]
@@ -401,6 +431,7 @@ for iCluster in lCluster:
             dfData.loc[dfData['cluster_' + str(iCluster)] == iClusterLabel, 'predicted_cluster_' + str(
                 iCluster)] = np.nan
 
+time_fc_cluster = datetime.datetime.now() - start_time_fc_cluster
 
 # Plot the sum of all predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -483,7 +514,7 @@ smape_fc_cluster = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                          dfData[dfData[trainMethod] == 0]['predicted_cluster_fc'])
 
 # Add RMSE and sMAPE of Forecast Combination to dfRMSE
-dfRMSE.loc['Cluster Combination'] = [rmse_fc_cluster, smape_fc_cluster]
+dfRMSE.loc['Cluster Combination'] = [rmse_fc_cluster, smape_fc_cluster, time_fc_cluster]
 
 ### Combine Cluster Forecast Combination and DST ###
 dfData['predicted_fc_cluster_dst'] = (dfData['predicted_cluster_fc'] + dfData['predicted_dst']) / 2
@@ -497,8 +528,10 @@ rmse_fc_cluster_dst = np.sqrt(
 smape_fc_cluster_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                              dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst'])
 
+time_fc_cluster_dst = datetime.datetime.now() - start_time_fc_cluster
+
 # Add RMSE and sMAPE of Forecast Combination to dfRMSE
-dfRMSE.loc['DST Cluster Combination'] = [rmse_fc_cluster_dst, smape_fc_cluster_dst]
+dfRMSE.loc['DST Cluster Combination'] = [rmse_fc_cluster_dst, smape_fc_cluster_dst, time_fc_cluster_dst]
 
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)

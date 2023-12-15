@@ -163,6 +163,9 @@ print(f'The optimal EN tol is {elastic_net_cv.best_params_.get("tol")}.')
 joblib.dump(elastic_net_cv, './.MODS/elastic_net_cv.pickle')
 
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), elastic_net_cv, 'en', lIndepVar, lJobNo)
+
+time_en = datetime.datetime.now() - start_time_en_sparse
+
 plot_predicted(dfData, 'predicted_en', 'Elastic Net', '4_0_en', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'ElasticNet finished in {datetime.datetime.now() - start_time_en_sparse}.')
@@ -176,8 +179,8 @@ smape_en_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan
                         dfData[dfData[trainMethod] == 0]['predicted_en'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Elastic Net', 'RMSE'] = rmse_en_sparse
-dfRMSE.loc['Elastic Net', 'sMAPE'] = smape_en_sparse
+dfRMSE.loc['Elastic Net'] = [rmse_en_sparse, smape_en_sparse, time_en]
+
 
 # Add to dfDataPred
 dfDataPred['predicted_en'] = dfData['predicted_en']
@@ -228,6 +231,8 @@ joblib.dump(rf_cv, './.MODS/rf_cv.pickle')
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), rf_cv, 'rf_full',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
+time_rf_full = datetime.datetime.now() - start_time_rf
+
 debug = dfData[dfData[trainMethod] == 0][['job_no', 'predicted_rf_full', 'total_contribution']].copy()
 
 debug['error'] = debug['predicted_rf_full'] - debug['total_contribution']
@@ -259,8 +264,7 @@ rmse_rf_full = np.sqrt(
 smape_rf_full = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_rf_full'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Random Forest (Full)', 'RMSE'] = rmse_rf_full
-dfRMSE.loc['Random Forest (Full)', 'sMAPE'] = smape_rf_full
+dfRMSE.loc['Random Forest (Full)'] = [rmse_rf_full, smape_rf_full, time_rf_full]
 
 # Add to dfDataPred
 dfDataPred['predicted_rf_full'] = dfData['predicted_rf_full']
@@ -302,6 +306,8 @@ predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), rf_cv, 'rf_sparse',
 
 plot_predicted(dfData, 'predicted_rf_sparse', 'Random Forest', '4_2_rf_sparse', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
+time_rf = datetime.datetime.now() - start_time_rf
+
 print(f'     ')
 print(f'RF Sparse fit finished in {datetime.datetime.now() - start_time_rf}.')
 
@@ -314,8 +320,7 @@ smape_rf_sparse = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan
                         dfData[dfData[trainMethod] == 0]['predicted_rf_sparse'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Random Forest (Sparse)', 'RMSE'] = rmse_rf_sparse
-dfRMSE.loc['Random Forest (Sparse)', 'sMAPE'] = smape_rf_sparse
+dfRMSE.loc['Random Forest (Sparse)'] = [rmse_rf_sparse, smape_rf_sparse, time_rf]
 
 # Add to dfDataPred
 dfDataPred['predicted_rf_sparse'] = dfData['predicted_rf_sparse']
@@ -374,6 +379,8 @@ joblib.dump(et_cv, './.MODS/et_cv.pickle')
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), et_cv, 'et',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
+time_et = datetime.datetime.now() - start_time_et
+
 plot_predicted(dfData, 'predicted_et', 'Extra Trees', '4_3_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
@@ -397,8 +404,7 @@ smape_et = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0),
                         dfData[dfData[trainMethod] == 0]['predicted_et'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Extra Trees', 'RMSE'] = rmse_et
-dfRMSE.loc['Extra Trees', 'sMAPE'] = smape_et
+dfRMSE.loc['Extra Trees'] = [rmse_et, smape_et, time_et]
 
 # Add to dfDataPred
 dfDataPred['predicted_et'] = dfData['predicted_et']
@@ -453,6 +459,8 @@ joblib.dump(gb_cv_det, './.MODS/gb_cv.pickle')
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), gb_cv_det, 'gb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
+time_gb = datetime.datetime.now() - start_time_gb
+
 plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
@@ -472,8 +480,7 @@ rmse_gb = np.sqrt(
 smape_gb = smape(dfData[dfData[trainMethod] == 0][sDepVar], dfData[dfData[trainMethod] == 0]['predicted_gb'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Gradient Boosting', 'RMSE'] = rmse_gb
-dfRMSE.loc['Gradient Boosting', 'sMAPE'] = smape_gb
+dfRMSE.loc['Gradient Boosting'] = [rmse_gb, smape_gb, time_gb]
 
 # Add to dfDataPred
 dfDataPred['predicted_gb'] = dfData['predicted_gb']
@@ -531,6 +538,8 @@ joblib.dump(xgb_cv_det, './.MODS/xgb_cv.pickle')
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), xgb_cv_det, 'xgb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
+time_xgb = datetime.datetime.now() - start_time_xgb
+
 plot_predicted(dfData, 'predicted_xgb', 'XGBoost', '4_5_xgb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 print(f'     ')
@@ -554,8 +563,7 @@ rmse_xgb = np.sqrt(
 smape_xgb = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfData[dfData[trainMethod] == 0]['predicted_xgb'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['XGBoost', 'RMSE'] = rmse_xgb
-dfRMSE.loc['XGBoost', 'sMAPE'] = smape_xgb
+dfRMSE.loc['XGBoost'] = [rmse_xgb, smape_xgb, time_xgb]
 
 # Add to dfDataPred
 dfDataPred['predicted_xgb'] = dfData['predicted_xgb']
@@ -569,6 +577,8 @@ dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predic
 dfData['predicted_boost'] = (dfData['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
 dfDataWIP['predicted_boost'] = (dfDataWIP['predicted_gb'] + dfDataWIP['predicted_xgb']) / 2
 
+time_gb_fc = datetime.datetime.now() - start_time_gb
+
 plot_predicted(dfData, 'predicted_boost', 'Combined Boosting', '4_6_boost', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 # Calculate RMSE of GB_FC
@@ -579,8 +589,7 @@ rmse_gb_fc = np.sqrt(
 smape_gb_fc = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfDataPred[dfData[trainMethod] == 0]['predicted_boost'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Combined Boosting', 'RMSE'] = rmse_gb_fc
-dfRMSE.loc['Combined Boosting', 'sMAPE'] = smape_gb_fc
+dfRMSE.loc['Combined Boosting'] = [rmse_gb_fc, smape_gb_fc, time_gb_fc]
 
 ### Forecast Combination with RF and ET
 dfDataPred['predicted_rf_et'] = (dfDataPred['predicted_rf_full'] + dfDataPred['predicted_et']) / 2
@@ -588,6 +597,8 @@ dfData['predicted_rf_et'] = (dfData['predicted_rf_full'] + dfDataPred['predicted
 dfDataWIP['predicted_rf_et'] = (dfDataWIP['predicted_rf_full'] + dfDataWIP['predicted_et']) / 2
 
 plot_predicted(dfData, 'predicted_rf_et', 'Ensemble of Ensembles', '4_7_rf_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
+time_rf_et = time_rf_full + time_et
 
 # Calculate RMSE of GB_FC
 rmse_rf_et = np.sqrt(
@@ -597,14 +608,16 @@ rmse_rf_et = np.sqrt(
 smape_rf_et = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfDataPred[dfData[trainMethod] == 0]['predicted_rf_et'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Ensemble of Ensembles', 'RMSE'] = rmse_rf_et
-dfRMSE.loc['Ensemble of Ensembles', 'sMAPE'] = smape_rf_et
+dfRMSE.loc['Ensemble of Ensembles'] = [rmse_rf_et, smape_rf_et, time_rf_et]
+
 
 ## Average of rf, et, gb and xgb
 dfDataPred['predicted_avg_ml'] = (dfDataPred['predicted_rf_sparse'] + dfDataPred['predicted_et'] + dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 4
 dfData['predicted_avg_ml'] = (dfData['predicted_rf_sparse'] + dfDataPred['predicted_et'] + dfDataPred['predicted_gb'] + dfDataPred['predicted_xgb']) / 4
 
 plot_predicted(dfData, 'predicted_avg_ml', 'Average of Ensembles', '4_8_ml_avg', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
+
+time_avg_ml = time_rf_sparse + time_et + time_gb + time_xgb
 
 # Calculate RMSE of GB_FC
 rmse_avg = np.sqrt(
@@ -614,9 +627,7 @@ rmse_avg = np.sqrt(
 smape_avg = smape(dfData[dfData[trainMethod] == 0][sDepVar].replace(np.nan, 0), dfDataPred[dfData[trainMethod] == 0]['predicted_avg_ml'].replace(np.nan, 0))
 
 # Add to dfRMSE
-dfRMSE.loc['Average of ML', 'RMSE'] = rmse_avg
-dfRMSE.loc['Average of ML', 'sMAPE'] = smape_avg
-
+dfRMSE.loc['Average of ML'] = [rmse_avg, smape_avg, time_avg_ml]
 
 # Save dfDataPred to ./dfDataPred.parquet
 dfDataPred.to_parquet("./dfDataPred.parquet")
