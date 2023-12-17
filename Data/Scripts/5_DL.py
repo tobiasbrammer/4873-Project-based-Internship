@@ -457,8 +457,10 @@ for i in range(best_hps.get('additional_layers')):
     With an optimal dropout of  {round(best_hps.get(f'dropout_{i + 1}'), 2)}. """)
 print(f"""The optimal activation function in the output layer is {best_hps.get('dense_activation')}.""")
 
+start_time_lstm = datetime.datetime.now()
+
 ## Create model from optimal hyperparameters ##
-early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=50)
+early_stop = EarlyStopping(monitor='loss', mode='auto', verbose=1, patience=250)
 
 # Fit model
 model_fit = model_builder(best_hps)
@@ -475,6 +477,10 @@ model_fit.fit(dfDataScaledTrain[lNumericCols][dfDataScaledTrain[lNumericCols].co
 
 model_fit.save('./.MODS/LSTM_tune.tf')
 model_fit.summary()
+#
+# # Save model summary to LaTeX
+# with open('./Results/Tables/5_0_lstm_tune.tex', 'w') as f:
+#     f.write(model_fit.summary())
 
 # Plot loss
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -495,7 +501,7 @@ predict_and_scale(dfData, dfDataScaled, model_fit, 'lstm',
                   bConst=False,
                   iBatchSize=best_batch_size)
 
-time_lstm = datetime.datetime.now() - start_time_lstm_tune
+time_lstm = datetime.datetime.now() - start_time_lstm
 
 predict_and_scale(dfData, dfDataScaled, model_fit_32, 'lstm_32',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]),
@@ -555,6 +561,10 @@ rmse_lstm = np.sqrt(
 smape_lstm = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                    dfData[dfData[trainMethod] == 0]['predicted_lstm'].replace(np.nan, 0))
 
+# Convert timedelta to seconds
+time_lstm = round(time_lstm.total_seconds()/60, 2)
+
+
 # Add to dfRMSE
 dfRMSE.loc['LSTM'] = [rmse_lstm, smape_lstm, time_lstm]
 
@@ -592,17 +602,18 @@ dfDataPred['predicted_avg'] = dfDataPred[['predicted_boost',
                                           'predicted_xgb']].mean(axis=1)
 dfData['predicted_avg'] = dfDataPred['predicted_avg']
 
-time_avg = (dfRMSE.loc['Combined Boosting', 'Time'] +
-            dfRMSE.loc['Elastic Net', 'Time'] +
-            dfRMSE.loc['Gradient Boosting', 'Time'] +
-            dfRMSE.loc['LSTM', 'Time'] +
-            dfRMSE.loc['OLS with lagged variables', 'Time'] +
-            dfRMSE.loc['OLS with lags and budget', 'Time'] +
-            dfRMSE.loc['OLS', 'Time'] +
-            dfRMSE.loc['Random Forest (full)', 'Time'] +
-            dfRMSE.loc['Random Forest (sparse)', 'Time'] +
-            dfRMSE.loc['Extra Trees', 'Time'] +
-            dfRMSE.loc['XGBoost', 'Time'])
+time_avg = (dfRMSE.loc['Combined Boosting', 'Minutes'] +
+            dfRMSE.loc['Elastic Net', 'Minutes'] +
+            dfRMSE.loc['Gradient Boosting', 'Minutes'] +
+            dfRMSE.loc['LSTM', 'Minutes'] +
+            dfRMSE.loc['OLS with lagged variables', 'Minutes'] +
+            dfRMSE.loc['OLS with lags and budget', 'Minutes'] +
+            dfRMSE.loc['OLS', 'Minutes'] +
+            dfRMSE.loc['Random Forest (Full)', 'Minutes'] +
+            dfRMSE.loc['Random Forest (Sparse)', 'Minutes'] +
+            dfRMSE.loc['Extra Trees', 'Minutes'] +
+            dfRMSE.loc['XGBoost', 'Minutes'])
+
 
 # Calculate RMSE of Bates and Granger
 rmse_avg = np.sqrt(
@@ -661,7 +672,8 @@ dfDataPred['predicted_bates_granger'] = dfDataPred[['predicted_boost',
                                                     'predicted_xgb']].mul(dfDataPredWeights['weights'],
                                                                           axis=1).sum(axis=1)
 
-time_bates_granger = datetime.datetime.now() - time_start_bates_granger + time_avg
+time_bates_granger = datetime.datetime.now() - time_start_bates_granger
+time_bates_granger = round(time_bates_granger.total_seconds()/60, 2) + time_avg
 
 dfData['predicted_bates_granger'] = dfDataPred['predicted_bates_granger']
 
@@ -721,7 +733,8 @@ dfDataPred['predicted_mse'] = dfDataPred[['predicted_boost',
                                           'predicted_xgb']].mul(
     dfDataPredWeightsMSE['weights'], axis=1).sum(axis=1)
 
-time_mse = datetime.datetime.now() - time_start_mse + time_avg
+time_mse = datetime.datetime.now() - time_start_mse
+time_mse = round(time_mse.total_seconds()/60, 2) + time_avg
 
 dfData['predicted_mse'] = dfDataPred['predicted_mse']
 dfDataPred['contribution_cumsum'] = dfData['contribution_cumsum']
@@ -827,9 +840,10 @@ upload(plt, 'Project-based Internship', 'figures/5_2_avg_fs.png')
 
 # dfRMSE to latex
 dfRMSE_latex = dfRMSE.copy()
-dfRMSE_latex = dfRMSE_latex.round(4)
-dfRMSE_latex['RMSE'] = dfRMSE_latex['RMSE'].apply(lambda x: '{0:.4f}'.format(x))
-dfRMSE_latex['sMAPE'] = dfRMSE_latex['sMAPE'].apply(lambda x: '{0:.4f}'.format(x))
+dfRMSE_latex = dfRMSE_latex.round(2)
+dfRMSE_latex['RMSE'] = dfRMSE_latex['RMSE'].apply(lambda x: '{0:.2f}'.format(x))
+dfRMSE_latex['sMAPE'] = dfRMSE_latex['sMAPE'].apply(lambda x: '{0:.2f}'.format(x))
+dfRMSE_latex['Minutes'] = dfRMSE_latex['Minutes'].apply(lambda x: '{0:.2f}'.format(x))
 
 # Bold the lowest RMSE to save to .tex
 dfRMSE_latex.loc[dfRMSE_latex['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'] = r'\textbf{' + dfRMSE_latex.loc[

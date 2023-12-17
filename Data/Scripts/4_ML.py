@@ -165,6 +165,7 @@ joblib.dump(elastic_net_cv, './.MODS/elastic_net_cv.pickle')
 predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), elastic_net_cv, 'en', lIndepVar, lJobNo)
 
 time_en = datetime.datetime.now() - start_time_en_sparse
+time_en = round(time_en.total_seconds()/60, 2)
 
 plot_predicted(dfData, 'predicted_en', 'Elastic Net', '4_0_en', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -232,6 +233,7 @@ predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), rf_cv, 'rf_full',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
 time_rf_full = datetime.datetime.now() - start_time_rf
+time_rf_full = round(time_rf_full.total_seconds()/60, 2)
 
 debug = dfData[dfData[trainMethod] == 0][['job_no', 'predicted_rf_full', 'total_contribution']].copy()
 
@@ -307,6 +309,7 @@ predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), rf_cv, 'rf_sparse',
 plot_predicted(dfData, 'predicted_rf_sparse', 'Random Forest', '4_2_rf_sparse', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 time_rf = datetime.datetime.now() - start_time_rf
+time_rf = round(time_rf.total_seconds()/60, 2)
 
 print(f'     ')
 print(f'RF Sparse fit finished in {datetime.datetime.now() - start_time_rf}.')
@@ -380,6 +383,7 @@ predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), et_cv, 'et',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
 time_et = datetime.datetime.now() - start_time_et
+time_et = round(time_et.total_seconds()/60, 2)
 
 plot_predicted(dfData, 'predicted_et', 'Extra Trees', '4_3_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -460,6 +464,7 @@ predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), gb_cv_det, 'gb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
 time_gb = datetime.datetime.now() - start_time_gb
+time_gb = round(time_gb.total_seconds()/60, 2)
 
 plot_predicted(dfData, 'predicted_gb', 'Gradient Boosting', '4_4_gb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -539,6 +544,7 @@ predict_and_scale(dfData, dfDataScaled.replace(np.nan,0), xgb_cv_det, 'xgb',
                   dfDataScaled[lNumericCols].columns.difference([sDepVar]), lJobNo)
 
 time_xgb = datetime.datetime.now() - start_time_xgb
+time_xgb = round(time_xgb.total_seconds()/60, 2)
 
 plot_predicted(dfData, 'predicted_xgb', 'XGBoost', '4_5_xgb', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -577,7 +583,7 @@ dfDataPred['predicted_boost'] = (dfDataPred['predicted_gb'] + dfDataPred['predic
 dfData['predicted_boost'] = (dfData['predicted_gb'] + dfDataPred['predicted_xgb']) / 2
 dfDataWIP['predicted_boost'] = (dfDataWIP['predicted_gb'] + dfDataWIP['predicted_xgb']) / 2
 
-time_gb_fc = datetime.datetime.now() - start_time_gb
+time_gb_fc = dfRMSE.loc['Gradient Boosting', 'Minutes'] + dfRMSE.loc['XGBoost', 'Minutes']
 
 plot_predicted(dfData, 'predicted_boost', 'Combined Boosting', '4_6_boost', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
@@ -598,7 +604,7 @@ dfDataWIP['predicted_rf_et'] = (dfDataWIP['predicted_rf_full'] + dfDataWIP['pred
 
 plot_predicted(dfData, 'predicted_rf_et', 'Ensemble of Ensembles', '4_7_rf_et', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
-time_rf_et = time_rf_full + time_et
+time_rf_et = dfRMSE.loc['Random Forest (Full)', 'Minutes'] + dfRMSE.loc['Extra Trees', 'Minutes']
 
 # Calculate RMSE of GB_FC
 rmse_rf_et = np.sqrt(
@@ -617,7 +623,12 @@ dfData['predicted_avg_ml'] = (dfData['predicted_rf_sparse'] + dfDataPred['predic
 
 plot_predicted(dfData, 'predicted_avg_ml', 'Average of Ensembles', '4_8_ml_avg', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
-time_avg_ml = time_rf_sparse + time_et + time_gb + time_xgb
+time_avg_ml = (dfRMSE.loc['Random Forest (Sparse)', 'Minutes'] +
+               dfRMSE.loc['Extra Trees', 'Minutes'] +
+               dfRMSE.loc['Gradient Boosting', 'Minutes'] +
+               dfRMSE.loc['XGBoost', 'Minutes'])
+
+
 
 # Calculate RMSE of GB_FC
 rmse_avg = np.sqrt(
@@ -637,6 +648,7 @@ dfDataWIP.to_parquet("./dfDataWIP_pred.parquet")
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
 print(dfRMSE)
+
 
 dfRMSE.to_csv("./Results/Tables/3_4_rmse.csv")
 

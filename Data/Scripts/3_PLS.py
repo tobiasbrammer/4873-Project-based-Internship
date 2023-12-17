@@ -1,4 +1,5 @@
 # Import required libraries
+import datetime
 import os
 import numpy as np
 import pandas as pd
@@ -113,6 +114,7 @@ with open('./.AUX/lJobNoWIP.txt', 'w') as lVars:
 predict_and_scale(dfData, dfDataScaled, results_dst, 'dst', lDST, lJobNo, bConst=False)
 
 time_dst = datetime.datetime.now() - start_time_dst
+time_dst = round(time_dst.total_seconds()/60, 2)
 
 # Check if model type is RegressionResultsWrapper:
 dfDataPred = dfData[['date', 'job_no', sDepVar, 'predicted_dst']]
@@ -151,6 +153,7 @@ upload(ols, 'Project-based Internship', 'tables/3_9_scurve.tex')
 predict_and_scale(dfData, dfDataScaled, results_scurve, 'scurve', lSCurve, lJobNo, bConst=False)
 
 time_scurve = datetime.datetime.now() - start_time_scurve
+time_scurve = round(time_scurve.total_seconds()/60, 2)
 
 dfDataPred['predicted_scurve'] = dfData['predicted_scurve']
 
@@ -213,6 +216,7 @@ upload(ols, 'Project-based Internship', 'tables/3_1_ols.tex')
 predict_and_scale(dfData, dfDataScaled, results_ols, 'ols', lIndepVar, lJobNo, bConst=False)
 
 time_ols = datetime.datetime.now() - start_time_ols
+time_ols = round(time_ols.total_seconds()/60, 2)
 
 dfDataPred['predicted_ols'] = dfData['predicted_ols']
 
@@ -273,6 +277,7 @@ upload(ols, 'Project-based Internship', 'tables/3_2_ols_lag.tex')
 predict_and_scale(dfData, dfDataScaled, results_ols_lag, 'lag', lIndepVar_lag, lJobNo, bConst=False)
 
 time_ols_lag = datetime.datetime.now() - start_time_ols_lag
+time_ols_lag = round(time_ols_lag.total_seconds()/60, 2)
 
 dfDataPred['predicted_lag'] = dfData['predicted_lag']
 plot_predicted(dfData, 'predicted_lag', 'OLS with lag', '3_2_ols_lag', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
@@ -348,6 +353,7 @@ upload(ols, 'Project-based Internship', 'tables/3_3_ols_lag_budget.tex')
 predict_and_scale(dfData, dfDataScaled, results_lag_budget, 'lag_budget', lIndepVar_lag_budget, lJobNo, bConst=False)
 
 time_ols_lag_budget = datetime.datetime.now() - start_time_ols_lag_budget
+time_ols_lag_budget = round(time_ols_lag_budget.total_seconds()/60, 2)
 
 dfDataPred['predicted_lag_budget'] = dfData['predicted_lag_budget']
 plot_predicted(dfData, 'predicted_lag_budget', 'OLS with lag and budget', '3_3_ols_lag_budget', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
@@ -370,6 +376,7 @@ dfDataPred['predicted_fc'] = dfData['predicted_fc']
 plot_predicted(dfData, 'predicted_fc', 'OLS Forecast Combination', '3_5_fc', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)
 
 time_fc = datetime.datetime.now() - start_time_dst
+time_fc = round(time_fc.total_seconds()/60, 2)
 
 # Calculate RMSE of Forecast Combination
 rmse_fc = np.sqrt(
@@ -394,7 +401,7 @@ time_prod = np.nan
 
 dfRMSE = pd.DataFrame({'RMSE': [rmse_final, rmse_prod, rmse_dst, rmse_scurve, rmse_ols, rmse_ols_lag, rmse_ols_lag_budget, rmse_fc],
                        'sMAPE': [smape_final, smape_prod, smape_dst, smape_scurve, smape_ols, smape_ols_lag, smape_ols_lag_budget, smape_fc],
-                      'Time': [time_final, time_prod, time_dst, time_scurve, time_ols, time_ols_lag, time_ols_lag_budget, time_fc]},
+                      'Minutes': [time_final, time_prod, time_dst, time_scurve, time_ols, time_ols_lag, time_ols_lag_budget, time_fc]},
                       index=['Final Estimate', 'Production Estimate', 'DST', 'S-curve', 'OLS', 'OLS with lagged variables', 'OLS with lags and budget', 'OLS Forecast Combination'])
 # Round to 4 decimals
 dfRMSE = dfRMSE.round(4)
@@ -432,6 +439,7 @@ for iCluster in lCluster:
                 iCluster)] = np.nan
 
 time_fc_cluster = datetime.datetime.now() - start_time_fc_cluster
+time_fc_cluster = round(time_fc_cluster.total_seconds()/60, 2)
 
 # Plot the sum of all predicted and actual sDepVar by date
 fig, ax = plt.subplots(figsize=(20, 10))
@@ -529,6 +537,7 @@ smape_fc_cluster_dst = smape(dfData[dfData[trainMethod] == 0][sDepVar],
                              dfData[dfData[trainMethod] == 0]['predicted_fc_cluster_dst'])
 
 time_fc_cluster_dst = datetime.datetime.now() - start_time_fc_cluster
+time_fc_cluster_dst = round(time_fc_cluster_dst.total_seconds()/60, 2)
 
 # Add RMSE and sMAPE of Forecast Combination to dfRMSE
 dfRMSE.loc['DST Cluster Combination'] = [rmse_fc_cluster_dst, smape_fc_cluster_dst, time_fc_cluster_dst]
