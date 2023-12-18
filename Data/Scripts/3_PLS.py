@@ -370,7 +370,7 @@ predict_and_scale(dfDataWIP, dfDataWIP, results_lag_budget, 'ols_lag_budget', lI
 
 ### Forecast Combination ###
 # Produce a combined forecast of ols_lag_budget and pls
-dfData['predicted_fc'] = (dfData['predicted_dst'] + dfData['predicted_lag_budget']) / 2
+dfData['predicted_fc'] = (dfData['predicted_dst'] + dfData['predicted_lag']) / 2
 dfDataPred['predicted_fc'] = dfData['predicted_fc']
 
 plot_predicted(dfData, 'predicted_fc', 'OLS Forecast Combination', '3_5_fc', transformation='sum', trainMethod=trainMethod, sDepVar=sDepVar)

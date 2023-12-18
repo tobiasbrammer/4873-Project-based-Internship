@@ -852,6 +852,10 @@ dfRMSE_latex.loc[dfRMSE_latex['RMSE'] == dfRMSE_latex['RMSE'].min(), 'RMSE'] = r
 dfRMSE_latex.loc[dfRMSE_latex['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'] = r'\textbf{' + dfRMSE_latex.loc[
     dfRMSE_latex['sMAPE'] == dfRMSE_latex['sMAPE'].min(), 'sMAPE'].astype(str) + '}'
 
+# Replace Minutes Final Estimate with -
+dfRMSE_latex.loc['Final Estimate', 'Minutes'] = '-'
+dfRMSE_latex.loc['Production Estimate', 'Minutes'] = '-'
+
 print(dfRMSE_latex)
 
 upload(dfRMSE_latex.to_latex(), 'Project-based Internship', 'tables/5_1_rmse.tex')
